@@ -4,11 +4,8 @@ from typing import Iterable, Iterator, List, Tuple, Union
 from .typedefs import CenterDefinitionType, DimensionDefinitionType
 
 
-def __get_center_flags(center: Union[str, bool]) -> Tuple[bool, bool, bool]:
+def get_center_flags(center: CenterDefinitionType) -> Tuple[bool, bool, bool]:
     if isinstance(center, str):
-        center = center.upper()
-        if center=="" or not re.match(r'^X?Y?Z?$', center):
-            raise ValueError("invalid center string")
         return ('X' in center , 'Y' in center, 'Z' in center)
     else:
         center = (center==True)
@@ -42,5 +39,5 @@ def get_dimensions(dimensions: Iterable[DimensionDefinitionType], center: Center
                 dim2 = half
         return (dim1, dim2)
     
-    return map(__handle_size, zip(dimensions, __get_center_flags(center)))
+    return map(__handle_size, zip(dimensions, get_center_flags(center)))
 
