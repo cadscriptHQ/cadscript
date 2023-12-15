@@ -2,6 +2,7 @@ import cadquery as cq
 
 from typing import Any, Optional, Tuple, Union
 
+from .typedefs import DimensionDefinitionType, CenterDefinitionType
 from .export import export_sketch_DXF
 from .helpers import get_dimensions
 
@@ -37,11 +38,11 @@ class SketchObject:
       y1, y2 = dim2
       return sketch.polygon([cq.Vector(x1, y1), cq.Vector(x1, y2), cq.Vector(x2, y2), cq.Vector(x2, y1), cq.Vector(x1, y1)], mode=mode)
 
-    def add_rect(self, size_x: Union[float, Tuple[float, float]], size_y: Union[float, Tuple[float, float]], center: Any = True, positions: Any = None):
+    def add_rect(self, size_x: DimensionDefinitionType, size_y: DimensionDefinitionType, center: CenterDefinitionType = True, positions: Any = None):
       action = lambda x: self.rect_helper(x, size_x, size_y, center)
       return self.perform_action(action, positions)
 
-    def cut_rect(self, size_x: Union[float, Tuple[float, float]], size_y: Union[float, Tuple[float, float]], center: Any = True, positions: Any = None):
+    def cut_rect(self, size_x: DimensionDefinitionType, size_y: DimensionDefinitionType, center: CenterDefinitionType = True, positions: Any = None):
       action = lambda x: self.rect_helper(x, size_x, size_y, center, mode="s")
       return self.perform_action(action, positions)
 
