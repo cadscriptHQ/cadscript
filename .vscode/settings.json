@@ -1,0 +1,18 @@
+{
+  "python.testing.unittestArgs": [
+    "-v",
+    "-s",
+    "./tests",
+    "-p",
+    "test_*.py"
+  ],
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestEnabled": true,
+  "python.autoComplete.extraPaths": ["./cadscript"],
+  "python.analysis.extraPaths": [
+    "./cadscript"
+  ],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.autoImportCompletions": true
+}
