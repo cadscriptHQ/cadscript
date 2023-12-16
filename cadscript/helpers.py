@@ -1,15 +1,16 @@
-import re
-from typing import Iterable, Iterator, List, Tuple, Union
+
+from typing import Iterable, Iterator, Tuple
 
 from .typedefs import CenterDefinitionType, DimensionDefinitionType
 
 
 def get_center_flags(center: CenterDefinitionType) -> Tuple[bool, bool, bool]:
     if isinstance(center, str):
-        return ('X' in center , 'Y' in center, 'Z' in center)
+        c = center.upper()
+        return ('X' in c , 'Y' in c, 'Z' in c)
     else:
-        center = (center==True)
-        return (center,center,center)
+        c = (center==True)
+        return (c,c,c)
 
 def get_dimensions(dimensions: Iterable[DimensionDefinitionType], center: CenterDefinitionType) -> Iterator[Tuple[float, float]]:
     """
@@ -17,7 +18,7 @@ def get_dimensions(dimensions: Iterable[DimensionDefinitionType], center: Center
 
     Args:
         dimensions (tuple): A tuple of size values or tuple of tuples representing min/max.
-        center (bool): A flag indicating whether to center the dimensions.
+        center (bool or string): indicating whether to center the dimensions, either a bool or a string ('X', 'Y', 'Z', 'XY', 'XZ', 'YZ', 'XYZ')
 
     Returns:
         tuple: A tuple of tuples with min/max values.
