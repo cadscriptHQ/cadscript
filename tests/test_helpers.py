@@ -5,6 +5,7 @@ import cadscript.helpers as helpers
 class DimensionsTest(unittest.TestCase):
 
     def assert_equal_tuple_iter(self, iter1, iter2):
+        self.assertEqual(len(list(iter1)), len(list(iter2)))
         for (a,b) in zip(iter1, iter2):
             self.assertEqual(a, b)
 
@@ -141,8 +142,8 @@ class CenterTest(unittest.TestCase):
         result = helpers.get_center_flags(center)
         self.assertEqual(result, expected_result)
 
-    def test_other(self):
+    def test_wrong_type(self):
         center = 123
         expected_result = (False, False, False)
-        result = helpers.get_center_flags(center)
+        result = helpers.get_center_flags(center) # type: ignore
         self.assertEqual(result, expected_result)
