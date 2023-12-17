@@ -1,7 +1,9 @@
 import cadquery as cq
 
 from .typedefs import DimensionDefinitionType, CenterDefinitionType, EdgeQueryType, Vector2DType, Vector3DType, AxisType, FaceQueryType
-    
+from .sketchobject import SketchObject
+
+
 class CadObject:
     """
     Represents a 3D CAD object. They are typically created using make_* functions, e.g. 
