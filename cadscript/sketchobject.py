@@ -16,7 +16,7 @@ class SketchObject:
       self.finalized_sketch = None
 
     def cq(self) -> Optional[cq.Sketch]:
-      return self.finalized_sketch if self.finalized_sketch else self.sketch
+      return self.sketch
 
     def copy(self) -> 'SketchObject':
       return SketchObject(self.sketch.copy())
@@ -47,13 +47,28 @@ class SketchObject:
       action = lambda x: self.__rect_helper(x, size_x, size_y, center, mode="s")
       return self.__perform_action(action, positions)
 
+    def __get_radius(self, r:Optional[float]=None, radius:Optional[float]=None, d:Optional[float]=None, diameter:Optional[float]=None) -> float:
+      # check only one parameter is specified
+      if sum(x is not None for x in [r, radius, d, diameter]) > 1:
+        raise ValueError("only one of r, radius, d, diameter can be specified")
+      if r is not None:
+        return r
+      elif radius is not None:
+        return radius
+      elif d is not None:
+        return d / 2
+      elif diameter is not None:
+        return diameter / 2
+      else:
+        raise ValueError("no radius/diameter specified")
+      
     def add_circle(self, *, r:Optional[float]=None, radius:Optional[float]=None, d:Optional[float]=None, diameter:Optional[float]=None, positions: Optional[Iterable[Vector2DType]] = None) -> 'SketchObject':
-      #todo support diameter
+      r = self.__get_radius(r, radius, d, diameter)    
       action = lambda x: x.circle(r)
       return self.__perform_action(action, positions)
 
     def cut_circle(self, *, r:Optional[float]=None, radius:Optional[float]=None, d:Optional[float]=None, diameter:Optional[float]=None, positions: Optional[Iterable[Vector2DType]] = None) -> 'SketchObject':
-      #todo support diameter
+      r = self.__get_radius(r, radius, d, diameter)    
       action = lambda x: x.circle(r, mode="s")
       return self.__perform_action(action, positions)
 

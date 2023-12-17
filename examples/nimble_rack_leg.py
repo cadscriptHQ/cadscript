@@ -7,7 +7,7 @@ def make_beam(length, hole_spacing, long_axis_hole_dia, mounting_holes_dia):
 
     # Long-axis hole for connecting multiple leg sections together
     long_axis_hole = cad.make_sketch()
-    long_axis_hole.add_circle(r=long_axis_hole_dia / 2.0)
+    long_axis_hole.add_circle(d=long_axis_hole_dia)
     beam = beam.cut_extrude(">Z", long_axis_hole, -length)
     
     # Channel cutouts
@@ -20,7 +20,7 @@ def make_beam(length, hole_spacing, long_axis_hole_dia, mounting_holes_dia):
     # Mounting holes
     mount_hole_ptn = cad.pattern_grid(1, 21, spacing_y = hole_spacing)
     sketch = cad.make_sketch()
-    sketch.add_circle(r=mounting_holes_dia / 2.0, positions = mount_hole_ptn)
+    sketch.add_circle(d=mounting_holes_dia, positions = mount_hole_ptn)
 
     beam.cut_extrude("<Y", sketch, -20.0)
     beam.cut_extrude("<X", sketch, -20.0)
