@@ -102,7 +102,7 @@ class SketchObject:
     def export_dxf(self, filename:str) -> None:
         export_sketch_DXF(self.sketch, filename)
 
-    def move(self, translationVector:Vector3DType) -> 'SketchObject':
+    def move(self, translationVector:Vector2DType) -> 'SketchObject':
         self.sketch = self.sketch.moved(cq.Location(cq.Vector(translationVector)))
         return self
 
