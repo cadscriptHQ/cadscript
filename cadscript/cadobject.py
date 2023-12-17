@@ -1,25 +1,47 @@
 import cadquery as cq
 
-
+from .typedefs import DimensionDefinitionType, CenterDefinitionType, EdgeQueryType, Vector2DType, Vector3DType, AxisType, FaceQueryType
+    
 class CadObject:
+    """
+    Represents a 3D CAD object. They are typically created using make_* functions, e.g. 
+    make_box or maker_extrude. 
 
+    Methods:
+      cq(): Returns the cadquery workplane object associated with the CAD object.
+      fillet(edgesStr, amount): Fillets the specified edges of the CAD object.
+      chamfer(edgesStr, amount): Chamfers the specified edges of the CAD object.
+      move(translationVector): Moves the CAD object by the specified translation vector.
+      rotate(axis, degrees): Rotates the CAD object around the specified axis by the specified angle in degrees.
+      cut(cad2): Performs a boolean cut operation with another CAD object.
+      fuse(cad2): Performs a boolean fuse operation with another CAD object.
+      add_extrude(faceStr, sketch, amount): Adds an extrusion to the specified face of the CAD object using a sketch.
+      cut_extrude(faceStr, sketch, amount): Adds a cut extrusion to the specified face of the CAD object using a sketch.
+      make_extrude(faceStr, sketch, amount): Creates a new CAD object by extruding the specified face of the CAD object using a sketch.
+      CenterOfBoundBox(): Returns the center of the bounding box of the CAD object.
+      copy(): Creates a copy of the CAD object.
+      export_step(filename): Exports the CAD object to a STEP file.
+      export_stl(filename): Exports the CAD object to an STL file.
+      render_svg(filename): Renders the CAD object as an SVG image.
+
+    """
     def __init__(self, workplane):
         self.wp = workplane
 
-    def cq(self):
+    def cq(self) -> cq.Workplane:
         return self.wp
 
-    def fillet(self, edgesStr, amount):
-        result = self.wp.edges(edgesStr).fillet(amount)
-        self.wp = result
-        return self
+    def fillet(self, edgesStr: EdgeQueryType, amount: float) -> 'CadObject':
+      result = self.wp.edges(edgesStr).fillet(amount)
+      self.wp = result
+      return self
 
-    def chamfer(self, edgesStr, amount):
+    def chamfer(self, edgesStr: EdgeQueryType, amount: float) -> 'CadObject':
         result = self.wp.edges(edgesStr).chamfer(amount)
         self.wp = result
         return self
 
-    def move(self, translationVector):
+    def move(self, translationVector: Vector3DType) -> 'CadObject':
         loc = cq.Location(cq.Vector(translationVector))
         c = self.wp.findSolid()
         c.move(loc)
@@ -27,7 +49,7 @@ class CadObject:
         self.wp = wp
         return self
 
-    def rotate(self, axis, degrees):
+    def rotate(self, axis: AxisType, degrees: float) -> 'CadObject':
         c = self.wp.findSolid()
         if axis == "X":
             c = c.rotate((0,0,0),(1,0,0), degrees)
@@ -41,7 +63,7 @@ class CadObject:
         self.wp = wp
         return self
 
-    def cut(self, cad2):
+    def cut(self, cad2: 'CadObject') -> 'CadObject':
         c1 = self.wp.findSolid()
         c2 = cad2.wp.findSolid()
         c = c1.cut(c2)
@@ -49,7 +71,7 @@ class CadObject:
         self.wp = wp
         return self
 
-    def fuse(self, cad2):
+    def fuse(self, cad2: 'CadObject') -> 'CadObject':
         c1 = self.wp.findSolid()
         c2 = cad2.wp.findSolid()
         c = c1.fuse(c2)
@@ -57,41 +79,41 @@ class CadObject:
         self.wp = wp
         return self
 
-    def add_extrude(self, faceStr, sketch, amount):
+    def add_extrude(self, faceStr : FaceQueryType, sketch: 'SketchObject', amount: float) -> 'CadObject':
         result = self.wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, "a")
         self.wp = result
         return self
 
-    def cut_extrude(self, faceStr, sketch, amount):
+    def cut_extrude(self, faceStr : FaceQueryType, sketch: 'SketchObject', amount: float) -> 'CadObject':
         result = self.wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, "s")
         self.wp = result
         return self
 
-    def make_extrude(self, faceStr, sketch, amount):
+    def make_extrude(self, faceStr : FaceQueryType, sketch: 'SketchObject', amount: float) -> 'CadObject':
         result = self.wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, False)
         c = result.findSolid().copy()
         wp = cq.Workplane(obj = c)
         return CadObject(wp)
 
-    def CenterOfBoundBox(self):
+    def CenterOfBoundBox(self) -> Vector3DType:
         c = self.wp.findSolid()
         shapes = []
         for s in c:
             shapes.append(s)
         return cq.Shape.CombinedCenterOfBoundBox(shapes)
 
-    def copy(self):
+    def copy(self) -> 'CadObject':
         c = self.wp.findSolid().copy()
         wp = cq.Workplane(obj = c)
         return CadObject(wp)
 
-    def export_step(self, filename):
+    def export_step(self, filename: str) -> None:
         self.wp.findSolid().exportStep(filename)
 
-    def export_stl(self, filename):
+    def export_stl(self, filename: str) -> None:
         self.wp.findSolid().exportStl(filename)
 
-    def render_svg(self, filename):
+    def render_svg(self, filename: str) -> None:
         c = self.wp.findSolid()
         cq.exporters.export(c,
                             filename,

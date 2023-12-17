@@ -45,7 +45,7 @@ def pattern_grid(
             Defaults to True. 
 
     Returns:
-        List[Tuple[float, float]]: A list of (x, y) coordinates representing the locations of the grid points.
+        List[Vector2DType]: A list of (x, y) coordinates representing the locations of the grid points.
     """
     locs = []
     if count_x < 1 or count_y < 1:

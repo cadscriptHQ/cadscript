@@ -147,3 +147,6 @@ class CenterTest(unittest.TestCase):
         expected_result = (False, False, False)
         result = helpers.get_center_flags(center) # type: ignore
         self.assertEqual(result, expected_result)
+
+if __name__ == '__main__':
+    unittest.main()        

@@ -1,7 +1,7 @@
 
 from typing import Iterable, Iterator, Tuple
 
-from .typedefs import CenterDefinitionType, DimensionDefinitionType
+from .typedefs import CenterDefinitionType, DimensionDefinitionType, Vector2DType
 
 
 def get_center_flags(center: CenterDefinitionType) -> Tuple[bool, bool, bool]:
@@ -12,7 +12,7 @@ def get_center_flags(center: CenterDefinitionType) -> Tuple[bool, bool, bool]:
         c = (center==True)
         return (c,c,c)
 
-def __handle_size(arg: Tuple[DimensionDefinitionType, bool]) -> Tuple[float, float]:
+def __handle_size(arg: Tuple[DimensionDefinitionType, bool]) -> Vector2DType:
     size, do_center = arg
     dim1,dim2 = (0,0)
     if isinstance(size, tuple):
@@ -27,7 +27,7 @@ def __handle_size(arg: Tuple[DimensionDefinitionType, bool]) -> Tuple[float, flo
             dim2 = half
     return (dim1, dim2)
 
-def get_dimensions(dimensions: Iterable[DimensionDefinitionType], center: CenterDefinitionType) -> Iterator[Tuple[float, float]]:
+def get_dimensions(dimensions: Iterable[DimensionDefinitionType], center: CenterDefinitionType) -> Iterator[Vector2DType]:
     """
     Calculate 2D or 3D dimensions based on the given size and center flags.
 
@@ -41,7 +41,7 @@ def get_dimensions(dimensions: Iterable[DimensionDefinitionType], center: Center
     """    
     return map(__handle_size, zip(dimensions, get_center_flags(center)))
 
-def get_dimension(dimension: DimensionDefinitionType, center: bool) -> Tuple[float, float]:
+def get_dimension(dimension: DimensionDefinitionType, center: bool) -> Vector2DType:
     """
     Calculate 2D or 3D dimensions based on the given size and center flags.
 
