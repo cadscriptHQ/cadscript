@@ -52,3 +52,20 @@ def export_sketch_DXF(
           conv(e, msp, plane)
 
     dxf.saveas(fname)
+
+
+def export_svg(part, filename, width=300, height=300, strokeWidth=0.6, projectionDir=(1, 1, 1)):
+  cq.exporters.export(part,
+                      filename,
+                      opt={
+                          "width": width,
+                          "height": height,
+                          "marginLeft": 5,
+                          "marginTop": 5,
+                          "showAxes": False,
+                          "projectionDir": projectionDir,
+                          "strokeWidth": strokeWidth,
+                          "strokeColor": (0, 0, 0),
+                          "hiddenColor": (0, 0, 255),
+                          "showHidden": False,
+                      },)

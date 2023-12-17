@@ -6,11 +6,10 @@ from sys import modules
 
 from .typedefs import *
 
-
-
-
-
+from .cadobject import CadObject
 from .sketchobject import SketchObject
+from .assembly import Assembly
+
 from .helpers import *
 
 # this is a pointer to the module object instance itself.
@@ -69,166 +68,73 @@ def pattern_rect(sizex, sizey, center=True):
     dimx,dimy = get_dimensions([sizex, sizey], center)
     return [(dimx[0],dimy[0]),(dimx[0],dimy[1]),(dimx[1],dimy[1]),(dimx[1],dimy[0])]
 
-def pattern_rect_array(xs, ys, nx, ny):
+def pattern_grid(
+        count_x: int, 
+        count_y: int, 
+        *,
+        spacing_x: Optional[float]=None, 
+        spacing_y: Optional[float]=None, 
+        size_x: Optional[DimensionDefinitionType]=None, 
+        size_y: Optional[DimensionDefinitionType]=None, 
+        center: CenterDefinitionType=True):
+    """
+    Generate a 2D grid of points with a given spacing.
+
+    Args:
+        xs (float): The spacing between points along the x-axis.
+        ys (float): The spacing between points along the y-axis.
+        nx (int): The number of points along the x-axis.
+        ny (int): The number of points along the y-axis.
+
+    Returns:
+        list: A list of tuples representing the coordinates of the points in the grid.
+    """
     locs = []
-    offsetx = (nx - 1) * xs * 0.5
-    offsety = (ny - 1) * ys * 0.5
-    for i, j in product(range(nx), range(ny)):
-        locs.append((i * xs - offsetx, j * ys - offsety))
+    if count_x < 1 or count_y < 1:
+        raise ValueError("count_x and count_y must be greater than 0")
+    center_x, center_y, _ = get_center_flags(center)
+    offset_x = 0
+    offset_y = 0
+
+    if count_x > 1:
+        if spacing_x is None and size_x is None:
+            raise ValueError("Either spacing_x or size_x must be specified")
+        if size_x is not None:
+            if spacing_x is not None:
+                raise ValueError("Only one of spacing_x or size_x must be specified")
+            (min_x,max_x) = get_dimension(size_x, center_x)
+            offset_x = min_x
+            spacing_x = (max_x-min_x)/(count_x-1)
+        elif spacing_x is not None:
+            if center_x: 
+                offset_x = -spacing_x*(count_x-1)/2 
+    else:
+        spacing_x = 0
+        
+    if count_y > 1:
+        if spacing_y is None and size_y is None:
+            raise ValueError("Either spacing_y or size_y must be specified")
+        if size_y is not None:
+            if spacing_y is not None:
+                raise ValueError("Only one of spacing_y or size_y must be specified")
+            (min_y,max_y) = get_dimension(size_y, center_y)
+            offset_y = min_y
+            spacing_y = (max_y-min_y)/(count_y-1)
+        elif spacing_y is not None:
+            if center_y: 
+                offset_y = -spacing_y*(count_y-1)/2 
+    else:
+        spacing_y = 0
+        
+    for i, j in product(range(count_x), range(count_y)):
+        locs.append((i * spacing_x + offset_x, j * spacing_y + offset_y))
     return locs
 
-def export_svg(part, filename, width=300, height=300, strokeWidth=0.6, projectionDir=(1, 1, 1)):
-  cq.exporters.export(part,
-                      filename,
-                      opt={
-                          "width": width,
-                          "height": height,
-                          "marginLeft": 5,
-                          "marginTop": 5,
-                          "showAxes": False,
-                          "projectionDir": projectionDir,
-                          "strokeWidth": strokeWidth,
-                          "strokeColor": (0, 0, 0),
-                          "hiddenColor": (0, 0, 255),
-                          "showHidden": False,
-                      },)
 
 
 
 
-class CadObject:
-    
-    def __init__(self):
-        self.wp = None
-
-    def __init__(self, workplane):
-        self.wp = workplane
-        
-    def cq(self):
-        return self.wp
-        
-    def fillet(self, edgesStr, amount):
-        result = self.wp.edges(edgesStr).fillet(amount)
-        self.wp = result
-        return self
-    
-    def chamfer(self, edgesStr, amount):
-        result = self.wp.edges(edgesStr).chamfer(amount)
-        self.wp = result
-        return self
-    
-    def move(self, translationVector):
-        loc = cq.Location(cq.Vector(translationVector))
-        c = self.wp.findSolid()
-        c.move(loc)
-        wp = cq.Workplane(obj = c)
-        self.wp = wp
-        return self
-
-    def rotate(self, axis, degrees):
-        c = self.wp.findSolid()
-        if axis == "X":
-            c = c.rotate((0,0,0),(1,0,0), degrees)
-        elif axis == "Y":
-            c = c.rotate((0,0,0),(0,1,0), degrees)
-        elif axis == "Z":
-            c = c.rotate((0,0,0),(0,0,1), degrees)
-        else:
-            raise ValueError("axis unknown")
-        wp = cq.Workplane(obj = c)
-        self.wp = wp
-        return self
-
-    def cut(self, cad2):
-        c1 = self.wp.findSolid()
-        c2 = cad2.wp.findSolid()
-        c = c1.cut(c2)
-        wp = cq.Workplane(obj = c)
-        self.wp = wp
-        return self
-    
-    def fuse(self, cad2):
-        c1 = self.wp.findSolid()
-        c2 = cad2.wp.findSolid()
-        c = c1.fuse(c2)
-        wp = cq.Workplane(obj = c)
-        self.wp = wp
-        return self
-
-    def addExtrude(self, faceStr, sketch, amount):
-        result = self.wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, "a")
-        self.wp = result
-        return self
-
-    def cutExtrude(self, faceStr, sketch, amount):
-        result = self.wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, "s")
-        self.wp = result
-        return self
-
-    def makeExtrude(self, faceStr, sketch, amount):
-        result = self.wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, False)
-        c = result.findSolid().copy()
-        wp = cq.Workplane(obj = c)
-        return CadObject(wp)        
-
-    def CenterOfBoundBox(self):
-        c = self.wp.findSolid()
-        shapes = []
-        for s in c:
-            shapes.append(s)
-        return cq.Shape.CombinedCenterOfBoundBox(shapes)
-
-    def copy(self):
-        c = self.wp.findSolid().copy()
-        wp = cq.Workplane(obj = c)
-        return CadObject(wp)
-            
-    def exportStep(self, filename):
-        self.wp.findSolid().exportStep(filename)
-        
-    def exportStl(self, filename):
-        self.wp.findSolid().exportStl(filename)
-
-    def renderSvg(self, filename):
-        c = self.wp.findSolid()
-        cq.exporters.export(c,
-                            filename,
-                            opt={
-                                "width": 300,
-                                "height": 300,
-                                "marginLeft": 10,
-                                "marginTop": 10,
-                                "showAxes": False,
-                                "projectionDir": (1, 1, 1),
-                                "strokeWidth": 0.8,
-                                "strokeColor": (0, 0, 0),
-                                "hiddenColor": (0, 0, 255),
-                                "showHidden": False,
-                            },)        
-
-class Assembly:
-    
-    def __init__(self):
-        self.assy = cq.Assembly()
-        
-    def cq(self):
-        return self.assy
-
-    def add(self, part: CadObject):
-        self.assy.add(part.cq())
-        return self.assy
 
 
-class M3Helper:
 
-    dia = 3
-    diaHole = 3.2
-    diaCoreHole = 2.5
-    diaThreadInsert = 3.9
 
-    r = dia/2
-    rHole = diaHole/2
-    rCoreHole = diaCoreHole/2
-    rThreadInsert = diaThreadInsert/2
-
-M3 = M3Helper()
