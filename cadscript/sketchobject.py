@@ -88,12 +88,12 @@ class SketchObject:
       action = lambda x: x.slot(w, h, angle=angle, mode="s")
       return self.__perform_action(action, positions)
 
-    def add_import_dxf(self, dxf_filename:str, *, positions: Optional[Iterable[Vector2DType]] = None) -> 'SketchObject':
-      action = lambda x: x.importDXF(dxf_filename)
+    def add_import_dxf(self, dxf_filename:str, *, positions: Optional[Iterable[Vector2DType]] = None, tolerance:float = 1e-3) -> 'SketchObject':
+      action = lambda x: x.importDXF(dxf_filename, tol=tolerance)
       return self.__perform_action(action, positions)
 
-    def cut_import_dxf(self, dxf_filename:str, *, positions: Optional[Iterable[Vector2DType]] = None) -> 'SketchObject':
-      action = lambda x: x.importDXF(dxf_filename, mode="s")
+    def cut_import_dxf(self, dxf_filename:str, *, positions: Optional[Iterable[Vector2DType]] = None, tolerance:float = 1e-3) -> 'SketchObject':
+      action = lambda x: x.importDXF(dxf_filename, tol=tolerance, mode="s")
       return self.__perform_action(action, positions)
 
     def fillet(self, edges_str:EdgeQueryType, amount:float) -> 'SketchObject':
