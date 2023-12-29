@@ -19,7 +19,6 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
-
 ]
 
 autodoc_default_options = {
@@ -35,3 +34,5 @@ intersphinx_mapping = {
 }
 
 intersphinx_disabled_domains = ['std']
+
+templates_path = ['_templates']
