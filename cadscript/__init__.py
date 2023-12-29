@@ -1,7 +1,5 @@
 import cadquery as cq
-from typing import Optional, Literal, Any, Optional, Union, Tuple
-from itertools import product
-import re
+from typing import Any
 from sys import modules
 
 from .typedefs import *
@@ -13,11 +11,9 @@ from .assembly import Assembly
 from .helpers import *
 from .patterns import *
 
-# this is a pointer to the module object instance itself.
+# this is a pointer to the module object instance itself
 this = modules[__name__]
 this.debugtxt = ""
-
-
 
 
 def make_box(sizex: DimensionDefinitionType, sizey: DimensionDefinitionType, sizez: DimensionDefinitionType, center: CenterDefinitionType=True) -> Any:
@@ -28,7 +24,6 @@ def __make_box_min_max(x1: float, x2: float, y1: float, y2: float, z1: float, z2
     solid = cq.Solid.makeBox(x2-x1, y2-y1, z2-z1).move(cq.Location(cq.Vector(x1,y1,z1)))
     wp = cq.Workplane(obj = solid)
     return CadObject(wp)
-
 
 def make_extrude(sketch, amount, workplane=None):
     if workplane is None:
@@ -55,7 +50,6 @@ def make_workplane(planeStr, offset=None):
     if not offset is None:
         wp = wp.workplane(offset=offset)
     return wp
-
 
 def make_sketch():
     sketch = cq.Sketch()
