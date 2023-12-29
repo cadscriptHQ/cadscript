@@ -18,9 +18,9 @@ def gameToken(number):
     # create text geometry
     t1 = cad.make_text(number, 18, 5, font="Cooper Black")
     # center it in x, move to right pos in y and z
-    c = t1.CenterOfBoundBox()
-    t1.move((-c.x, 9-c.y, 1))
-    # make a copy, rotate it
+    (cx,cy,_) = t1.get_center()
+    t1.move((-cx, 9-cy, 1))
+    # make a copy, rotate its
     t2 = t1.copy().rotate("Z",180)    
     # make base token, cut text from it
     return base().cut(t1).cut(t2)

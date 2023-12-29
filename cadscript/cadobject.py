@@ -97,12 +97,12 @@ class CadObject:
         wp = cq.Workplane(obj = c)
         return CadObject(wp)
 
-    def CenterOfBoundBox(self) -> Vector3DType:
+    def get_center(self) -> Vector3DType:
         c = self.wp.findSolid()
         shapes = []
         for s in c:
             shapes.append(s)
-        return cq.Shape.CombinedCenterOfBoundBox(shapes)
+        return cq.Shape.CombinedCenterOfBoundBox(shapes).toTuple()
 
     def copy(self) -> 'CadObject':
         c = self.wp.findSolid().copy()
