@@ -4,7 +4,7 @@ This file is part of Cadscript
 SPDX-License-Identifier: Apache-2.0
 '''
 
-from typing import Optional, Literal, Any, Optional, Union, Tuple
+from typing import Literal, Union, Tuple
 
 Vector2DType = Tuple[float, float]
 Vector3DType = Tuple[float, float, float]
