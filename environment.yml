@@ -26,4 +26,5 @@ dependencies:
   - click
   - appdirs
   - pip
+  - recommonmark
   - cadquery
