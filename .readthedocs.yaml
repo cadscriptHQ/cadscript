@@ -27,4 +27,6 @@ python:
    install:
    - requirements: docs/requirements.txt
    - method: pip
-     path: ./cadquery
+     path: .
+     extra_requirements:
+       - cadquery
