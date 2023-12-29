@@ -14,5 +14,9 @@
   ],
   "python.analysis.typeCheckingMode": "basic",
   "python.analysis.autoSearchPaths": true,
-  "python.analysis.autoImportCompletions": true
+  "python.analysis.autoImportCompletions": true,
+
+  "terminal.integrated.env.windows": {    
+    "SPHINXBUILD": "C:\\Users\\Andreas\\.conda\\envs\\cadquery\\Scripts\\sphinx-build.exe"
+  }
 }

@@ -3,3 +3,4 @@
 cadscript.egg-info/*
 private/*
 build/*
+docs/build/*
