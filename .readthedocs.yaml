@@ -26,5 +26,5 @@ sphinx:
 python:
    install:
    - requirements: docs/requirements.txt
-   path: 
-   - "."   
+   - method: pip
+     path: ./cadquery
