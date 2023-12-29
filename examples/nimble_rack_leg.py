@@ -1,3 +1,9 @@
+'''
+Copyright (C) 2023 Andreas Kahler
+This file is part of Cadscript
+SPDX-License-Identifier: Apache-2.0
+'''
+
 import cadscript as cad
 
 def make_beam(length, hole_spacing, long_axis_hole_dia, mounting_holes_dia):

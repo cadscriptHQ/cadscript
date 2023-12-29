@@ -1,3 +1,9 @@
+'''
+Copyright (C) 2023 Andreas Kahler
+This file is part of Cadscript
+SPDX-License-Identifier: Apache-2.0
+'''
+
 import cadscript as cad
 
 # create set of rummy game tokens
