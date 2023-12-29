@@ -1,3 +1,9 @@
+'''
+Copyright (C) 2023 Andreas Kahler
+This file is part of Cadscript
+SPDX-License-Identifier: Apache-2.0
+'''
+
 from itertools import product
 from typing import Optional, Tuple, Union
 
