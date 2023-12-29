@@ -1,0 +1,29 @@
+name: cadscript
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.8,<=3.12
+  - ipython
+  - ocp=7.7.2
+  - vtk=*=qt*
+  - pyparsing>=2.1.9
+  - sphinx=5.0.1
+  - sphinx_rtd_theme
+  - mypy
+  - codecov
+  - pytest
+  - pytest-cov
+  - ezdxf
+  - typing_extensions
+  - nptyping=2.0.1
+  - nlopt
+  - path
+  - casadi
+  - multimethod ==1.9.1
+  - typed-ast
+  - regex
+  - pathspec
+  - click
+  - appdirs
+  - pip
+  - cadquery
