@@ -6,7 +6,7 @@ Module functions
    :members:
    :undoc-members:   
 
-.. automethod:: pattern_rect
-.. automethod:: pattern_grid
+.. autofunction:: pattern_rect
+.. autofunction:: pattern_grid
 
 
