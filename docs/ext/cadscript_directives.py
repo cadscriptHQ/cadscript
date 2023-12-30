@@ -20,6 +20,18 @@ postfix = """
 result = result.cq()
 """
 
+template_img = """
+
+.. raw:: html
+
+    <div class="cq" style="text-align:{txt_align};float:left;">
+        {out_svg}
+    </div>
+    <div style="clear:both;">
+    </div>
+
+"""
+
 class cadscript_directive(cq_directive_vtk):
 
     option_spec = {
@@ -27,6 +39,7 @@ class cadscript_directive(cq_directive_vtk):
         "width": directives.length_or_percentage_or_unitless,
         "align": directives.unchanged,
         "select": directives.unchanged,
+        "as_image": directives.flag,
       }
     
     def run(self):
@@ -63,18 +76,15 @@ class cadscript_directive(cq_directive_vtk):
 
           # add the output
           lines = []
-
-          data = dumps(toJSON(assy))
-
-          lines.extend(
-              template_vtk.format(
-                  data=data,
-                  element="document.currentScript.parentNode",
-                  txt_align=options.get("align", "left"),
-                  width=options.get("width", "100%"),
-                  height=options.get("height", "500px"),
-              ).splitlines()
-          )
+          if "as_image" in options:
+              # rendering as image
+              render = self.render_image(assy, options)
+              lines.extend(render)
+          else:
+              # rendering as interactive 3d view with vtk.js
+              render = self.render_vtk(assy, options)
+              lines.extend(render)
+          
 
           lines.extend(["::", ""])
           lines.extend(["    %s" % row.rstrip() for row in script.split("\n")])
@@ -84,6 +94,29 @@ class cadscript_directive(cq_directive_vtk):
               state_machine.insert_input(lines, state_machine.input_lines.source(0))
 
           return []
+    
+    def render_vtk(self, assy, options):
+        data = dumps(toJSON(assy))
+        return template_vtk.format(
+                  data=data,
+                  element="document.currentScript.parentNode",
+                  txt_align=options.get("align", "left"),
+                  width=options.get("width", "100%"),
+                  height=options.get("height", "500px"),
+              ).splitlines()    
+        
+        
+    def render_image(self, assy, options):
+        out_svg = exporters.getSVG(assy.toCompound())
+        out_svg = out_svg.replace("\n", "")
+        
+        return template_img.format(
+                  out_svg=out_svg,
+                  txt_align=options.get("align", "left"),
+                  width=options.get("width", "100%"),
+                  height=options.get("height", "500px"),
+              ).splitlines()   
+    
 
 def setup(app):
     setup.app = app
