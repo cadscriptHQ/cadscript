@@ -11,30 +11,35 @@ from .export import export_sketch_DXF
 from .helpers import get_dimensions
 
 class SketchObject:
-    
-    sketch: cq.Sketch
-    finalized_sketch: Optional[cq.Sketch]
+    """
+    Represents a 2D sketch. They are typically created using make_sketch().
+    """
+    __sketch: cq.Sketch
+    __finalized_sketch: Optional[cq.Sketch]
 
     def __init__(self, sketch: cq.Sketch) -> None:
-      self.sketch = sketch
-      self.finalized_sketch = None
+      self.__sketch = sketch
+      self.__finalized_sketch = None
 
     def cq(self) -> Optional[cq.Sketch]:
-      return self.sketch
+      return self.__sketch
 
     def copy(self) -> 'SketchObject':
-      return SketchObject(self.sketch.copy())
+      """
+      Returns a copy of the sketch.
+      """
+      return SketchObject(self.__sketch.copy())
 
     def finalize(self) -> 'SketchObject':
-      self.finalized_sketch = self.sketch
+      self.__finalized_sketch = self.__sketch
       return self
 
     def __perform_action(self, action, positions: Optional[Iterable[Vector2DType]]) -> 'SketchObject':
       if positions:
-        self.sketch = action(self.sketch.push(positions))
+        self.__sketch = action(self.__sketch.push(positions))
       else:
-        self.sketch = action(self.sketch)
-      self.sketch.reset()
+        self.__sketch = action(self.__sketch)
+      self.__sketch.reset()
       return self
 
     def __rect_helper(self, sketch, size_x: DimensionDefinitionType, size_y: DimensionDefinitionType, center: CenterDefinitionType, mode="a"):
@@ -44,10 +49,38 @@ class SketchObject:
       return sketch.polygon([cq.Vector(x1, y1), cq.Vector(x1, y2), cq.Vector(x2, y2), cq.Vector(x2, y1), cq.Vector(x1, y1)], mode=mode)
 
     def add_rect(self, size_x: DimensionDefinitionType, size_y: DimensionDefinitionType, *, center: CenterDefinitionType = True, positions: Optional[Iterable[Vector2DType]] = None) -> 'SketchObject':
+      """
+      Adds a rectangle to the sketch object.
+
+      Args:
+        size_x (DimensionDefinitionType): The size of the rectangle along the x-axis.
+        size_y (DimensionDefinitionType): The size of the rectangle along the y-axis.
+        center (CenterDefinitionType, optional): Determines whether the rectangle is centered. If False, the rectangle will start from the origin.
+            Can also be "X" or "Y" to center in only one direction. Defaults to True.
+        positions (Optional[Iterable[Vector2DType]], optional): If given, a rectangle is added for each of the entries, specifying the offset as (x,y) tuple. 
+            Defaults to None, which results in a single rectangle added with no offset.
+
+      Returns:
+        SketchObject: The updated sketch object.
+      """
       action = lambda x: self.__rect_helper(x, size_x, size_y, center)
       return self.__perform_action(action, positions)
 
     def cut_rect(self, size_x: DimensionDefinitionType, size_y: DimensionDefinitionType, *, center: CenterDefinitionType = True, positions: Optional[Iterable[Vector2DType]] = None) -> 'SketchObject':
+      """
+      Cuts a rectangle from the sketch object.
+
+      Args:
+        size_x (DimensionDefinitionType): The size of the rectangle along the x-axis.
+        size_y (DimensionDefinitionType): The size of the rectangle along the y-axis.
+        center (CenterDefinitionType, optional): Determines whether the rectangle is centered. If False, the rectangle will start from the origin.
+            Can also be "X" or "Y" to center in only one direction. Defaults to True.
+        positions (Optional[Iterable[Vector2DType]], optional): If given, a rectangle is cut for each of the entries, specifying the offset as (x,y) tuple. 
+            Defaults to None, which results in a single rectangle cut with no offset.
+
+      Returns:
+        SketchObject: The updated sketch object.
+      """
       action = lambda x: self.__rect_helper(x, size_x, size_y, center, mode="s")
       return self.__perform_action(action, positions)
 
@@ -67,20 +100,70 @@ class SketchObject:
         raise ValueError("no radius/diameter specified")
       
     def add_circle(self, *, r:Optional[float]=None, radius:Optional[float]=None, d:Optional[float]=None, diameter:Optional[float]=None, positions: Optional[Iterable[Vector2DType]] = None) -> 'SketchObject':
+      """
+      Adds a circle to the sketch. One of the parameters 'r', 'radius', 'd' or 'diameter' must be specified.
+
+      Parameters:
+        r (Optional[float]): The radius of the circle.
+        radius (Optional[float]): The radius of the circle (alternative to 'r').
+        d (Optional[float]): The diameter of the circle.
+        diameter (Optional[float]): The diameter of the circle (alternative to 'd').
+        positions (Optional[Iterable[Vector2DType]]): If given, a circle is added for each of the entries, specifying the center as (x,y) tuple.  If None, a single circle will be added at the origin.
+
+      Returns:
+        SketchObject: The updated sketch object.
+      """
       r = self.__get_radius(r, radius, d, diameter)    
       action = lambda x: x.circle(r)
       return self.__perform_action(action, positions)
 
     def cut_circle(self, *, r:Optional[float]=None, radius:Optional[float]=None, d:Optional[float]=None, diameter:Optional[float]=None, positions: Optional[Iterable[Vector2DType]] = None) -> 'SketchObject':
+      """
+      Cuts a circle from the sketch. One of the parameters 'r', 'radius', 'd' or 'diameter' must be specified.
+
+      Parameters:
+        r (Optional[float]): The radius of the circle.
+        radius (Optional[float]): The radius of the circle (alternative to 'r').
+        d (Optional[float]): The diameter of the circle.
+        diameter (Optional[float]): The diameter of the circle (alternative to 'd').
+        positions (Optional[Iterable[Vector2DType]]): If given, a circle is cut for each of the entries, specifying the center as (x,y) tuple.  If None, a single circle will be cut at the origin.
+
+      Returns:
+        SketchObject: The updated sketch object.
+      """
       r = self.__get_radius(r, radius, d, diameter)    
       action = lambda x: x.circle(r, mode="s")
       return self.__perform_action(action, positions)
 
     def add_polygon(self, point_list: Iterable[Vector2DType], *, positions: Optional[Iterable[Vector2DType]] = None) -> 'SketchObject':
+      """
+      Adds a polygon to the sketch.
+
+      Args:
+        point_list (Iterable[Vector2DType]): A list of points defining the polygon.
+        positions (Optional[Iterable[Vector2DType]], optional): If given, a polygon is added for each of the entries, specifying the offset as (x,y) tuple. 
+            Defaults to None, which results in a single polygon added with no offset.
+
+      Returns:
+        SketchObject: The modified sketch object.
+
+      """
       action = lambda x: x.polygon(point_list)
       return self.__perform_action(action, positions)
 
     def cut_polygon(self, point_list: Iterable[Vector2DType], *, positions: Optional[Iterable[Vector2DType]] = None) -> 'SketchObject':
+      """
+      Cuts a polygon from the sketch.
+
+      Args:
+        point_list (Iterable[Vector2DType]): A list of points defining the polygon.
+        positions (Optional[Iterable[Vector2DType]], optional): If given, a polygon is added for each of the entries, specifying the offset as (x,y) tuple. 
+            Defaults to None, which results in a single polygon added with no offset.
+
+      Returns:
+        SketchObject: The modified sketch object.
+
+      """
       action = lambda x: x.polygon(point_list, mode="s")
       return self.__perform_action(action, positions)
 
@@ -101,30 +184,69 @@ class SketchObject:
       return self.__perform_action(action, positions)
 
     def fillet(self, edges_str:EdgeQueryType, amount:float) -> 'SketchObject':
+      """
+      Fillets the edges of the sketch.
+
+      Args:
+        edges_str (EdgeQueryType): The edges to fillet. Can be "ALL" to fillet all edges.
+        amount (float): The fillet amount.
+
+      Returns:
+        SketchObject: The modified sketch object.
+      """
       #todo support edge selector
       if edges_str == "ALL":
-        result = self.sketch.reset().vertices().fillet(amount)
+        result = self.__sketch.reset().vertices().fillet(amount)
       else:
         raise ValueError("unknown edge selector")
-      self.sketch = result
+      self.__sketch = result
       return self
 
     def chamfer(self, edges_str:EdgeQueryType, amount:float) -> 'SketchObject':
+      """
+      Chamfers the edges of the sketch.
+
+      Args:
+        edges_str (EdgeQueryType): The edges to chamfer. Can be "ALL" to chamfer all edges.
+        amount (float): The chamfer amount.
+
+      Returns:
+        SketchObject: The modified sketch object.
+      """
       #todo support edge selector
       if edges_str == "ALL":
-        result = self.sketch.reset().vertices().chamfer(amount)
+        result = self.__sketch.reset().vertices().chamfer(amount)
       else:
         raise ValueError("unknown edge selector")
-      self.sketch = result
+      self.__sketch = result
       return self
 
     def export_dxf(self, filename:str) -> None:
-        export_sketch_DXF(self.sketch, filename)
+        export_sketch_DXF(self.__sketch, filename)
 
     def move(self, translationVector:Vector2DType) -> 'SketchObject':
-        self.sketch = self.sketch.moved(cq.Location(cq.Vector(translationVector)))
-        return self
+      """
+      Moves the SketchObject by the specified translation vector.
+
+      Args:
+        translationVector (Vector2DType): The translation vector specifying the amount and direction of the movement.
+
+      Returns:
+        SketchObject: The updated SketchObject after the movement.
+
+      """
+      self.__sketch = self.__sketch.moved(cq.Location(cq.Vector(translationVector)))
+      return self
 
     def rotate(self, degrees) -> 'SketchObject':
-        self.sketch = self.sketch.moved(cq.Location(cq.Vector(),cq.Vector(0, 0, 1), degrees))
-        return self
+      """
+      Rotates the sketch object by the specified number of degrees.
+
+      Args:
+        degrees (float): The number of degrees to rotate the sketch object.
+
+      Returns:
+        SketchObject: The rotated sketch object.
+      """
+      self.__sketch = self.__sketch.moved(cq.Location(cq.Vector(),cq.Vector(0, 0, 1), degrees))
+      return self
