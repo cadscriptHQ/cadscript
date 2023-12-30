@@ -14,7 +14,7 @@ Contents
 
 .. toctree::
 
-   usage
+   getting_started
    module_functions
    cad_object
    sketch_object

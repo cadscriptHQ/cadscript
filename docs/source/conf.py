@@ -1,8 +1,9 @@
 import os
 import sys
 
-# allow autodoc to find the cadscript package
+# allow autodoc to find the cadscript package and extensions
 sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath('../'))
 
 project = 'cadscript'
 author = 'Andreas Kahler'
@@ -19,6 +20,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
+    'ext.cadscript_directives',
 ]
 
 autodoc_default_options = {
@@ -34,4 +36,9 @@ intersphinx_mapping = {
 }
 
 intersphinx_disabled_domains = ['std']
+
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
+html_static_path = ["_static"]
 
