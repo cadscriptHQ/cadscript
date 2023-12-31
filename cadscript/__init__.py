@@ -2,6 +2,7 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
+import string
 import cadquery as cq
 from typing import Any
 from sys import modules
@@ -10,6 +11,7 @@ from .typedefs import *
 
 from .body import Body
 from .sketch import Sketch
+from .construction_plane import ConstructionPlane
 from .assembly import Assembly
 
 from .helpers import *
@@ -29,13 +31,13 @@ def __make_box_min_max(x1: float, x2: float, y1: float, y2: float, z1: float, z2
     wp = cq.Workplane(obj = solid)
     return Body(wp)
 
-def make_extrude(sketch, amount, workplane=None):
-    if workplane is None:
+def make_extrude(sketch: Sketch, amount: float, plane: Optional[Union[ConstructionPlane,str]]=None):
+    if plane is None:
         wp = cq.Workplane()
-    elif isinstance(workplane, str):
-        wp = cq.Workplane(workplane)
+    elif isinstance(plane, str):
+        wp = cq.Workplane(plane)
     else:
-        wp = workplane
+        wp = plane.cq
     onj = wp.placeSketch(sketch.cq()).extrude(amount, False)
     return Body(onj)
 
@@ -49,11 +51,11 @@ def make_text(
     wp = cq.Workplane(obj = c)
     return Body(wp)
 
-def make_workplane(planeStr, offset=None):
+def make_construction_plane(planeStr: str, offset:Optional[float]=None):
     wp = cq.Workplane(planeStr)
     if not offset is None:
         wp = wp.workplane(offset=offset)
-    return wp
+    return ConstructionPlane(wp)
 
 def make_sketch():
     sketch = cq.Sketch()

@@ -105,7 +105,7 @@ class Body:
 
     def make_extrude(self, faceStr : FaceQueryType, sketch: 'Sketch', amount: float) -> 'Body':
         """
-        Creates a new CAD object by extruding the specified face of the CAD object using a sketch.
+        Creates a new body by extruding the specified face of the CAD object using a sketch.
         """
         result = self.__wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, False)
         c = result.findSolid().copy()
