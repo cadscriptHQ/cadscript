@@ -34,7 +34,7 @@ def exportAll():
     for i in range(1,14):
         number = str(i)
         s = gameToken(number)    
-        s.export_stl("rummy_" + number + ".stl")           
+        s.export_stl("build/rummy_" + number + ".stl")           
     
     
 exportAll()
