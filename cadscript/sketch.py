@@ -21,7 +21,7 @@ class Sketch:
       self.__sketch = sketch
       self.__finalized_sketch = None
 
-    def cq(self) -> Optional[cq.Sketch]:
+    def cq(self) -> cq.Sketch:
       return self.__sketch
 
     def copy(self) -> 'Sketch':
