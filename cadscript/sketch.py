@@ -12,7 +12,7 @@ from .helpers import get_dimensions
 
 class Sketch:
     """
-    Represents a 2D sketch. They are typically created using make_sketch().
+    Represents a 2D sketch. Scetch instances are typically created using make_sketch().
     """
     __sketch: cq.Sketch
     __finalized_sketch: Optional[cq.Sketch]
