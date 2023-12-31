@@ -71,9 +71,9 @@ Finally, we place the sketch on the top face of our object, rotate it 45 degrees
     .. hlist::
 
         * :py:meth:`cadscript.make_box` 
-        * :py:meth:`CadObject.fillet` 
-        * :py:meth:`CadObject.chamfer` 
+        * :py:meth:`Body.fillet` 
+        * :py:meth:`Body.chamfer` 
         * :py:meth:`cadscript.make_sketch` 
-        * :py:meth:`SketchObject.add_circle` 
-        * :py:meth:`SketchObject.add_rect` 
-        * :py:meth:`CadObject.cut_extrude` 
+        * :py:meth:`Sketch.add_circle` 
+        * :py:meth:`Sketch.add_rect` 
+        * :py:meth:`Body.cut_extrude` 

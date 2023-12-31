@@ -1,8 +1,8 @@
 
-Class CadObject
+Class Body
 ===============
 
-.. autoclass:: cadscript.CadObject
+.. autoclass:: cadscript.Body
    :members:
    :undoc-members:   
 

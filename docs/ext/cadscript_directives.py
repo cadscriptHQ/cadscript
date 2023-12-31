@@ -18,7 +18,7 @@ import cadscript
 
 postfix = """
 result = {result_var}
-if isinstance(result, cadscript.SketchObject):
+if isinstance(result, cadscript.Sketch):
     sketch = result.cq()
     sketch.finalize()
     result = cadquery.Workplane("XY").placeSketch(sketch.clean()).extrude(0.001, False)

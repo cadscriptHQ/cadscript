@@ -1,7 +1,7 @@
 
-Class SketchObject
+Class Sketch
 ==================
 
-.. autoclass:: cadscript.SketchObject
+.. autoclass:: cadscript.Sketch
    :members:
    :undoc-members:   
