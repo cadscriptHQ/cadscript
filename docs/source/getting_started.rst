@@ -49,8 +49,8 @@ Then we add two circles at the center of two of the sides. The operation is a Bo
     :select: sketch
 
     sketch = cadscript.make_sketch()
-    sketch.add_rect(10, 10)
-    sketch.add_circle(diameter=10, positions=[(5, 0), (0, 5)])
+    sketch.add_rect(8, 8)
+    sketch.add_circle(diameter=10, positions=[(4, 0), (0, 4)])
 
 Finally, we place the sketch on the top face of our object, rotate it 45 degrees, and use it to cut a hole by extruding it down (negative value).
 
@@ -69,7 +69,11 @@ Finally, we place the sketch on the top face of our object, rotate it 45 degrees
 .. topic:: Api References
 
     .. hlist::
-        :columns: 2
 
         * :py:meth:`cadscript.make_box` 
         * :py:meth:`CadObject.fillet` 
+        * :py:meth:`CadObject.chamfer` 
+        * :py:meth:`cadscript.make_sketch` 
+        * :py:meth:`SketchObject.add_circle` 
+        * :py:meth:`SketchObject.add_rect` 
+        * :py:meth:`CadObject.cut_extrude` 
