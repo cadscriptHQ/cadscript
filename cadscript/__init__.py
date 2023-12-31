@@ -20,11 +20,11 @@ this = modules[__name__]
 this.debugtxt = ""
 
 
-def make_box(sizex: DimensionDefinitionType, sizey: DimensionDefinitionType, sizez: DimensionDefinitionType, center: CenterDefinitionType=True) -> Any:
+def make_box(sizex: DimensionDefinitionType, sizey: DimensionDefinitionType, sizez: DimensionDefinitionType, center: CenterDefinitionType=True) -> 'CadObject':
     dimx,dimy,dimz = get_dimensions([sizex, sizey, sizez], center)
     return __make_box_min_max(dimx[0],dimx[1],dimy[0],dimy[1],dimz[0],dimz[1])
 
-def __make_box_min_max(x1: float, x2: float, y1: float, y2: float, z1: float, z2: float) -> Any:
+def __make_box_min_max(x1: float, x2: float, y1: float, y2: float, z1: float, z2: float) -> 'CadObject':
     solid = cq.Solid.makeBox(x2-x1, y2-y1, z2-z1).move(cq.Location(cq.Vector(x1,y1,z1)))
     wp = cq.Workplane(obj = solid)
     return CadObject(wp)
