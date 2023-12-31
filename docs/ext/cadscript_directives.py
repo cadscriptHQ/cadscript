@@ -17,7 +17,13 @@ import cadscript
 """
 
 postfix = """
-result = result.cq()
+result = {result_var}
+if isinstance(result, cadscript.SketchObject):
+    sketch = result.cq()
+    sketch.finalize()
+    result = cadquery.Workplane("XY").placeSketch(sketch.clean()).extrude(0.001, False)
+else:
+    result = result.cq()
 """
 
 template_img = """
@@ -39,19 +45,22 @@ class cadscript_directive(cq_directive_vtk):
         "width": directives.length_or_percentage_or_unitless,
         "align": directives.unchanged,
         "select": directives.unchanged,
-        "as_image": directives.flag,
+        "interactive": directives.flag,
       }
     
     def run(self):
           options = self.options
           content = self.content
           state_machine = self.state_machine
+          result_var = options.get("select", "result")
 
           # only consider inline snippets
           script = "\n".join(content)
-          plot_code = prefix + "\n" + script + "\n" + postfix
+          plot_code = prefix + "\n" + script + "\n" + postfix.format(result_var=result_var)
+          sketch = None
 
           # collect the result
+          lines = []
           try:
               result = cqgi.parse(plot_code).build()
 
@@ -59,32 +68,32 @@ class cadscript_directive(cq_directive_vtk):
                   if result.first_result:
                       shape = result.first_result.shape
                   else:
-                      shape = result.env[options.get("select", "result")]
+                      shape = result.env["result"]
 
                   if isinstance(shape, Assembly):
                       assy = shape
                   elif isinstance(shape, Sketch):
                       assy = Assembly(shape._faces, color=Color(*DEFAULT_COLOR))
+
                   else:
                       assy = Assembly(shape, color=Color(*DEFAULT_COLOR))
               else:
                   raise result.exception
 
+              # add the output
+              if "interactive" in options:
+                  # rendering as interactive 3d view with vtk.js
+                  render = self.render_vtk(assy, options)
+              else:
+                  # rendering as image
+                  render = self.render_image(assy, options)
+              lines.extend(render)
+          
           except Exception:
               traceback.print_exc()
               assy = Assembly(Compound.makeText("CQGI error", 10, 5))
 
-          # add the output
-          lines = []
-          if "as_image" in options:
-              # rendering as image
-              render = self.render_image(assy, options)
-              lines.extend(render)
-          else:
-              # rendering as interactive 3d view with vtk.js
-              render = self.render_vtk(assy, options)
-              lines.extend(render)
-          
+
 
           lines.extend(["::", ""])
           lines.extend(["    %s" % row.rstrip() for row in script.split("\n")])
@@ -107,17 +116,27 @@ class cadscript_directive(cq_directive_vtk):
         
         
     def render_image(self, assy, options):
-        out_svg = exporters.getSVG(assy.toCompound())
+        svg_options = {
+            "projectionDir": (-3, -6, -2.5),
+            "showAxes": False,
+            "showHidden": True,
+            "width": options.get("width", 600),
+            "height": options.get("height", 200),
+            "marginLeft" : 20,
+            "marginTop" : 20,
+            "focus": 200,
+        }
+        out_svg = exporters.getSVG(assy.toCompound(), svg_options)
         out_svg = out_svg.replace("\n", "")
         
         return template_img.format(
                   out_svg=out_svg,
                   txt_align=options.get("align", "left"),
-                  width=options.get("width", "100%"),
-                  height=options.get("height", "500px"),
+                  width="100%",
+                  height=options.get("height", "300")+"px",
               ).splitlines()   
     
-
+    
 def setup(app):
     setup.app = app
     setup.config = app.config
