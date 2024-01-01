@@ -24,7 +24,7 @@ class Body:
 
     def fillet(self, edgesStr: EdgeQueryType, amount: float) -> 'Body':
         """
-        Fillets the specified edges of the CAD object.
+        Fillets the specified edges of the body.
         """
         result = self.__wp.edges(edgesStr).fillet(amount)
         self.__wp = result
@@ -32,7 +32,7 @@ class Body:
 
     def chamfer(self, edgesStr: EdgeQueryType, amount: float) -> 'Body':
         """
-        Chamfers the specified edges of the CAD object.
+        Chamfers the specified edges of the body.
         """
         result = self.__wp.edges(edgesStr).chamfer(amount)
         self.__wp = result
@@ -40,7 +40,7 @@ class Body:
 
     def move(self, translationVector: Vector3DType) -> 'Body':
         """
-        Moves the CAD object by the specified translation vector.
+        Moves the body by the specified translation vector.
         """
         loc = cq.Location(cq.Vector(translationVector))
         c = self.__wp.findSolid()
@@ -51,7 +51,7 @@ class Body:
 
     def rotate(self, axis: AxisType, degrees: float) -> 'Body':
         """
-        Rotates the CAD object around the specified axis by the specified angle in degrees.
+        Rotates the body around the specified axis by the specified angle in degrees.
         """
         c = self.__wp.findSolid()
         if axis == "X":
@@ -68,7 +68,7 @@ class Body:
 
     def cut(self, cad2: 'Body') -> 'Body':
         """
-        Performs a boolean cut operation with another CAD object.
+        Performs a boolean cut operation with another body.
         """
         c1 = self.__wp.findSolid()
         c2 = cad2.__wp.findSolid()
@@ -79,7 +79,7 @@ class Body:
 
     def fuse(self, cad2: 'Body') -> 'Body':
         """
-        Performs a boolean fuse operation with another CAD object.
+        Performs a boolean fuse operation with another body.
         """
         c1 = self.__wp.findSolid()
         c2 = cad2.__wp.findSolid()
@@ -90,7 +90,7 @@ class Body:
 
     def add_extrude(self, faceStr : FaceQueryType, sketch: 'Sketch', amount: float) -> 'Body':
         """
-        Adds an extrusion to the specified face of the CAD object using a sketch.
+        Adds an extrusion to the specified face of the body using a sketch.
         """
         result = self.__wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, "a")
         self.__wp = result
@@ -98,7 +98,7 @@ class Body:
 
     def cut_extrude(self, faceStr : FaceQueryType, sketch: 'Sketch', amount: float) -> 'Body':
         """
-        Adds a cut extrusion to the specified face of the CAD object using a sketch.
+        Adds a cut extrusion to the specified face of the body using a sketch.
         """
         result = self.__wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, "s")
         self.__wp = result
@@ -106,7 +106,7 @@ class Body:
 
     def make_extrude(self, faceStr : FaceQueryType, sketch: 'Sketch', amount: float) -> 'Body':
         """
-        Creates a new body by extruding the specified face of the CAD object using a sketch.
+        Creates a new body by extruding the specified face of the body using a sketch.
         """
         result = self.__wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, False)
         c = result.findSolid().copy()
@@ -115,7 +115,7 @@ class Body:
 
     def get_center(self) -> Vector3DType:
         """
-        Returns the center of the bounding box of the CAD object.
+        Returns the center of the bounding box of the body.
         """
         bb = self.__wp.findSolid().BoundingBox()
         return ((bb.xmin+bb.xmax)/2, (bb.ymin+bb.ymax)/2, (bb.zmin+bb.zmax)/2)
@@ -129,7 +129,7 @@ class Body:
 
     def copy(self) -> 'Body':
         """
-        Creates a copy of the CAD object.
+        Creates a copy of the body.
         """
         c = self.__wp.findSolid().copy()
         wp = cq.Workplane(obj = c)
@@ -137,19 +137,19 @@ class Body:
 
     def export_step(self, filename: str) -> None:
         """
-        Exports the CAD object to a STEP file.
+        Exports the body to a STEP file.
         """
         self.__wp.findSolid().exportStep(filename)
 
     def export_stl(self, filename: str) -> None:
         """
-        Exports the CAD object to an STL file.
+        Exports the body to an STL file.
         """
         self.__wp.findSolid().exportStl(filename)
 
     def render_svg(self, filename: str) -> None:
         """
-        Renders the CAD object as an SVG illustration.        
+        Renders the body as an SVG illustration.        
         """
         c = self.__wp.findSolid()
         cq.exporters.export(c,
