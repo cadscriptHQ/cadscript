@@ -2,6 +2,7 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Tuple
 import cadquery as cq
 
 from .typedefs import DimensionDefinitionType, CenterDefinitionType, EdgeQueryType, Vector2DType, Vector3DType, AxisType, FaceQueryType
@@ -116,11 +117,15 @@ class Body:
         """
         Returns the center of the bounding box of the CAD object.
         """
-        c = self.__wp.findSolid()
-        shapes = []
-        for s in c:
-            shapes.append(s)
-        return cq.Shape.CombinedCenterOfBoundBox(shapes).toTuple()
+        bb = self.__wp.findSolid().BoundingBox()
+        return ((bb.xmin+bb.xmax)/2, (bb.ymin+bb.ymax)/2, (bb.zmin+bb.zmax)/2)
+
+    def get_extent(self) -> Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
+        """
+        Returns the extent of the bounding box of the body.
+        """
+        bb = self.__wp.findSolid().BoundingBox()
+        return ((bb.xmin, bb.xmax), (bb.ymin, bb.ymax), (bb.zmin, bb.zmax))
 
     def copy(self) -> 'Body':
         """
