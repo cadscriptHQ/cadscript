@@ -2,10 +2,10 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
-import string
 import cadquery as cq
 from typing import Any
 from sys import modules
+import inspect
 
 from .typedefs import *
 
@@ -16,10 +16,6 @@ from .assembly import Assembly
 
 from .helpers import *
 from .patterns import *
-
-# this is a pointer to the module object instance itself
-this = modules[__name__]
-this.debugtxt = ""
 
 
 def make_box(sizex: DimensionDefinitionType, sizey: DimensionDefinitionType, sizez: DimensionDefinitionType, center: CenterDefinitionType=True) -> 'Body':
@@ -65,10 +61,39 @@ def import_step(path):
     wp = cq.importers.importStep(path)
     return Body(wp)
 
+'''
+If inside CQ-Editor, use the show_object function to show the object.
+Otherwise, do nothing
+'''
+def show(item: Union[Body,Sketch,ConstructionPlane,Assembly]):
+    show_fn = __get_show_fn()
+    if show_fn:
+        show_fn(item.cq())
+    else:
+        # when cadquery.vis is available
+        # show(item)
+        pass
 
+#examine the context of the caller. check if there is a function "show_object" available, return a reference to it
+def __get_show_fn():
+    # Start with the immediate caller's caller frame.
+    frame = inspect.currentframe().f_back.f_back
+    
+    while frame:
+        # Check global scope.
+        if 'show_object' in frame.f_globals:
+            potential_func = frame.f_globals['show_object']
+            if callable(potential_func):
+                return potential_func
+        
+        # Move up to the next caller in the stack.
+        frame = frame.f_back
 
+    # If function is not found in any ancestor's scope, return None.
+    return None
+    
 
-
+    
 
 
 

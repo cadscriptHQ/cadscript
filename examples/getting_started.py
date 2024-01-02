@@ -14,4 +14,6 @@ sketch.add_circle(diameter=8, positions=[(4, 0), (0, 4)])
 
 result.cut_extrude(">Z", sketch.rotate(45), -4)
 
-result.export_stl("build/heart.stl")
+cadscript.show(result) 
+
+
