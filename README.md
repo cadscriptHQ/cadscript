@@ -2,6 +2,8 @@
 
 A Python module for creating 3D models with scripts.
 
+**Quicklinks: [Getting Started](https://cadscript.readthedocs.io/en/latest/getting_started.html) - [Documentation](https://cadscript.readthedocs.io/)**
+
 ## What is Cadscript?
 
 Cadscript is a Python module that allows you to write simple scripts that produce 3D CAD models. Using scripting, you can easily describe parametric 3D models, that can be customized without additional effort. Scripting also allows non-UI workflows, Cadscript can e.g. be integrated into automated build pipelines. Cadscript can produce STL files (e.g. for 3D printing) and STEP files (high-quality CAD format) that can be used in traditional CAD packages.
