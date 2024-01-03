@@ -18,7 +18,8 @@ Let's start with a simple box:
 
     
 
-Now we fillet the corners. We choose the edges with the first argument for fillet() method. "|Z" selects all edges parallel to Z axis. 
+Now we fillet the corners. We choose the edges with the first argument for :py:meth:`Body.fillet` method. 
+``"|Z"`` selects all edges parallel to Z axis. 
 The second argument is the radius of the fillet.
 
 .. cadscript:: 
@@ -27,7 +28,7 @@ The second argument is the radius of the fillet.
 
 
 Next we add a little chamfer to the top and bottom edges. Again, the first argument selects the edges to work on. 
-"#Z" selects all edges perpendicular to Z axis, that is, parallel to the XY plane.
+``"#Z"`` selects all edges perpendicular to Z axis, that is, parallel to the XY plane.
 
 .. cadscript:: 
     :source: ../examples/getting_started.py
@@ -60,7 +61,7 @@ Finally, we place the sketch on the top face of our object, rotate it 45 degrees
         * :py:meth:`cadscript.make_box` 
         * :py:meth:`Body.fillet` 
         * :py:meth:`Body.chamfer` 
-        * :py:meth:`cadscript.make_sketch`   
+        * :py:meth:`cadscript.make_sketch`    
         * :py:meth:`Sketch.add_circle` 
         * :py:meth:`Sketch.add_rect` 
         * :py:meth:`Body.cut_extrude` 

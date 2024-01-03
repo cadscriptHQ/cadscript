@@ -14,7 +14,12 @@ Contents
 
 .. toctree::
 
-   getting_started
-   module_functions
-   cad_object
-   sketch_object
+   intro_getting_started
+   intro_installation
+   ref_module_functions
+   ref_body
+   ref_sketch
+
+.. sidebar-links::
+   :github:
+   :pypi: cadscript

@@ -2,6 +2,8 @@ import re
 import cadscript
 import traceback
 
+from pathlib import Path
+
 from json import dumps
 
 from cadquery import exporters, Assembly, Compound, Color, Sketch
@@ -39,6 +41,7 @@ template_img = """
 
 """
 
+
 class cadscript_directive(cq_directive_vtk):
 
     option_spec = {
@@ -50,7 +53,21 @@ class cadscript_directive(cq_directive_vtk):
         "source": directives.path,
         "steps": directives.unchanged,
       }
-    
+
+    def __get_file(self, path):
+        # get the absolute path of the file. If the file is not found, try to find it in parent directory
+        file_path = Path(setup.confdir) / path
+        file_path = file_path.resolve()
+        if not file_path.exists():
+            file_path = Path(setup.confdir.parent) / path
+            file_path = file_path.resolve()
+        # if the file is still not found, print error, then raise error
+        if not file_path.exists():
+            print("ERROR: File not found: ", path)
+            print("confdir: ", setup.confdir)
+            raise FileNotFoundError
+        return file_path
+
     def run(self):
         options = self.options
         script = self.content
@@ -59,7 +76,7 @@ class cadscript_directive(cq_directive_vtk):
 
         if "source" in options:
             # load the script from a file
-            with open(options["source"]) as f:
+            with open(self.__get_file(options["source"])) as f:
                 content = f.read()
             content = re.sub(r'^cadscript.show\(.*$', '', content, flags=re.MULTILINE) # remove show() calls
 

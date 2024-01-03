@@ -28,3 +28,6 @@ dependencies:
   - pip
   - recommonmark
   - cadquery
+  - pip:
+    - sphinx-toolbox>=3.5.0
+  
