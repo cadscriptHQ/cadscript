@@ -2,6 +2,8 @@ import re
 import cadscript
 import traceback
 
+from pathlib import Path
+
 from json import dumps
 
 from cadquery import exporters, Assembly, Compound, Color, Sketch
@@ -54,10 +56,10 @@ class cadscript_directive(cq_directive_vtk):
 
     def __get_file(self, path):
         # get the absolute path of the file. If the file is not found, try to find it in parent directory
-        file_path = setup.confdir / path
+        file_path = Path(setup.confdir) / path
         file_path = file_path.resolve()
         if not file_path.exists():
-            file_path = setup.confdir.parent / path
+            file_path = Path(setup.confdir.parent) / path
             file_path = file_path.resolve()
         # if the file is still not found, print error, then raise error
         if not file_path.exists():
