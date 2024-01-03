@@ -27,4 +27,5 @@ dependencies:
   - appdirs
   - pip
   - recommonmark
+  - sphinx_toolbox
   - cadquery
