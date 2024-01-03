@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.abspath('../'))
 
 project = 'cadscript'
 author = 'Andreas Kahler'
+copyright = "2023-2024, Andreas Kahler"
 source_suffix = ['.rst', '.md']
 master_doc = 'index'
 
