@@ -36,6 +36,20 @@ After that install the cadscript module using pip:
 pip install cadscript
 ```
 
+## API Design
+
+Cadscript follows the following API design guidelines
+
+* **Understandability over compactness** - Ensure the API is easy to comprehend, especially for programmers new to the library, instead of striving for overly compact code.
+* **Accessibility over sophistication** - When choosing between two methods to implement a feature, opt for the one that a less experienced programmer would understand more easily.
+* **Simplicity over feature richness** - Keep the API small, consistent, and easy to understand, prioritizing it over adding an extensive range of features to avoid "feature creep."
+* **Specialization over generalization** - Focus on supporting the preferred way of designing 3D models excellently, rather than attempting to cater to a wide array of different styles.
+
+But even with this focus on simplicity, Cadscript wants to be a general-purpose tool for programmatic 3D modelling. This is archived by
+
+* **Complete 3D Modelling API**: Although simple, the Cadscript API includes everything you need for modelling complex parts
+* **Compatibitly with CadQuery**: Internally Cadscript uses Cadquery for all operations. Therefore you can easily use the generated geometry with CadQuery functionality or use CadQuery tools like CQ-Editor for developing with Cadscript.
+
 ## License
 
 Cadscript is licensed under the terms of the [Apache Public License, version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
