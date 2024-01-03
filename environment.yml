@@ -27,5 +27,5 @@ dependencies:
   - appdirs
   - pip
   - recommonmark
-  - sphinx-toolbox
+  - sphinx-toolbox>3.5.0
   - cadquery
