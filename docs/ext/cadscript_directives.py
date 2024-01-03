@@ -1,3 +1,4 @@
+import re
 import cadscript
 import traceback
 
@@ -18,7 +19,7 @@ import cadscript
 
 postfix = """
 result = {result_var}
-if isinstance(result, cadscript.SketchObject):
+if isinstance(result, cadscript.Sketch):
     sketch = result.cq()
     sketch.finalize()
     result = cadquery.Workplane("XY").placeSketch(sketch.clean()).extrude(0.001, False)
@@ -46,63 +47,86 @@ class cadscript_directive(cq_directive_vtk):
         "align": directives.unchanged,
         "select": directives.unchanged,
         "interactive": directives.flag,
+        "source": directives.path,
+        "steps": directives.unchanged,
       }
     
     def run(self):
-          options = self.options
-          content = self.content
-          state_machine = self.state_machine
-          result_var = options.get("select", "result")
+        options = self.options
+        script = self.content
+        state_machine = self.state_machine
+        result_var = options.get("select", "result")
 
-          # only consider inline snippets
-          script = "\n".join(content)
-          plot_code = prefix + "\n" + script + "\n" + postfix.format(result_var=result_var)
-          sketch = None
+        if "source" in options:
+            # load the script from a file
+            with open(options["source"]) as f:
+                content = f.read()
+            content = re.sub(r'^cadscript.show\(.*$', '', content, flags=re.MULTILINE) # remove show() calls
 
-          # collect the result
-          lines = []
-          try:
-              result = cqgi.parse(plot_code).build()
+            # split script at lines starting with "#STEP"
+            steps_sources = re.split(r'#STEP.*\n', content)
+            if "steps" in options:
+                steps = options["steps"].strip()
+                if '-' in steps:
+                    start, end = steps.split('-')
+                    start = int(start)
+                    end = int(end)+1
+                    script = "".join(steps_sources[start:end])
+                else:
+                    script = steps_sources[int(steps)]                
+            else:
+                script = "".join(steps_sources[1:]) # skip everything before step 1
+        else:
+            # only consider inline snippets
+            script = "".join(script)
 
-              if result.success:
-                  if result.first_result:
-                      shape = result.first_result.shape
-                  else:
-                      shape = result.env["result"]
+        plot_code = prefix + "\n" + script + "\n" + postfix.format(result_var=result_var)
+        
 
-                  if isinstance(shape, Assembly):
-                      assy = shape
-                  elif isinstance(shape, Sketch):
-                      assy = Assembly(shape._faces, color=Color(*DEFAULT_COLOR))
+        # collect the result
+        lines = []
+        try:
+            result = cqgi.parse(plot_code).build()
 
-                  else:
-                      assy = Assembly(shape, color=Color(*DEFAULT_COLOR))
-              else:
-                  raise result.exception
+            if result.success:
+                if result.first_result:
+                    shape = result.first_result.shape
+                else:
+                    shape = result.env["result"]
 
-              # add the output
-              if "interactive" in options:
-                  # rendering as interactive 3d view with vtk.js
-                  render = self.render_vtk(assy, options)
-              else:
-                  # rendering as image
-                  render = self.render_image(assy, options)
-              lines.extend(render)
-          
-          except Exception:
-              traceback.print_exc()
-              assy = Assembly(Compound.makeText("CQGI error", 10, 5))
+                if isinstance(shape, Assembly):
+                    assy = shape
+                elif isinstance(shape, Sketch):
+                    assy = Assembly(shape._faces, color=Color(*DEFAULT_COLOR))
+
+                else:
+                    assy = Assembly(shape, color=Color(*DEFAULT_COLOR))
+            else:
+                raise result.exception
+
+            # add the output
+            if "interactive" in options:
+                # rendering as interactive 3d view with vtk.js
+                render = self.render_vtk(assy, options)
+            else:
+                # rendering as image
+                render = self.render_image(assy, options)
+            lines.extend(render)
+        
+        except Exception:
+            traceback.print_exc()
+            assy = Assembly(Compound.makeText("CQGI error", 10, 5))
 
 
 
-          lines.extend(["::", ""])
-          lines.extend(["    %s" % row.rstrip() for row in script.split("\n")])
-          lines.append("")
+        lines.extend(["::", ""])
+        lines.extend(["    %s" % row.rstrip() for row in script.split("\n")])
+        lines.append("")
 
-          if len(lines):
-              state_machine.insert_input(lines, state_machine.input_lines.source(0))
+        if len(lines):
+            state_machine.insert_input(lines, state_machine.input_lines.source(0))
 
-          return []
+        return []
     
     def render_vtk(self, assy, options):
         data = dumps(toJSON(assy))

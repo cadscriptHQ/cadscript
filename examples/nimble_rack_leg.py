@@ -32,4 +32,4 @@ def make_beam(length, hole_spacing, long_axis_hole_dia, mounting_holes_dia):
     return beam
 
 beam = make_beam(length = 294, hole_spacing = 14, long_axis_hole_dia = 4.6, mounting_holes_dia = 3.6)
-beam.export_stl("beam.stl")
+beam.export_stl("build/beam.stl")

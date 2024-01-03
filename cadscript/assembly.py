@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import cadquery as cq
-from .cadobject import CadObject
+from .body import Body
 
 class Assembly:
 
@@ -13,6 +13,6 @@ class Assembly:
     def cq(self):
         return self.assy
 
-    def add(self, part: CadObject):
+    def add(self, part: Body):
         self.assy.add(part.cq())
         return self.assy
