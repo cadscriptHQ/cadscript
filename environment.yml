@@ -29,5 +29,5 @@ dependencies:
   - recommonmark
   - cadquery
   - pip:
-    - sphinx-toolbox>3.5.0
+    - sphinx-toolbox>=3.5.0
   
