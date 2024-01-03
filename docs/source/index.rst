@@ -19,3 +19,7 @@ Contents
    ref_module_functions
    ref_body
    ref_sketch
+
+.. sidebar-links::
+   :github:
+   :pypi: cadscript

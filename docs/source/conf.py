@@ -22,6 +22,8 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
+    'sphinx_toolbox.github',
+    'sphinx_toolbox.sidebar_links',
     'ext.cadscript_directives',
 ]
 
@@ -38,6 +40,9 @@ intersphinx_mapping = {
 }
 
 intersphinx_disabled_domains = ['std']
+
+github_username = 'cadscriptHQ'
+github_repository = 'cadscript'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
