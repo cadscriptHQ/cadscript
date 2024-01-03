@@ -4,7 +4,7 @@ setup(
     name='cadscript',
     description = "A Python module for creating 3D models with scripts.",
     long_description="A Python module for creating 3D models with scripts.",
-    version='0.2.2',
+    version='0.3.0',
     url="https://github.com/CadQuery/cadquery",
     license="Apache Public License 2.0",    
     author='Andreas Kahler',
