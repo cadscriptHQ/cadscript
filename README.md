@@ -2,7 +2,7 @@
 
 A Python module for creating 3D models with scripts.
 
-**Quicklinks: [Getting Started](https://cadscript.readthedocs.io/en/latest/getting_started.html) - [Documentation](https://cadscript.readthedocs.io/)**
+**Quicklinks: [Getting Started](https://cadscript.readthedocs.io/en/latest/getting_started.html) -  [Installation](https://cadscript.readthedocs.io/en/latest/intro_installation.html) - [Documentation](https://cadscript.readthedocs.io/)**
 
 ## What is Cadscript?
 
@@ -35,6 +35,8 @@ After that install the cadscript module using pip:
 ```
 pip install cadscript
 ```
+
+More details see the [installation section in the documentation](https://cadscript.readthedocs.io/en/latest/intro_installation.html)
 
 ## API Design
 
