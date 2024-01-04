@@ -12,7 +12,7 @@ from .helpers import get_dimensions
 
 class Sketch:
     """
-    Represents a 2D sketch. Scetch instances are typically created using make_sketch().
+    Represents a 2D sketch. Sketch instances are typically created using :func:`cadscript.make_sketch`.
     """
     __sketch: cq.Sketch
     __finalized_sketch: Optional[cq.Sketch]
@@ -21,14 +21,6 @@ class Sketch:
       self.__sketch = sketch
       self.__finalized_sketch = None
 
-    def cq(self) -> cq.Sketch:
-      return self.__sketch
-
-    def copy(self) -> 'Sketch':
-      """
-      Returns a copy of the sketch.
-      """
-      return Sketch(self.__sketch.copy())
 
     def finalize(self) -> 'Sketch':
       self.__finalized_sketch = self.__sketch
@@ -168,19 +160,73 @@ class Sketch:
       action = lambda x: x.polygon(point_list, mode="s")
       return self.__perform_action(action, positions)
 
-    def add_slot(self, w:float, h:float, *, angle:float=0, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
+    def add_slot(self, w: float, h: float, *, angle: float = 0, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
+      """
+      Adds a slot to the sketch. The slot is defined by a width and height, and an angle of rotation. By default (rotation is 0), 
+      the slot is parallel to the x-axis. The width is the non-rounded part along the x-axis and the height is the extent along the y-axis.
+      The part is centered at the origin unless the positions paramter is specified.
+
+      Args:
+        w (float): The width of the slot, the part without the rounded sides.
+        h (float): The height of the slot.
+        angle (float, optional): The angle of rotation for the slot. Defaults to 0, which means the slot is parallel to the x-axis.
+        positions (Optional[Iterable[Vector2DType]], optional): If given, a slot is added for each of the entries, specifying the 
+            its respective center as (x,y) tuple. Defaults to None, which results in a single slot added at the origin.
+
+      Returns:
+        Sketch: The updated sketch object.
+      """
       action = lambda x: x.slot(w, h, angle=angle)
-      return self.__perform_action(action, positions)
+      return self.__perform_action(action, positions)    
 
     def cut_slot(self, w:float, h:float, *, angle:float=0, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
+      """
+      Cuts a slot from sketch. The slot is defined by a width and height, and an angle of rotation. By default (rotation is 0), 
+      the slot is parallel to the x-axis. The width is the non-rounded part along the x-axis and the height is the extent along the y-axis.
+      The part is centered at the origin unless the positions paramter is specified.
+
+      Args:
+        w (float): The width of the slot, the part without the rounded sides.
+        h (float): The height of the slot.
+        angle (float, optional): The angle of rotation for the slot. Defaults to 0, which means the slot is parallel to the x-axis.
+        positions (Optional[Iterable[Vector2DType]], optional): If given, a slot is added for each of the entries, specifying the 
+            its respective center as (x,y) tuple. Defaults to None, which results in a single slot added at the origin.
+
+      Returns:
+        Sketch: The updated sketch object.
+      """
       action = lambda x: x.slot(w, h, angle=angle, mode="s")
       return self.__perform_action(action, positions)
 
     def add_import_dxf(self, dxf_filename:str, *, positions: Optional[Iterable[Vector2DType]] = None, tolerance:float = 1e-3) -> 'Sketch':
+      """
+      Imports a DXF file and adds it to the sketch object. The DXF mus contain one or more closed loops from lines and curves.
+
+      Args:
+        dxf_filename (str): The filename of the DXF file to import.
+        positions (Optional[Iterable[Vector2DType]]): Optional positions to place the imported objects. If not provided, the objects will be placed at the origin.
+        tolerance (float): The tolerance to use for the import. Defaults to 1e-3.
+
+      Returns:
+        Sketch: The updated sketch object.
+
+      """
       action = lambda x: x.importDXF(dxf_filename, tol=tolerance)
       return self.__perform_action(action, positions)
 
     def cut_import_dxf(self, dxf_filename:str, *, positions: Optional[Iterable[Vector2DType]] = None, tolerance:float = 1e-3) -> 'Sketch':
+      """
+      Imports a DXF file and cuts it from the sketch object. The DXF mus contain one or more closed loops from lines and curves.
+
+      Args:
+        dxf_filename (str): The filename of the DXF file to import.
+        positions (Optional[Iterable[Vector2DType]]): Optional positions to place the imported objects. If not provided, the objects will be placed at the origin.
+        tolerance (float): The tolerance to use for the import. Defaults to 1e-3.
+
+      Returns:
+        Sketch: The updated sketch object.
+
+      """
       action = lambda x: x.importDXF(dxf_filename, tol=tolerance, mode="s")
       return self.__perform_action(action, positions)
 
@@ -222,8 +268,14 @@ class Sketch:
       self.__sketch = result
       return self
 
-    def export_dxf(self, filename:str) -> None:
-        export_sketch_DXF(self.__sketch, filename)
+    def export_dxf(self, filepath:str) -> None:
+      """
+      Export the sketch to a DXF file.
+
+      Args:
+        filename (str): The name of the DXF file to export to. If passing a path, the parent directory must exist.
+      """
+      export_sketch_DXF(self.__sketch, filepath)
 
     def move(self, translationVector:Vector2DType) -> 'Sketch':
       """
@@ -251,3 +303,18 @@ class Sketch:
       """
       self.__sketch = self.__sketch.moved(cq.Location(cq.Vector(),cq.Vector(0, 0, 1), degrees))
       return self
+
+    def cq(self) -> cq.Sketch:
+      """
+      Returns the underlying CadQuery sketch object. Useful when mixing CadQuery and Cadscript code.
+      """
+      return self.__sketch
+
+    def copy(self) -> 'Sketch':
+      """
+      Returns a copy of the sketch.
+
+      Returns:
+        Sketch: The copied sketch.
+      """
+      return Sketch(self.__sketch.copy())
