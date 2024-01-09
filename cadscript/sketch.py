@@ -38,7 +38,11 @@ class Sketch:
       dim1, dim2 = get_dimensions([size_x, size_y], center)
       x1, x2 = dim1
       y1, y2 = dim2
-      return sketch.polygon([cq.Vector(x1, y1), cq.Vector(x1, y2), cq.Vector(x2, y2), cq.Vector(x2, y1), cq.Vector(x1, y1)], mode=mode)
+      p0 = cq.Vector(x1, y1)
+      p1 = cq.Vector(x2, y1)
+      p2 = cq.Vector(x2, y2) 
+      p3 = cq.Vector(x1, y2)
+      return sketch.polygon([p0, p1, p2, p3, p0], mode=mode)
 
     def add_rect(self, size_x: DimensionDefinitionType, size_y: DimensionDefinitionType, *, center: CenterDefinitionType = True, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
       """
@@ -132,7 +136,7 @@ class Sketch:
       Adds a polygon to the sketch.
 
       Args:
-        point_list (Iterable[Vector2DType]): A list of points defining the polygon.
+        point_list (Iterable[Vector2DType]): A list of points defining the polygon. The points must be given in counter-clockwise order.
         positions (Optional[Iterable[Vector2DType]], optional): If given, a polygon is added for each of the entries, specifying the offset as (x,y) tuple. 
             Defaults to None, which results in a single polygon added with no offset.
 
@@ -148,7 +152,7 @@ class Sketch:
       Cuts a polygon from the sketch.
 
       Args:
-        point_list (Iterable[Vector2DType]): A list of points defining the polygon.
+        point_list (Iterable[Vector2DType]): A list of points defining the polygon. The points must be given in counter-clockwise order.
         positions (Optional[Iterable[Vector2DType]], optional): If given, a polygon is added for each of the entries, specifying the offset as (x,y) tuple. 
             Defaults to None, which results in a single polygon added with no offset.
 
@@ -245,7 +249,7 @@ class Sketch:
         result = self.__sketch.reset().vertices().fillet(amount)
       else:
         raise ValueError("unknown edge selector")
-      self.__sketch = result
+      self.__sketch = result.clean().reset()
       return self
 
     def chamfer(self, edges_str:EdgeQueryType, amount:float) -> 'Sketch':
@@ -264,7 +268,7 @@ class Sketch:
         result = self.__sketch.reset().vertices().chamfer(amount)
       else:
         raise ValueError("unknown edge selector")
-      self.__sketch = result
+      self.__sketch = result.clean().reset()
       return self
 
     def export_dxf(self, filepath:str) -> None:
