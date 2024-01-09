@@ -2,7 +2,7 @@
 
 A Python module for creating 3D models with scripts.
 
-**Quicklinks: [Getting Started](https://cadscript.readthedocs.io/en/latest/getting_started.html) - [Documentation](https://cadscript.readthedocs.io/)**
+**Quicklinks: [Getting Started](https://cadscript.readthedocs.io/en/latest/intro_getting_started.html) -  [Installation](https://cadscript.readthedocs.io/en/latest/intro_installation.html) - [Documentation](https://cadscript.readthedocs.io/)**
 
 ## What is Cadscript?
 
@@ -35,6 +35,46 @@ After that install the cadscript module using pip:
 ```
 pip install cadscript
 ```
+
+More details see the [installation section in the documentation](https://cadscript.readthedocs.io/en/latest/intro_installation.html)
+
+## Modelling Workflow
+
+The Cadscript modelling workflow is based on [Bodies](https://cadscript.readthedocs.io/en/latest/ref_body.html) and [Sketches](https://cadscript.readthedocs.io/en/latest/ref_sketch.html). Usually you start by creating a Sketch (a 2D drawing) and turn that into a Body (a 3D object) e.g. by extrusion. You can also place Sketches on faces of Bodies and add additional features to Bodies this way, e.g. by adding an extrusion or by extruding inwards to create a hole. Cadscript also supports [Boolean operations](https://en.wikipedia.org/wiki/Boolean_operations_on_polygons) on Sketches and Bodies.
+
+For more details consult the [documentation](https://cadscript.readthedocs.io/).
+
+## Features and Roadmap
+
+* Sketches are built using Boolean operations from primitives (rect, circle, slots, polygons)
+* Fillet and chamfer on Sketches
+* Extrusion of sketches
+* Boolean operations on Bodies
+* Fillet and chamfer on Body edges
+* 3D text objects from system fonts
+* Import: DXF, STEP
+* Export: DFX, SVG (Sketches), SVG (3D rendering), STEP, STL
+* Compatibility with CadQuery
+* CQ-Editor integration
+* Jupyter integration (TODO, planned for version 1.0)
+* Construction planes (TODO, planned for version 1.0)
+* Revolve and loft operation (TODO, planned for version 1.0)
+* Assemblies (TODO, planned for version 1.0)
+* OpenSCAD to Cadscript conversion utility (TODO, planned for version 1.5)
+
+## API Design
+
+Cadscript follows the following API design guidelines
+
+* **Understandability over compactness** - Ensure the API is easy to comprehend, especially for programmers new to the library, instead of striving for overly compact code.
+* **Accessibility over sophistication** - When choosing between two methods to implement a feature, opt for the one that a less experienced programmer would understand more easily.
+* **Simplicity over feature richness** - Keep the API small, consistent, and easy to understand, prioritizing it over adding an extensive range of features to avoid "feature creep."
+* **Specialization over generalization** - Focus on supporting the preferred way of designing 3D models excellently, rather than attempting to cater to a wide array of different styles.
+
+But even with this focus on simplicity, Cadscript wants to be a general-purpose tool for programmatic 3D modelling. This is archived by
+
+* **Complete 3D Modelling API**: Although simple, the Cadscript API includes everything you need for modelling complex parts
+* **Compatibitly with CadQuery**: Internally Cadscript uses Cadquery for all operations. Therefore you can easily use the generated geometry with CadQuery functionality or use CadQuery tools like CQ-Editor for developing with Cadscript.
 
 ## License
 
