@@ -104,7 +104,7 @@ class Body:
         self.__wp = wp
         return self
 
-    def fuse(self, tool_body: 'Body') -> 'Body':
+    def add(self, tool_body: 'Body') -> 'Body':
         """
         Performs a boolean add operation with another body.
 
@@ -117,6 +117,23 @@ class Body:
         c1 = self.__wp.findSolid()
         c2 = tool_body.__wp.findSolid()
         c = c1.fuse(c2)
+        wp = cq.Workplane(obj = c)
+        self.__wp = wp
+        return self
+        
+    def intersect(self, tool_body: 'Body') -> 'Body':
+        """
+        Performs a boolean intersect operation with another body.
+
+        Args:
+            tool_body (Body): The body to intersect with this body.
+
+        Returns:
+            Body: The modified body object.
+        """
+        c1 = self.__wp.findSolid()
+        c2 = tool_body.__wp.findSolid()
+        c = c1.intersect(c2)
         wp = cq.Workplane(obj = c)
         self.__wp = wp
         return self

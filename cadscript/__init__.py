@@ -2,10 +2,12 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
-import cadquery as cq
-from typing import Any
-from sys import modules
+from pathlib import Path
+import tempfile
+import time
 import inspect
+
+import cadquery as cq
 
 from .typedefs import *
 
@@ -41,27 +43,33 @@ def __make_box_min_max(x1: float, x2: float, y1: float, y2: float, z1: float, z2
     wp = cq.Workplane(obj = solid)
     return Body(wp)
 
-def make_extrude(sketch: Sketch, amount: float, plane: Optional[Union[ConstructionPlane,str]]=None):
+def make_extrude(plane: Union[ConstructionPlane,str], sketch: Sketch, amount: Union[float,Tuple[float,float]]) -> 'Body':
     """
     Create an extrusion from a sketch.
 
     Args:
-        sketch (Sketch): The sketch to extrude.
-        amount (float): The amount of extrusion.
-        plane (Optional[Union[ConstructionPlane,str]], optional): The plane to extrude on. Defaults to the XY plane.
+        plane (Union[ConstructionPlane,str]): The plane to extrude on. 
             Can be one of the strings "XY", "YZ", "XZ", "front", "back", "top", "bottom", "left" or "right"
+        sketch (Sketch): The sketch to extrude.
+        amount (float): The amount of extrusion. Can also be a tuple of two floats to extrude between two planes with the given offsets.
 
     Returns:
         Body: The extruded body.
     """
-    if plane is None:
-        wp = cq.Workplane()
-    elif isinstance(plane, str):
-        wp = cq.Workplane(plane)
+    if isinstance(amount, (float, int)):
+        if isinstance(plane, str):
+            wp = cq.Workplane(plane)
+        else:
+            wp = plane.cq()
+        extr = wp.placeSketch(sketch.cq()).extrude(amount, False)
+        return Body(extr)
     else:
-        wp = plane.cq
-    onj = wp.placeSketch(sketch.cq()).extrude(amount, False)
-    return Body(onj)
+        # test that the tuple has two elements
+        if not isinstance(amount, tuple) or len(amount) != 2:
+            raise ValueError("amount must be a float or a tuple of two floats")
+        start_plane = make_construction_plane(plane, amount[0])
+        return make_extrude(start_plane, sketch, amount[1]-amount[0]) 
+        
 
 def make_text(
     text: str,
@@ -85,8 +93,11 @@ def make_text(
     wp = cq.Workplane(obj = c)
     return Body(wp)
 
-def make_construction_plane(planeStr: str, offset:Optional[float]=None):
-    wp = cq.Workplane(planeStr)
+def make_construction_plane(plane: Union[ConstructionPlane,str], offset:Optional[float]=None):
+    if isinstance(plane, str):
+        wp = cq.Workplane(plane)
+    else:
+        wp = plane.cq()
     if not offset is None:
         wp = wp.workplane(offset=offset)
     return ConstructionPlane(wp)
@@ -120,20 +131,34 @@ def show(item: Union[Body,Sketch,ConstructionPlane,Assembly]):
     Otherwise will do nothing.
 
     Args:
-        item: the item to show. Can be a `Body` or a `Sketch`
+        item: the item to show. Can be a :class:`Body` or a :class:`Sketch`
     '''
     show_fn = __get_show_fn()
     if show_fn:
         show_fn(item.cq())
+    # when cadquery.vis is available
+    # show(item)
     else:
-        # when cadquery.vis is available
-        # show(item)
-        pass
+        temp_dir = Path(tempfile.gettempdir())
+        temp_path = str(temp_dir / f"cadscript_{time.time()}")
+        if isinstance(item, Body):
+            temp_path = temp_path + ".stl"
+            item.export_stl(temp_path)
+            print("Cadscript body exported to ", temp_path)
+        elif isinstance(item, Sketch):
+            temp_path = temp_path + ".dxf"
+            item.export_dxf(temp_path)
+            print("Cadscript sketch exported to ", temp_path)
+
+
 
 #examine the context of the caller. check if there is a function "show_object" available, return a reference to it
 def __get_show_fn():
     # Start with the immediate caller's caller frame.
-    frame = inspect.currentframe().f_back.f_back
+    f = inspect.currentframe()
+    if f is None or f.f_back is None:
+        return None
+    frame = f.f_back.f_back
     
     while frame:
         # Check global scope.

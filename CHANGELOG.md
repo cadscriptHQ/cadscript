@@ -1,9 +1,16 @@
 # Changelog
 
-## [0.2] - 2023-11-26
+## [0.4] in progress
 
-- Initial version on github
+- new method: Body.intersect
+- renamed Body.fuse() to Body.add()
+- reordered params of cadscript.make_extrude, allowed passing of tuple for amount
 
 ## [0.3] - 2024-01-03
 
 - Refectoring; API cleanup 
+
+## [0.2] - 2023-11-26
+
+- Initial version on github
+
