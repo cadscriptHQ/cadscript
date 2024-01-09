@@ -2,5 +2,6 @@
 *.pyc
 cadscript.egg-info/*
 private/*
+**private*
 build/*
 docs/build/*
