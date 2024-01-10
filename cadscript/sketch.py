@@ -335,14 +335,11 @@ class Sketch:
       return Sketch(self.__sketch.copy())
 
     def find_vertices(self, search: Optional[str]=None) -> List[Vector2DType]:
-      if search is None or str=="ALL":
+      if search is None or str=="ALL" or str=="*":
         self.__sketch.vertices() # select all vertices
       else:
         self.__sketch.vertices(search) # select vertices matching search
-      pos_list = []
-      for v in self.__sketch._selection:
-        if isinstance(v, cq.Vertex):
-          pos_list.append((v.X, v.Y))
-      self.__sketch.reset() # delete selection again, we only want to return it
+      pos_list = [(v.X, v.Y) for v in self.__sketch._selection if isinstance(v, cq.Vertex)]
+      self.__sketch.reset() # delete selection again
       return pos_list
       
