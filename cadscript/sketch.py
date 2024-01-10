@@ -4,27 +4,21 @@
 
 import cadquery as cq
 
-from typing import Any, Callable, Iterable, Optional, TypeVar
+from typing import Any, Callable, Iterable, List, Optional, TypeVar, Union
 
 from .typedefs import DimensionDefinitionType, CenterDefinitionType, EdgeQueryType, Vector2DType, Vector3DType
 from .export import export_sketch_DXF
 from .helpers import get_dimensions
+from .cqselectors import NearestToPointListSelector
 
 class Sketch:
     """
     Represents a 2D sketch. Sketch instances are typically created using :func:`cadscript.make_sketch`.
     """
     __sketch: cq.Sketch
-    __finalized_sketch: Optional[cq.Sketch]
 
     def __init__(self, sketch: cq.Sketch) -> None:
       self.__sketch = sketch
-      self.__finalized_sketch = None
-
-
-    def finalize(self) -> 'Sketch':
-      self.__finalized_sketch = self.__sketch
-      return self
 
     def __perform_action(self, action, positions: Optional[Iterable[Vector2DType]]) -> 'Sketch':
       if positions:
@@ -233,42 +227,60 @@ class Sketch:
       action = lambda x: x.importDXF(dxf_filename, tol=tolerance, mode="s")
       return self.__perform_action(action, positions)
 
-    def fillet(self, edges_str:EdgeQueryType, amount:float) -> 'Sketch':
+    def _select_vertices(self, query:Union[EdgeQueryType,Vector2DType,Iterable[Vector2DType]]) -> bool:
+      '''
+      Selects vertices in the sketch. The query can be a search string, a point or a point list.      
+      '''
+      if isinstance(query, str): 
+        if query == "ALL" or query == "*":
+          self.__sketch.reset().vertices()
+          return True
+        else:
+          self.__sketch.reset().vertices(query)
+          return True
+      
+      if isinstance(query, tuple):
+        vertex = (query[0], query[1],0)
+        vertices = [vertex]
+      else: # list
+        vertices = [(v[0], v[1],0) for v in query]
+      self.__sketch.reset().vertices(NearestToPointListSelector(vertices))
+      return True
+
+    def fillet(self, query:Union[EdgeQueryType,Vector2DType,Iterable[Vector2DType]], radius:float) -> 'Sketch':
       """
-      Fillets the edges of the sketch.
+      Fillets corners of the sketch.
 
       Args:
-        edges_str (EdgeQueryType): The edges to fillet. Can be "ALL" to fillet all edges.
-        amount (float): The fillet amount.
+        query (Union[EdgeQueryType,Vector2DType,Iterable[Vector2DType]]): The vertices to fillet. 
+          Can be "ALL" or "*" to fillet all vertices.
+          You can also pass a point or a list of points to fillet the nearest vertices.
+        radius (float): The fillet radius.
 
       Returns:
         Sketch: The modified sketch object.
       """
-      #todo support edge selector
-      if edges_str == "ALL":
-        result = self.__sketch.reset().vertices().fillet(amount)
-      else:
-        raise ValueError("unknown edge selector")
-      self.__sketch = result.clean().reset()
+      success = self._select_vertices(query)
+      if success:
+        self.__sketch.fillet(radius).clean().reset()
       return self
 
-    def chamfer(self, edges_str:EdgeQueryType, amount:float) -> 'Sketch':
+    def chamfer(self, query:Union[EdgeQueryType,Vector2DType,Iterable[Vector2DType]], amount:float) -> 'Sketch':
       """
       Chamfers the edges of the sketch.
 
       Args:
-        edges_str (EdgeQueryType): The edges to chamfer. Can be "ALL" to chamfer all edges.
+        query (Union[EdgeQueryType,Vector2DType,Iterable[Vector2DType]]): The vertices to chamfer. 
+          Can be "ALL" or "*" to chamfer all vertices.
+          You can also pass a point or a list of points to chamfer the nearest vertices.
         amount (float): The chamfer amount.
 
       Returns:
         Sketch: The modified sketch object.
       """
-      #todo support edge selector
-      if edges_str == "ALL":
-        result = self.__sketch.reset().vertices().chamfer(amount)
-      else:
-        raise ValueError("unknown edge selector")
-      self.__sketch = result.clean().reset()
+      success = self._select_vertices(query)
+      if success:
+        self.__sketch.chamfer(amount).clean().reset()
       return self
 
     def export_dxf(self, filepath:str) -> None:
@@ -321,3 +333,16 @@ class Sketch:
         Sketch: The copied sketch.
       """
       return Sketch(self.__sketch.copy())
+
+    def find_vertices(self, search: Optional[str]=None) -> List[Vector2DType]:
+      if search is None or str=="ALL":
+        self.__sketch.vertices() # select all vertices
+      else:
+        self.__sketch.vertices(search) # select vertices matching search
+      pos_list = []
+      for v in self.__sketch._selection:
+        if isinstance(v, cq.Vertex):
+          pos_list.append((v.X, v.Y))
+      self.__sketch.reset() # delete selection again, we only want to return it
+      return pos_list
+      
