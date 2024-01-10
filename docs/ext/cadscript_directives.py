@@ -18,6 +18,7 @@ from cadquery.cq_directive import cq_directive_vtk, template_vtk, rendering_code
 
 prefix = """
 import cadscript
+import cadscript as cad
 """
 
 postfix = """
@@ -42,7 +43,6 @@ template_img = """
 
 """
 
-
 class cadscript_directive(cq_directive_vtk):
 
     option_spec = {
@@ -56,7 +56,7 @@ class cadscript_directive(cq_directive_vtk):
         "steps": directives.unchanged,
       }
 
-    def __get_file(self, path):
+    def get_file(self, path):
         # get the absolute path of the file. If the file is not found, try to find it in parent directory
         file_path = Path(setup.confdir) / path
         file_path = file_path.resolve()
@@ -80,7 +80,7 @@ class cadscript_directive(cq_directive_vtk):
         if "source" in options:
             # load the script from a file
             source_file = options["source"].strip()
-            with open(self.__get_file(source_file)) as f:
+            with open(self.get_file(source_file)) as f:
                 content = f.read()
                 script, text  = self.get_source_file(content, options.get("steps", None), "text_from_comment" in options)
         else:
@@ -141,6 +141,10 @@ class cadscript_directive(cq_directive_vtk):
         if len(text):
             lines.extend(["", text, ""])
 
+        lines.extend(["", "::", ""])
+        lines.extend(["    %s" % row.rstrip() for row in script.split("\n")])
+        lines.append("")
+
         try:
             result = cqgi.parse(plot_code).build()
 
@@ -173,8 +177,6 @@ class cadscript_directive(cq_directive_vtk):
             traceback.print_exc()
             assy = Assembly(Compound.makeText("CQGI error", 10, 5))
 
-        lines.extend(["::", ""])
-        lines.extend(["    %s" % row.rstrip() for row in script.split("\n")])
         lines.append("")
 
         return lines
@@ -211,7 +213,51 @@ class cadscript_directive(cq_directive_vtk):
                   height=options.get("height", "300")+"px",
               ).splitlines()   
     
-    
+
+
+class cadscript_auto_directive(cadscript_directive):
+
+    option_spec = {
+        "height": directives.length_or_unitless,
+        "width": directives.length_or_percentage_or_unitless,
+        "align": directives.unchanged,
+        "interactive": directives.flag,
+        "source": directives.path,
+      }
+
+
+    def run(self):
+        options = self.options
+        script = self.content
+        state_machine = self.state_machine
+
+        # load the script from a file
+        source_file = options["source"].strip()
+        with open(self.get_file(source_file)) as f:
+            content = f.read()
+
+            # get all lines starting with "#DOCSTEP"
+            # get (step_string, result_var) tuples from the lines
+            steps = re.findall(r'#DOCSTEP:\s*(.*),(.*)$', content, flags=re.MULTILINE)
+
+            lines = []            
+            for step, result_var in steps:
+                script, text  = self.get_source_file(content, step, text_from_comment=True)
+                #print("STEP: ", step)
+                #print("SCRIPT: \n", script)
+                #print("TEXT: \n", text)
+
+                # add the prefix and postfix
+                plot_code = prefix + "\n" + script + "\n" + postfix.format(result_var=result_var)
+                
+                # collect the result
+                lines.extend(self.generate_output(plot_code, text, script, options))
+
+            if len(lines):
+                state_machine.insert_input(lines, state_machine.input_lines.source(0))
+
+        return []
+
 def setup(app):
     setup.app = app
     setup.config = app.config
@@ -219,6 +265,7 @@ def setup(app):
 
     app.add_directive("cadquery", cq_directive_vtk)
     app.add_directive('cadscript', cadscript_directive)
+    app.add_directive('cadscript-auto', cadscript_auto_directive)
 
     # add vtk.js
     app.add_js_file("vtk.js")

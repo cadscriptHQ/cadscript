@@ -12,9 +12,9 @@
 #DOCSTEP: 8,sketch2
 #DOCSTEP: 8-9,sketch2
 #DOCSTEP: 8-10,sketch2
-#DOCSTEP: 11,extr1
-#DOCSTEP: 12,extr2
-#DOCSTEP: 13,result
+#_DOCSTEP: 11,extr1
+#_DOCSTEP: 12,extr2
+#_DOCSTEP: 13,result
 
 #STEP 1
 import cadscript as cad
@@ -57,15 +57,15 @@ sketch2 = cad.make_sketch()
 sketch2.add_rect(70, 5, center=False)
 sketch2.add_circle(d=26, positions=[(0,10)])
 #STEP 9
-# Adding a fillet. We want only the point where the circle and the rectangle meet.
+# We add a fillet now. We want only the point where the circle and the rectangle meet.
 # The search string ">>X" sorts all vertices in positive X direction.
 # The "[1]" selects the second vertex in that list, which is the one we want.
 sketch2.fillet(">>X[1]", 15)
 #STEP 10
-# We cut a circle and a rectangle from the sketch
+# Now we cut a circle and a rectangle from the sketch
 # The circle is centered at x=0,y=10 with diameter 12.
 # The rectangle ranges from -50 to 50 in x direction 
-# and -100 to 0 in y direction.
+# and -100 to 0 in y direction, effectively cutting off the lower half of the sketch.
 sketch2.cut_circle(d=12, positions=[(0,10)])
 sketch2.cut_rect(100, (-100,0), center="X")
 
