@@ -5,7 +5,7 @@
 from typing import Tuple
 import cadquery as cq
 
-from .typedefs import DimensionDefinitionType, CenterDefinitionType, EdgeQueryType, Vector2DType, Vector3DType, AxisType, FaceQueryType
+from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType, Vector3DType, AxisType
 from .sketch import Sketch
 
 
@@ -19,12 +19,12 @@ class Body:
     def __init__(self, workplane: cq.Workplane):
         self.__wp = workplane
 
-    def fillet(self, edgesStr: EdgeQueryType, amount: float) -> 'Body':
+    def fillet(self, edgesStr: str, amount: float) -> 'Body':
         """
         Fillets the specified edges of the body.
 
         Args:
-            edgesStr (EdgeQueryType): The edges to fillet.
+            edgesStr (str): The edges to fillet.
             amount (float): The radius of the fillet.
 
         Returns:
@@ -34,12 +34,12 @@ class Body:
         self.__wp = result
         return self
 
-    def chamfer(self, edgesStr: EdgeQueryType, amount: float) -> 'Body':
+    def chamfer(self, edgesStr: str, amount: float) -> 'Body':
         """
         Chamfers the specified edges of the body.
 
         Args:
-            edgesStr (EdgeQueryType): The edges to chamfer.
+            edgesStr (str): The edges to chamfer.
             amount (float): The distance of the chamfer.
 
         Returns:
@@ -138,12 +138,12 @@ class Body:
         self.__wp = wp
         return self
 
-    def add_extrude(self, faceStr : FaceQueryType, sketch: 'Sketch', amount: float) -> 'Body':
+    def add_extrude(self, faceStr : str, sketch: 'Sketch', amount: float) -> 'Body':
         """
         Adds an extrusion to the specified face of the body using a sketch.
 
         Args:
-            faceStr (FaceQueryType): The face to extrude.
+            faceStr (str): The face to extrude.
             sketch (Sketch): The sketch to extrude.
             amount (float): The amount of extrusion.
 
@@ -154,12 +154,12 @@ class Body:
         self.__wp = result
         return self
 
-    def cut_extrude(self, faceStr : FaceQueryType, sketch: 'Sketch', amount: float) -> 'Body':
+    def cut_extrude(self, faceStr : str, sketch: 'Sketch', amount: float) -> 'Body':
         """
         Adds a cut extrusion to the specified face of the body using a sketch.
 
         Args:
-            faceStr (FaceQueryType): The face to extrude.
+            faceStr (str): The face to extrude.
             sketch (Sketch): The sketch to extrude.
             amount (float): The amount of extrusion. For cutting you usually want to use a negative value to cut into the body.
 
@@ -170,12 +170,12 @@ class Body:
         self.__wp = result
         return self
 
-    def make_extrude(self, faceStr : FaceQueryType, sketch: 'Sketch', amount: float) -> 'Body':
+    def make_extrude(self, faceStr : str, sketch: 'Sketch', amount: float) -> 'Body':
         """
         Creates a new body by extruding the specified face of the body using a sketch.
 
         Args:
-            faceStr (FaceQueryType): The face to extrude.
+            faceStr (str): The face to extrude.
             sketch (Sketch): The sketch to extrude.
             amount (float): The amount of extrusion.
 

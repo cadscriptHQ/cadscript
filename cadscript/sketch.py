@@ -6,7 +6,7 @@ import cadquery as cq
 
 from typing import Any, Callable, Iterable, List, Optional, TypeVar, Union
 
-from .typedefs import DimensionDefinitionType, CenterDefinitionType, EdgeQueryType, Vector2DType, Vector3DType
+from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType, Vector3DType
 from .export import export_sketch_DXF
 from .helpers import get_dimensions
 from .cqselectors import NearestToPointListSelector
@@ -227,7 +227,7 @@ class Sketch:
       action = lambda x: x.importDXF(dxf_filename, tol=tolerance, mode="s")
       return self.__perform_action(action, positions)
 
-    def _select_vertices(self, query:Union[EdgeQueryType,Vector2DType,Iterable[Vector2DType]]) -> bool:
+    def _select_vertices(self, query:Union[str,Vector2DType,Iterable[Vector2DType]]) -> bool:
       '''
       Selects vertices in the sketch. The query can be a search string, a point or a point list.      
       '''
@@ -247,12 +247,12 @@ class Sketch:
       self.__sketch.reset().vertices(NearestToPointListSelector(vertices))
       return True
 
-    def fillet(self, query:Union[EdgeQueryType,Vector2DType,Iterable[Vector2DType]], radius:float) -> 'Sketch':
+    def fillet(self, query:Union[str,Vector2DType,Iterable[Vector2DType]], radius:float) -> 'Sketch':
       """
       Fillets corners of the sketch.
 
       Args:
-        query (Union[EdgeQueryType,Vector2DType,Iterable[Vector2DType]]): The vertices to fillet. 
+        query (Union[str,Vector2DType,Iterable[Vector2DType]]): The vertices to fillet. 
           Can be "ALL" or "*" to fillet all vertices.
           You can also pass a point or a list of points to fillet the nearest vertices.
         radius (float): The fillet radius.
@@ -265,12 +265,12 @@ class Sketch:
         self.__sketch.fillet(radius).clean().reset()
       return self
 
-    def chamfer(self, query:Union[EdgeQueryType,Vector2DType,Iterable[Vector2DType]], amount:float) -> 'Sketch':
+    def chamfer(self, query:Union[str,Vector2DType,Iterable[Vector2DType]], amount:float) -> 'Sketch':
       """
-      Chamfers the edges of the sketch.
+      Chamfers corners of the sketch.
 
       Args:
-        query (Union[EdgeQueryType,Vector2DType,Iterable[Vector2DType]]): The vertices to chamfer. 
+        query (Union[str,Vector2DType,Iterable[Vector2DType]]): The vertices to chamfer. 
           Can be "ALL" or "*" to chamfer all vertices.
           You can also pass a point or a list of points to chamfer the nearest vertices.
         amount (float): The chamfer amount.
