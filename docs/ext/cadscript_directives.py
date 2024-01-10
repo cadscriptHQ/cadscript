@@ -1,4 +1,5 @@
 import re
+
 import cadscript
 import traceback
 
@@ -51,6 +52,7 @@ class cadscript_directive(cq_directive_vtk):
         "select": directives.unchanged,
         "interactive": directives.flag,
         "source": directives.path,
+        "text_from_comment": directives.flag,
         "steps": directives.unchanged,
       }
 
@@ -73,35 +75,72 @@ class cadscript_directive(cq_directive_vtk):
         script = self.content
         state_machine = self.state_machine
         result_var = options.get("select", "result")
+        text = ""
 
         if "source" in options:
             # load the script from a file
-            with open(self.__get_file(options["source"])) as f:
+            source_file = options["source"].strip()
+            with open(self.__get_file(source_file)) as f:
                 content = f.read()
-            content = re.sub(r'^cadscript.show\(.*$', '', content, flags=re.MULTILINE) # remove show() calls
-
-            # split script at lines starting with "#STEP"
-            steps_sources = re.split(r'#STEP.*\n', content)
-            if "steps" in options:
-                steps = options["steps"].strip()
-                if '-' in steps:
-                    start, end = steps.split('-')
-                    start = int(start)
-                    end = int(end)+1
-                    script = "".join(steps_sources[start:end])
-                else:
-                    script = steps_sources[int(steps)]                
-            else:
-                script = "".join(steps_sources[1:]) # skip everything before step 1
+                script, text  = self.get_source_file(content, options.get("steps", None), "text_from_comment" in options)
         else:
-            # only consider inline snippets
+            # use inline code
             script = "".join(script)
 
+        # add the prefix and postfix
         plot_code = prefix + "\n" + script + "\n" + postfix.format(result_var=result_var)
         
-
         # collect the result
+        lines = self.generate_output(plot_code, text, script, options)
+
+        if len(lines):
+            state_machine.insert_input(lines, state_machine.input_lines.source(0))
+
+        return []
+    
+    def get_source_file(self, content, steps, text_from_comment):
+
+        content = re.sub(r'^cadscript.show\(.*$', '', content, flags=re.MULTILINE) # remove show() calls
+        text = ""
+
+        # split script at lines starting with "#STEP"
+        steps_sources = re.split(r'#STEP.*\n', content)
+        if steps:            
+            if '-' in steps:
+                start, end = steps.split('-')
+                start = int(start)
+                end = int(end)+1
+                script = steps_sources[start:end]
+            else:
+                script = [steps_sources[int(steps)]]
+        else:
+            script = steps_sources[1:] # skip everything before step 1
+
+        if text_from_comment:
+            # extract the text from the comment
+            newscript = []
+            last_comment = ""
+            for part in script:
+                last_comment = ""
+                new_part = ""
+                for line in part.split("\n"):
+                    if line.startswith("#"):
+                        last_comment += line[1:].strip() + " "
+                    else:
+                        new_part += line + "\n"
+                newscript.append(new_part)
+            script = newscript
+            text = last_comment
+        script = "".join(script)
+        return script, text
+        
+    def generate_output(self, plot_code, text, script, options ):
+
         lines = []
+
+        if len(text):
+            lines.extend(["", text, ""])
+
         try:
             result = cqgi.parse(plot_code).build()
 
@@ -122,7 +161,7 @@ class cadscript_directive(cq_directive_vtk):
                 raise result.exception
 
             # add the output
-            if "interactive" in options:
+            if "is_interactive" in options:
                 # rendering as interactive 3d view with vtk.js
                 render = self.render_vtk(assy, options)
             else:
@@ -134,17 +173,12 @@ class cadscript_directive(cq_directive_vtk):
             traceback.print_exc()
             assy = Assembly(Compound.makeText("CQGI error", 10, 5))
 
-
-
         lines.extend(["::", ""])
         lines.extend(["    %s" % row.rstrip() for row in script.split("\n")])
         lines.append("")
 
-        if len(lines):
-            state_machine.insert_input(lines, state_machine.input_lines.source(0))
+        return lines
 
-        return []
-    
     def render_vtk(self, assy, options):
         data = dumps(toJSON(assy))
         return template_vtk.format(
