@@ -76,19 +76,20 @@ class cadscript_directive(cq_directive_vtk):
         state_machine = self.state_machine
         result_var = options.get("select", "result")
         text = ""
+        pre_script = ""
 
         if "source" in options:
             # load the script from a file
             source_file = options["source"].strip()
             with open(self.get_file(source_file)) as f:
                 content = f.read()
-                script, text  = self.get_source_file(content, options.get("steps", None), "text_from_comment" in options)
+                pre_script, script, text  = self.get_source_file(content, options.get("steps", None), "text_from_comment" in options)
         else:
             # use inline code
             script = "".join(script)
 
         # add the prefix and postfix
-        plot_code = prefix + "\n" + script + "\n" + postfix.format(result_var=result_var)
+        plot_code = prefix + "\n" + pre_script + "\n" + script + "\n" + postfix.format(result_var=result_var)
         
         # collect the result
         lines = self.generate_output(plot_code, text, script, options)
@@ -102,17 +103,27 @@ class cadscript_directive(cq_directive_vtk):
 
         content = re.sub(r'^cadscript.show\(.*$', '', content, flags=re.MULTILINE) # remove show() calls
         text = ""
+        pre_script = []
+        content = content + "\n" # fix problem with last line 
+        ellipsis = False
 
         # split script at lines starting with "#STEP"
         steps_sources = re.split(r'#STEP.*\n', content)
-        if steps:            
+        if steps:   
+            if steps.startswith("..."):
+                steps = steps[3:]
+                ellipsis = True
+
             if '-' in steps:
                 start, end = steps.split('-')
                 start = int(start)
                 end = int(end)+1
                 script = steps_sources[start:end]
+                pre_script = steps_sources[1:start]
             else:
-                script = [steps_sources[int(steps)]]
+                index = int(steps)
+                script = [steps_sources[index]]
+                pre_script = steps_sources[1:index]
         else:
             script = steps_sources[1:] # skip everything before step 1
 
@@ -123,7 +134,7 @@ class cadscript_directive(cq_directive_vtk):
             for part in script:
                 last_comment = ""
                 new_part = ""
-                for line in part.split("\n"):
+                for line in part.split("\n")[:-1]: # skip last empty item with [:-1]
                     if line.startswith("#"):
                         last_comment += line[1:].strip() + " "
                     else:
@@ -131,8 +142,14 @@ class cadscript_directive(cq_directive_vtk):
                 newscript.append(new_part)
             script = newscript
             text = last_comment
+
         script = "".join(script)
-        return script, text
+        pre_script = "".join(pre_script)  
+
+        if ellipsis:
+            script = "...\n" + script
+
+        return pre_script, script, text
         
     def generate_output(self, plot_code, text, script, options ):
 
@@ -242,13 +259,13 @@ class cadscript_auto_directive(cadscript_directive):
 
             lines = []            
             for step, result_var in steps:
-                script, text  = self.get_source_file(content, step, text_from_comment=True)
+                pre_script, script, text  = self.get_source_file(content, step, text_from_comment=True)
                 #print("STEP: ", step)
                 #print("SCRIPT: \n", script)
                 #print("TEXT: \n", text)
-
+                
                 # add the prefix and postfix
-                plot_code = prefix + "\n" + script + "\n" + postfix.format(result_var=result_var)
+                plot_code = prefix + "\n" + pre_script + "\n" + script + "\n" + postfix.format(result_var=result_var)
                 
                 # collect the result
                 lines.extend(self.generate_output(plot_code, text, script, options))
@@ -271,4 +288,22 @@ def setup(app):
     app.add_js_file("vtk.js")
     app.add_js_file(None, body=rendering_code)
 
+
+
+if __name__ == "__main__":
+    # debug helper
+    c = cadscript_auto_directive(name="test", arguments=[], 
+        options = {"source": "test", "steps": "2-14", "text_from_comment": True}, 
+        content=[], lineno=1, content_offset=0, block_text="", state=None, state_machine=None)
+    try:
+        # create a dummy object with attribute confdir
+        app = lambda: None
+        app.config = None
+        app.confdir = "."
+        setup(app)
+    except:
+        pass
+    with open(c.get_file('./examples/bracket.py')) as f:
+        content = f.read()
+        pre_script, script, text  = c.get_source_file(content, "2-14", True)
 

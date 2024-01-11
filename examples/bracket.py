@@ -3,26 +3,27 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # this is used by the documentation generation
-#DOCSTEP: 1-2,sketch1
-#DOCSTEP: 1-3,sketch1
-#DOCSTEP: 1-4,sketch1
-#DOCSTEP: 1-5,sketch1
-#DOCSTEP: 1-6,sketch1
-#DOCSTEP: 1-7,sketch1
+#DOCSTEP: 2,sketch1
+#DOCSTEP: ...3,sketch1
+#DOCSTEP: ...4,sketch1
+#DOCSTEP: ...5,sketch1
+#DOCSTEP: ...6,sketch1
+#DOCSTEP: ...7,sketch1
 #DOCSTEP: 8,sketch2
-#DOCSTEP: 8-9,sketch2
-#DOCSTEP: 8-10,sketch2
-#_DOCSTEP: 11,extr1
-#_DOCSTEP: 12,extr2
-#_DOCSTEP: 13,result
+#DOCSTEP: ...9,sketch2
+#DOCSTEP: ...10,sketch2
+#DOCSTEP: 11,extr1
+#DOCSTEP: 12,extr2
+#DOCSTEP: ...13,result
+#DOCSTEP: 2-14,result
 
 #STEP 1
-import cadscript as cad
+import cadscript
 
 #STEP 2
 # Let's start with a sketch.
 # We add a rectangle with width 70 and height 30, centered at the origin.
-sketch1 = cad.make_sketch()
+sketch1 = cadscript.make_sketch()
 sketch1.add_rect(70, 30)
 #STEP 3
 # Now we add a chamfer. ">X" selects all vertices with maximum X coordinate.
@@ -53,7 +54,7 @@ sketch1.cut_circle(d=16, positions=[(50,0)])
 
 #STEP 8
 # Make a new sketch, add a rectangle and a circle.
-sketch2 = cad.make_sketch()
+sketch2 = cadscript.make_sketch()
 sketch2.add_rect(70, 5, center=False)
 sketch2.add_circle(d=26, positions=[(0,10)])
 #STEP 9
@@ -74,19 +75,20 @@ sketch2.cut_rect(100, (-100,0), center="X")
 # The extrusion will happen perpendicular to the plane, that is, in positive Z direction.
 # The extrusion amount is given as a tuple, 
 # the first value is the start position, the second value is the end position.
-extr1 = cad.make_extrude("XY", sketch1, (-100, 100))
+extr1 = cadscript.make_extrude("XY", sketch1, (-100, 100))
 #STEP 12
 # Now we do the same for the second sketch.
 # We use the XZ plane this time, so the extrusion will happen in Y direction.
-extr2 = cad.make_extrude("XZ", sketch2, (-100, 100))
+extr2 = cadscript.make_extrude("XZ", sketch2, (-100, 100))
 
 #STEP 13
 # Finally, we intersect the two extrusions.
 # This performs a boolean intersection of the two bodies.
 result = extr2.intersect(extr1)
 
-#STEP 14
-# Complete script look like this
-cad.show(result) 
+#STEP 14 dummy step to show whole script in documentation
+# The complete script looks like this:
+
+cadscript.show(result) 
 
 
