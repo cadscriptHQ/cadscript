@@ -6,21 +6,25 @@ from pathlib import Path
 import tempfile
 import time
 import inspect
+from typing import Optional, Union, Tuple
 
 import cadquery as cq
 
-from .typedefs import *
+from .typedefs import DimensionDefinitionType, CenterDefinitionType
 
 from .body import Body
 from .sketch import Sketch
 from .construction_plane import ConstructionPlane
 from .assembly import Assembly
+from .helpers import get_dimensions
+from .patterns import pattern_grid, pattern_rect # noqa
 
-from .helpers import *
-from .patterns import *
 
-
-def make_box(sizex: DimensionDefinitionType, sizey: DimensionDefinitionType, sizez: DimensionDefinitionType, center: CenterDefinitionType = True) -> 'Body':
+def make_box(sizex: DimensionDefinitionType,
+             sizey: DimensionDefinitionType,
+             sizez: DimensionDefinitionType,
+             center: CenterDefinitionType = True
+             ) -> 'Body':
     """
     Create a box-shaped body with the given dimensions.
 
@@ -39,18 +43,27 @@ def make_box(sizex: DimensionDefinitionType, sizey: DimensionDefinitionType, siz
     return __make_box_min_max(dimx[0], dimx[1], dimy[0], dimy[1], dimz[0], dimz[1])
 
 
-def __make_box_min_max(x1: float, x2: float, y1: float, y2: float, z1: float, z2: float) -> 'Body':
+def __make_box_min_max(x1: float,
+                       x2: float,
+                       y1: float,
+                       y2: float,
+                       z1: float,
+                       z2: float
+                       ) -> 'Body':
     solid = cq.Solid.makeBox(x2 - x1, y2 - y1, z2 - z1).move(cq.Location(cq.Vector(x1, y1, z1)))
     wp = cq.Workplane(obj=solid)
     return Body(wp)
 
 
-def make_extrude(plane: Union[ConstructionPlane, str], sketch: Sketch, amount: Union[float, Tuple[float, float]]) -> 'Body':
+def make_extrude(plane: Union[ConstructionPlane, str],
+                 sketch: Sketch,
+                 amount: Union[float, Tuple[float, float]]
+                 ) -> 'Body':
     """
     Create an extrusion from a sketch.
 
     Args:
-        plane (Union[ConstructionPlane,str]): The plane to extrude on. 
+        plane (Union[ConstructionPlane,str]): The plane to extrude on.
             Can be one of the strings "XY", "YZ", "XZ", "front", "back", "top", "bottom", "left" or "right"
         sketch (Sketch): The sketch to extrude.
         amount (float): The amount of extrusion. Can also be a tuple of two floats to extrude between two planes with the given offsets.
@@ -73,12 +86,11 @@ def make_extrude(plane: Union[ConstructionPlane, str], sketch: Sketch, amount: U
         return make_extrude(start_plane, sketch, amount[1] - amount[0])
 
 
-def make_text(
-    text: str,
-    size: float,
-    height: float,
-    font: str = "Arial",
-):
+def make_text(text: str,
+              size: float,
+              height: float,
+              font: str = "Arial",
+              ):
     """
     Create a 3D text object.
 
@@ -101,7 +113,7 @@ def make_construction_plane(plane: Union[ConstructionPlane, str], offset: Option
         wp = cq.Workplane(plane)
     else:
         wp = plane.cq()
-    if not offset is None:
+    if offset is not None:
         wp = wp.workplane(offset=offset)
     return ConstructionPlane(wp)
 
@@ -159,7 +171,6 @@ def show(item: Union[Body, Sketch, ConstructionPlane, Assembly]):
             temp_path = temp_path + ".dxf"
             item.export_dxf(temp_path)
             print("Cadscript sketch exported to ", temp_path)
-
 
 
 # examine the context of the caller. check if there is a function "show_object" available, return a reference to it

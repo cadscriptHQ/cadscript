@@ -12,7 +12,7 @@ def get_center_flags(center: CenterDefinitionType) -> Tuple[bool, bool, bool]:
         c = center.upper()
         return ('X' in c, 'Y' in c, 'Z' in c)
     else:
-        c = (center == True)
+        c = (center is True)
         return (c, c, c)
 
 
@@ -38,7 +38,8 @@ def get_dimensions(dimensions: Iterable[DimensionDefinitionType], center: Center
 
     Args:
         dimensions (tuple): A tuple of size values or tuple of tuples representing min/max.
-        center (bool or string): indicating whether to center the dimensions, either a bool or a string ('X', 'Y', 'Z', 'XY', 'XZ', 'YZ', 'XYZ')
+        center (bool or string): indicating whether to center the dimensions,
+            either a bool or a string ('X', 'Y', 'Z', 'XY', 'XZ', 'YZ', 'XYZ')
 
     Returns:
         tuple: A tuple of tuples with min/max values.

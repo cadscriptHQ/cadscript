@@ -5,14 +5,14 @@
 from typing import Tuple
 import cadquery as cq
 
-from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType, Vector3DType, AxisType
+from .typedefs import Vector3DType, AxisType
 from .sketch import Sketch
 
 
 class Body:
     """
-    Represents a 3D CAD object. They are typically created using make_* functions, e.g. 
-    :func:`cadscript.make_box` or :func:`cadscript.make_extrude`. 
+    Represents a 3D CAD object. They are typically created using make_* functions, e.g.
+    :func:`cadscript.make_box` or :func:`cadscript.make_extrude`.
     """
     __wp: cq.Workplane
 
@@ -214,7 +214,7 @@ class Body:
         """
         Exports the body to a STEP file.
 
-        Args:   
+        Args:
             filename (str): The filename to export to.
         """
         self.__wp.findSolid().exportStep(filename)
@@ -230,10 +230,10 @@ class Body:
 
     def render_svg(self, filename: str) -> None:
         """
-        Renders the body as an SVG illustration.   
+        Renders the body as an SVG illustration.
 
         Args:
-            filename (str): The filename to export to.     
+            filename (str): The filename to export to.
         """
         c = self.__wp.findSolid()
         cq.exporters.export(c,

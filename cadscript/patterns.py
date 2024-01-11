@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from itertools import product
-from typing import Optional, Tuple, Union
+from typing import Optional
 
-from .typedefs import *
-from .helpers import *
+from .typedefs import DimensionDefinitionType, CenterDefinitionType
+from .helpers import get_center_flags, get_dimension, get_dimensions
 
 
 def pattern_rect(sizex: float, sizey: float, center: CenterDefinitionType = True):
@@ -40,15 +40,22 @@ def pattern_grid(
     Generate a grid pattern of locations based on the given parameters.
 
     Args:
-        count_x (int): The number of grid points in the x-direction. If 1 is passed, the result will be a 1D grid, i.e. points along the y-axis.
-        count_y (int): The number of grid points in the y-direction. If 1 is passed, the result will be a 1D grid, i.e. points along the x-axis.
-        spacing_x (float, optional): The spacing between grid points in the x-direction. If not specified, it will be calculated based on the size_x parameter.
-        spacing_y (float, optional): The spacing between grid points in the y-direction. If not specified, it will be calculated based on the size_y parameter.
-        size_x (DimensionDefinitionType, optional): The size of the grid in the x-direction. If not specified, it will be calculated based on the spacing_x parameter.
-        size_y (DimensionDefinitionType, optional): The size of the grid in the y-direction. If not specified, it will be calculated based on the spacing_y parameter.
-        center (CenterDefinitionType, optional): Determines whether the grid is centered. If True, the grid will be centered. 
+        count_x (int): The number of grid points in the x-direction.
+            If 1 is passed, the result will be a 1D grid, i.e. points along the y-axis.
+        count_y (int): The number of grid points in the y-direction.
+            If 1 is passed, the result will be a 1D grid, i.e. points along the x-axis.
+        spacing_x (float, optional): The spacing between grid points in the x-direction.
+            If not specified, it will be calculated based on the size_x parameter.
+        spacing_y (float, optional): The spacing between grid points in the y-direction.
+            If not specified, it will be calculated based on the size_y parameter.
+        size_x (DimensionDefinitionType, optional): The size of the grid in the x-direction.
+            If not specified, it will be calculated based on the spacing_x parameter.
+        size_y (DimensionDefinitionType, optional): The size of the grid in the y-direction.
+            If not specified, it will be calculated based on the spacing_y parameter.
+        center (CenterDefinitionType, optional): Determines whether the grid is centered.
+            If True, the grid will be centered.
             If False, the grid will start from the origin. Can also be "X" or "Y" to center in only one direction.
-            Defaults to True. 
+            Defaults to True.
 
     Returns:
         List[Vector2DType]: A list of (x, y) coordinates representing the locations of the grid points.
