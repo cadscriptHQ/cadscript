@@ -303,7 +303,6 @@ if __name__ == "__main__":
         setup(app)
     except:
         pass
-    with open(c.get_file('./examples/bracket.py')) as f:
-        content = f.read()
-        pre_script, script, text  = c.get_source_file(content, "2-14", True)
+    #pre_script, script, text  = c.get_source_file(open(c.get_file('./examples/bracket.py')).read(), "2-14", True)
+    pre_script, script, text  = c.get_source_file(open(c.get_file('./examples/getting_started.py')).read(), None, None)
 
