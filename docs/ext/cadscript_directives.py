@@ -108,7 +108,7 @@ class cadscript_directive(cq_directive_vtk):
         ellipsis = False
 
         # split script at lines starting with "#STEP"
-        steps_sources = re.split(r'#STEP.*\n', content)
+        steps_sources = re.split(r'#\s?STEP.*\n', content)
         if steps:   
             if steps.startswith("..."):
                 steps = steps[3:]
@@ -255,7 +255,7 @@ class cadscript_auto_directive(cadscript_directive):
 
             # get all lines starting with "#DOCSTEP"
             # get (step_string, result_var) tuples from the lines
-            steps = re.findall(r'#DOCSTEP:\s*(.*),(.*)$', content, flags=re.MULTILINE)
+            steps = re.findall(r'#\s?DOCSTEP:\s*(.*),(.*)$', content, flags=re.MULTILINE)
 
             lines = []            
             for step, result_var in steps:
@@ -303,6 +303,6 @@ if __name__ == "__main__":
         setup(app)
     except:
         pass
-    #pre_script, script, text  = c.get_source_file(open(c.get_file('./examples/bracket.py')).read(), "2-14", True)
+    pre_script, script, text  = c.get_source_file(open(c.get_file('./examples/bracket.py')).read(), "2-14", True)
     pre_script, script, text  = c.get_source_file(open(c.get_file('./examples/getting_started.py')).read(), None, None)
 
