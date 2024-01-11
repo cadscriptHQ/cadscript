@@ -16,5 +16,8 @@ class BodyPropertiesTest(unittest.TestCase):
         box = cadscript.make_box(1,2,3, center=True)
         self.assertEqual(box.get_extent(), ((-0.5,0.5),(-1,1),(-1.5,1.5)))
 
+    def test_fail_box_extent(self):
+        self.fail("just a test")
+
 if __name__ == '__main__':
     unittest.main()        
