@@ -133,11 +133,15 @@ def show(item: Union[Body,Sketch,ConstructionPlane,Assembly]):
     Args:
         item: the item to show. Can be a :class:`Body` or a :class:`Sketch`
     '''
+    # check if there is a function "show_object" available
+    # if so, call it
     show_fn = __get_show_fn()
     if show_fn:
         show_fn(item.cq())
-    # when cadquery.vis is available
+    # TODO when cadquery.vis is available
     # show(item)
+        
+    # otherwise, export file to temp dir and print path
     else:
         temp_dir = Path(tempfile.gettempdir())
         temp_path = str(temp_dir / f"cadscript_{time.time()}")

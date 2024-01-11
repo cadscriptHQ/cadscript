@@ -36,6 +36,5 @@ def exportAll():
         s = gameToken(number)    
         s.export_stl("build/rummy_" + number + ".stl")           
     
-    
-exportAll()
 
+cad.show(gameToken("13"))
