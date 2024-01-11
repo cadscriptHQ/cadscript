@@ -10,25 +10,27 @@ from .typedefs import CenterDefinitionType, DimensionDefinitionType, Vector2DTyp
 def get_center_flags(center: CenterDefinitionType) -> Tuple[bool, bool, bool]:
     if isinstance(center, str):
         c = center.upper()
-        return ('X' in c , 'Y' in c, 'Z' in c)
+        return ('X' in c, 'Y' in c, 'Z' in c)
     else:
-        c = (center==True)
-        return (c,c,c)
+        c = (center == True)
+        return (c, c, c)
+
 
 def __handle_size(arg: Tuple[DimensionDefinitionType, bool]) -> Vector2DType:
     size, do_center = arg
-    dim1,dim2 = (0,0)
+    dim1, dim2 = (0, 0)
     if isinstance(size, tuple):
-        (dim1,dim2) = size
+        (dim1, dim2) = size
         if dim1 > dim2:
-            dim1,dim2 = dim2,dim1
+            dim1, dim2 = dim2, dim1
     else:
         dim2 = size
-        if do_center: 
-            half = (dim2-dim1)/2
+        if do_center:
+            half = (dim2 - dim1) / 2
             dim1 = -half
             dim2 = half
     return (dim1, dim2)
+
 
 def get_dimensions(dimensions: Iterable[DimensionDefinitionType], center: CenterDefinitionType) -> Iterator[Vector2DType]:
     """
@@ -41,8 +43,9 @@ def get_dimensions(dimensions: Iterable[DimensionDefinitionType], center: Center
     Returns:
         tuple: A tuple of tuples with min/max values.
 
-    """    
+    """
     return map(__handle_size, zip(dimensions, get_center_flags(center)))
+
 
 def get_dimension(dimension: DimensionDefinitionType, center: bool) -> Vector2DType:
     """
@@ -55,7 +58,6 @@ def get_dimension(dimension: DimensionDefinitionType, center: bool) -> Vector2DT
     Returns:
         tuple: A tuple with min/max values.
 
-    """    
+    """
     t = (dimension, center)
     return __handle_size(t)
-

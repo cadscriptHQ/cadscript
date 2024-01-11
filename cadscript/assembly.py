@@ -5,6 +5,7 @@
 import cadquery as cq
 from .body import Body
 
+
 class Assembly:
 
     def __init__(self):

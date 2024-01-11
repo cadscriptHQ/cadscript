@@ -26,50 +26,50 @@ def export_sketch_DXF(
     """
     w = cq.Workplane().placeSketch(s)
     plane = w.plane
-    
+
     dxf = ezdxf.new()
     dxf.units = ezdxf.units.MM
     msp = dxf.modelspace()
 
     for f in s.faces():
-      
-      shape = f.transformShape(plane.fG)
 
-      if approx == "spline":
-          edges = [
-              e.toSplines() if e.geomType() == "BSPLINE" else e for e in shape.Edges()
-          ]
+        shape = f.transformShape(plane.fG)
 
-      elif approx == "arc":
-          edges = []
+        if approx == "spline":
+            edges = [
+                e.toSplines() if e.geomType() == "BSPLINE" else e for e in shape.Edges()
+            ]
 
-          # this is needed to handle free wires
-          for el in shape.Wires():
-              edges.extend(cq.Face.makeFromWires(el).toArcs(tolerance).Edges())
+        elif approx == "arc":
+            edges = []
 
-      else:
-          edges = shape.Edges()
+            # this is needed to handle free wires
+            for el in shape.Wires():
+                edges.extend(cq.Face.makeFromWires(el).toArcs(tolerance).Edges())
 
-      for e in edges:
+        else:
+            edges = shape.Edges()
 
-          conv = cq.exporters.dxf.DXF_CONVERTERS.get(e.geomType(), cq.exporters.dxf._dxf_spline)
-          conv(e, msp, plane)
+        for e in edges:
+
+            conv = cq.exporters.dxf.DXF_CONVERTERS.get(e.geomType(), cq.exporters.dxf._dxf_spline)
+            conv(e, msp, plane)
 
     dxf.saveas(fname)
 
 
 def export_svg(part, filename, width=300, height=300, strokeWidth=0.6, projectionDir=(1, 1, 1)):
-  cq.exporters.export(part,
-                      filename,
-                      opt={
-                          "width": width,
-                          "height": height,
-                          "marginLeft": 5,
-                          "marginTop": 5,
-                          "showAxes": False,
-                          "projectionDir": projectionDir,
-                          "strokeWidth": strokeWidth,
-                          "strokeColor": (0, 0, 0),
-                          "hiddenColor": (0, 0, 255),
-                          "showHidden": False,
-                      },)
+    cq.exporters.export(part,
+                        filename,
+                        opt={
+                            "width": width,
+                            "height": height,
+                            "marginLeft": 5,
+                            "marginTop": 5,
+                            "showAxes": False,
+                            "projectionDir": projectionDir,
+                            "strokeWidth": strokeWidth,
+                            "strokeColor": (0, 0, 0),
+                            "hiddenColor": (0, 0, 255),
+                            "showHidden": False,
+                        },)

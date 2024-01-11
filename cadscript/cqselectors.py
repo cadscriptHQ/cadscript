@@ -4,6 +4,7 @@
 
 import cadquery as cq
 
+
 class NearestToPointListSelector(cq.Selector):
     """
     for each of the provided points, select the nearest one.

@@ -1,6 +1,5 @@
 import re
 
-import cadscript
 import traceback
 
 from pathlib import Path
@@ -11,7 +10,7 @@ from cadquery import exporters, Assembly, Compound, Color, Sketch
 from cadquery import cqgi
 from cadquery.occ_impl.assembly import toJSON
 from cadquery.occ_impl.jupyter_tools import DEFAULT_COLOR
-from docutils.parsers.rst import directives, Directive
+from docutils.parsers.rst import directives
 
 from cadquery.cq_directive import cq_directive_vtk, template_vtk, rendering_code
 
@@ -43,6 +42,7 @@ template_img = """
 
 """
 
+
 class cadscript_directive(cq_directive_vtk):
 
     option_spec = {
@@ -54,7 +54,7 @@ class cadscript_directive(cq_directive_vtk):
         "source": directives.path,
         "text_from_comment": directives.flag,
         "steps": directives.unchanged,
-      }
+    }
 
     def get_file(self, path):
         # get the absolute path of the file. If the file is not found, try to find it in parent directory
@@ -83,14 +83,14 @@ class cadscript_directive(cq_directive_vtk):
             source_file = options["source"].strip()
             with open(self.get_file(source_file)) as f:
                 content = f.read()
-                pre_script, script, text  = self.get_source_file(content, options.get("steps", None), "text_from_comment" in options)
+                pre_script, script, text = self.get_source_file(content, options.get("steps", None), "text_from_comment" in options)
         else:
             # use inline code
             script = "".join(script)
 
         # add the prefix and postfix
         plot_code = prefix + "\n" + pre_script + "\n" + script + "\n" + postfix.format(result_var=result_var)
-        
+
         # collect the result
         lines = self.generate_output(plot_code, text, script, options)
 
@@ -98,18 +98,18 @@ class cadscript_directive(cq_directive_vtk):
             state_machine.insert_input(lines, state_machine.input_lines.source(0))
 
         return []
-    
+
     def get_source_file(self, content, steps, text_from_comment):
 
-        content = re.sub(r'^cadscript.show\(.*$', '', content, flags=re.MULTILINE) # remove show() calls
+        content = re.sub(r'^cadscript.show\(.*$', '', content, flags=re.MULTILINE)  # remove show() calls
         text = ""
         pre_script = []
-        content = content + "\n" # fix problem with last line 
+        content = content + "\n"  # fix problem with last line
         ellipsis = False
 
         # split script at lines starting with "#STEP"
         steps_sources = re.split(r'#\s?STEP.*\n', content)
-        if steps:   
+        if steps:
             if steps.startswith("..."):
                 steps = steps[3:]
                 ellipsis = True
@@ -117,7 +117,7 @@ class cadscript_directive(cq_directive_vtk):
             if '-' in steps:
                 start, end = steps.split('-')
                 start = int(start)
-                end = int(end)+1
+                end = int(end) + 1
                 script = steps_sources[start:end]
                 pre_script = steps_sources[1:start]
             else:
@@ -125,7 +125,7 @@ class cadscript_directive(cq_directive_vtk):
                 script = [steps_sources[index]]
                 pre_script = steps_sources[1:index]
         else:
-            script = steps_sources[1:] # skip everything before step 1
+            script = steps_sources[1:]  # skip everything before step 1
 
         if text_from_comment:
             # extract the text from the comment
@@ -134,7 +134,7 @@ class cadscript_directive(cq_directive_vtk):
             for part in script:
                 last_comment = ""
                 new_part = ""
-                for line in part.split("\n")[:-1]: # skip last empty item with [:-1]
+                for line in part.split("\n")[:-1]:  # skip last empty item with [:-1]
                     if line.startswith("#"):
                         last_comment += line[1:].strip() + " "
                     else:
@@ -144,14 +144,14 @@ class cadscript_directive(cq_directive_vtk):
             text = last_comment
 
         script = "".join(script)
-        pre_script = "".join(pre_script)  
+        pre_script = "".join(pre_script)
 
         if ellipsis:
             script = "...\n" + script
 
         return pre_script, script, text
-        
-    def generate_output(self, plot_code, text, script, options ):
+
+    def generate_output(self, plot_code, text, script, options):
 
         lines = []
 
@@ -189,7 +189,7 @@ class cadscript_directive(cq_directive_vtk):
                 # rendering as image
                 render = self.render_image(assy, options)
             lines.extend(render)
-        
+
         except Exception:
             traceback.print_exc()
             assy = Assembly(Compound.makeText("CQGI error", 10, 5))
@@ -201,14 +201,14 @@ class cadscript_directive(cq_directive_vtk):
     def render_vtk(self, assy, options):
         data = dumps(toJSON(assy))
         return template_vtk.format(
-                  data=data,
-                  element="document.currentScript.parentNode",
-                  txt_align=options.get("align", "left"),
-                  width=options.get("width", "100%"),
-                  height=options.get("height", "500px"),
-              ).splitlines()    
-        
-        
+            data=data,
+            element="document.currentScript.parentNode",
+            txt_align=options.get("align", "left"),
+            width=options.get("width", "100%"),
+            height=options.get("height", "500px"),
+        ).splitlines()
+
+
     def render_image(self, assy, options):
         svg_options = {
             "projectionDir": (-3, -6, -2.5),
@@ -216,20 +216,20 @@ class cadscript_directive(cq_directive_vtk):
             "showHidden": True,
             "width": options.get("width", 600),
             "height": options.get("height", 200),
-            "marginLeft" : 20,
-            "marginTop" : 20,
+            "marginLeft": 20,
+            "marginTop": 20,
             "focus": 200,
         }
         out_svg = exporters.getSVG(assy.toCompound(), svg_options)
         out_svg = out_svg.replace("\n", "")
-        
+
         return template_img.format(
-                  out_svg=out_svg,
-                  txt_align=options.get("align", "left"),
-                  width="100%",
-                  height=options.get("height", "300")+"px",
-              ).splitlines()   
-    
+            out_svg=out_svg,
+            txt_align=options.get("align", "left"),
+            width="100%",
+            height=options.get("height", "300") + "px",
+        ).splitlines()
+
 
 
 class cadscript_auto_directive(cadscript_directive):
@@ -240,7 +240,7 @@ class cadscript_auto_directive(cadscript_directive):
         "align": directives.unchanged,
         "interactive": directives.flag,
         "source": directives.path,
-      }
+    }
 
 
     def run(self):
@@ -257,16 +257,16 @@ class cadscript_auto_directive(cadscript_directive):
             # get (step_string, result_var) tuples from the lines
             steps = re.findall(r'#\s?DOCSTEP:\s*(.*),(.*)$', content, flags=re.MULTILINE)
 
-            lines = []            
+            lines = []
             for step, result_var in steps:
-                pre_script, script, text  = self.get_source_file(content, step, text_from_comment=True)
-                #print("STEP: ", step)
-                #print("SCRIPT: \n", script)
-                #print("TEXT: \n", text)
-                
+                pre_script, script, text = self.get_source_file(content, step, text_from_comment=True)
+                # print("STEP: ", step)
+                # print("SCRIPT: \n", script)
+                # print("TEXT: \n", text)
+
                 # add the prefix and postfix
                 plot_code = prefix + "\n" + pre_script + "\n" + script + "\n" + postfix.format(result_var=result_var)
-                
+
                 # collect the result
                 lines.extend(self.generate_output(plot_code, text, script, options))
 
@@ -274,6 +274,7 @@ class cadscript_auto_directive(cadscript_directive):
                 state_machine.insert_input(lines, state_machine.input_lines.source(0))
 
         return []
+
 
 def setup(app):
     setup.app = app
@@ -292,8 +293,9 @@ def setup(app):
 
 if __name__ == "__main__":
     # debug helper
-    c = cadscript_auto_directive(name="test", arguments=[], 
-        options = {"source": "test", "steps": "2-14", "text_from_comment": True}, 
+    c = cadscript_auto_directive(
+        name="test", arguments=[],
+        options={"source": "test", "steps": "2-14", "text_from_comment": True},
         content=[], lineno=1, content_offset=0, block_text="", state=None, state_machine=None)
     try:
         # create a dummy object with attribute confdir
@@ -303,6 +305,5 @@ if __name__ == "__main__":
         setup(app)
     except:
         pass
-    pre_script, script, text  = c.get_source_file(open(c.get_file('./examples/bracket.py')).read(), "2-14", True)
-    pre_script, script, text  = c.get_source_file(open(c.get_file('./examples/getting_started.py')).read(), None, None)
-
+    pre_script, script, text = c.get_source_file(open(c.get_file('./examples/bracket.py')).read(), "2-14", True)
+    pre_script, script, text = c.get_source_file(open(c.get_file('./examples/getting_started.py')).read(), None, None)

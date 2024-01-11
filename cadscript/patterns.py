@@ -8,7 +8,8 @@ from typing import Optional, Tuple, Union
 from .typedefs import *
 from .helpers import *
 
-def pattern_rect(sizex:float, sizey:float, center:CenterDefinitionType=True):
+
+def pattern_rect(sizex: float, sizey: float, center: CenterDefinitionType = True):
     """
     Generate a rectangular pattern.
 
@@ -25,15 +26,16 @@ def pattern_rect(sizex:float, sizey:float, center:CenterDefinitionType=True):
     dimx, dimy = get_dimensions([sizex, sizey], center)
     return [(dimx[0], dimy[0]), (dimx[0], dimy[1]), (dimx[1], dimy[1]), (dimx[1], dimy[0])]
 
+
 def pattern_grid(
-        count_x: int, 
-        count_y: int, 
+        count_x: int,
+        count_y: int,
         *,
-        spacing_x: Optional[float]=None, 
-        spacing_y: Optional[float]=None, 
-        size_x: Optional[DimensionDefinitionType]=None, 
-        size_y: Optional[DimensionDefinitionType]=None, 
-        center: CenterDefinitionType=True):
+        spacing_x: Optional[float] = None,
+        spacing_y: Optional[float] = None,
+        size_x: Optional[DimensionDefinitionType] = None,
+        size_y: Optional[DimensionDefinitionType] = None,
+        center: CenterDefinitionType = True):
     """
     Generate a grid pattern of locations based on the given parameters.
 
@@ -64,30 +66,30 @@ def pattern_grid(
         if size_x is not None:
             if spacing_x is not None:
                 raise ValueError("Only one of spacing_x or size_x must be specified")
-            (min_x,max_x) = get_dimension(size_x, center_x)
+            (min_x, max_x) = get_dimension(size_x, center_x)
             offset_x = min_x
-            spacing_x = (max_x-min_x)/(count_x-1)
+            spacing_x = (max_x - min_x) / (count_x - 1)
         elif spacing_x is not None:
-            if center_x: 
-                offset_x = -spacing_x*(count_x-1)/2 
+            if center_x:
+                offset_x = -spacing_x * (count_x - 1) / 2
     else:
         spacing_x = 0
-        
+
     if count_y > 1:
         if spacing_y is None and size_y is None:
             raise ValueError("Either spacing_y or size_y must be specified")
         if size_y is not None:
             if spacing_y is not None:
                 raise ValueError("Only one of spacing_y or size_y must be specified")
-            (min_y,max_y) = get_dimension(size_y, center_y)
+            (min_y, max_y) = get_dimension(size_y, center_y)
             offset_y = min_y
-            spacing_y = (max_y-min_y)/(count_y-1)
+            spacing_y = (max_y - min_y) / (count_y - 1)
         elif spacing_y is not None:
-            if center_y: 
-                offset_y = -spacing_y*(count_y-1)/2 
+            if center_y:
+                offset_y = -spacing_y * (count_y - 1) / 2
     else:
         spacing_y = 0
-        
+
     for i, j in product(range(count_x), range(count_y)):
         locs.append((i * spacing_x + offset_x, j * spacing_y + offset_y))
     return locs

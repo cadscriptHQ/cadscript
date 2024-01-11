@@ -20,7 +20,7 @@ from .helpers import *
 from .patterns import *
 
 
-def make_box(sizex: DimensionDefinitionType, sizey: DimensionDefinitionType, sizez: DimensionDefinitionType, center: CenterDefinitionType=True) -> 'Body':
+def make_box(sizex: DimensionDefinitionType, sizey: DimensionDefinitionType, sizez: DimensionDefinitionType, center: CenterDefinitionType = True) -> 'Body':
     """
     Create a box-shaped body with the given dimensions.
 
@@ -35,15 +35,17 @@ def make_box(sizex: DimensionDefinitionType, sizey: DimensionDefinitionType, siz
     Returns:
         Body: The created box-shaped body.
     """
-    dimx,dimy,dimz = get_dimensions([sizex, sizey, sizez], center)
-    return __make_box_min_max(dimx[0],dimx[1],dimy[0],dimy[1],dimz[0],dimz[1])
+    dimx, dimy, dimz = get_dimensions([sizex, sizey, sizez], center)
+    return __make_box_min_max(dimx[0], dimx[1], dimy[0], dimy[1], dimz[0], dimz[1])
+
 
 def __make_box_min_max(x1: float, x2: float, y1: float, y2: float, z1: float, z2: float) -> 'Body':
-    solid = cq.Solid.makeBox(x2-x1, y2-y1, z2-z1).move(cq.Location(cq.Vector(x1,y1,z1)))
-    wp = cq.Workplane(obj = solid)
+    solid = cq.Solid.makeBox(x2 - x1, y2 - y1, z2 - z1).move(cq.Location(cq.Vector(x1, y1, z1)))
+    wp = cq.Workplane(obj=solid)
     return Body(wp)
 
-def make_extrude(plane: Union[ConstructionPlane,str], sketch: Sketch, amount: Union[float,Tuple[float,float]]) -> 'Body':
+
+def make_extrude(plane: Union[ConstructionPlane, str], sketch: Sketch, amount: Union[float, Tuple[float, float]]) -> 'Body':
     """
     Create an extrusion from a sketch.
 
@@ -68,8 +70,8 @@ def make_extrude(plane: Union[ConstructionPlane,str], sketch: Sketch, amount: Un
         if not isinstance(amount, tuple) or len(amount) != 2:
             raise ValueError("amount must be a float or a tuple of two floats")
         start_plane = make_construction_plane(plane, amount[0])
-        return make_extrude(start_plane, sketch, amount[1]-amount[0]) 
-        
+        return make_extrude(start_plane, sketch, amount[1] - amount[0])
+
 
 def make_text(
     text: str,
@@ -90,10 +92,11 @@ def make_text(
         Body: The 3D text object.
     """
     c = cq.Compound.makeText(text, size, height, font=font)
-    wp = cq.Workplane(obj = c)
+    wp = cq.Workplane(obj=c)
     return Body(wp)
 
-def make_construction_plane(plane: Union[ConstructionPlane,str], offset:Optional[float]=None):
+
+def make_construction_plane(plane: Union[ConstructionPlane, str], offset: Optional[float] = None):
     if isinstance(plane, str):
         wp = cq.Workplane(plane)
     else:
@@ -101,6 +104,7 @@ def make_construction_plane(plane: Union[ConstructionPlane,str], offset:Optional
     if not offset is None:
         wp = wp.workplane(offset=offset)
     return ConstructionPlane(wp)
+
 
 def make_sketch():
     """
@@ -111,6 +115,7 @@ def make_sketch():
     """
     sketch = cq.Sketch()
     return Sketch(sketch)
+
 
 def import_step(path):
     """
@@ -125,7 +130,8 @@ def import_step(path):
     wp = cq.importers.importStep(path)
     return Body(wp)
 
-def show(item: Union[Body,Sketch,ConstructionPlane,Assembly]):
+
+def show(item: Union[Body, Sketch, ConstructionPlane, Assembly]):
     '''
     If inside CQ-Editor, will display the item in the 3D view.
     Otherwise will do nothing.
@@ -140,7 +146,7 @@ def show(item: Union[Body,Sketch,ConstructionPlane,Assembly]):
         show_fn(item.cq())
     # TODO when cadquery.vis is available
     # show(item)
-        
+
     # otherwise, export file to temp dir and print path
     else:
         temp_dir = Path(tempfile.gettempdir())
@@ -156,31 +162,23 @@ def show(item: Union[Body,Sketch,ConstructionPlane,Assembly]):
 
 
 
-#examine the context of the caller. check if there is a function "show_object" available, return a reference to it
+# examine the context of the caller. check if there is a function "show_object" available, return a reference to it
 def __get_show_fn():
     # Start with the immediate caller's caller frame.
     f = inspect.currentframe()
     if f is None or f.f_back is None:
         return None
     frame = f.f_back.f_back
-    
+
     while frame:
         # Check global scope.
         if 'show_object' in frame.f_globals:
             potential_func = frame.f_globals['show_object']
             if callable(potential_func):
                 return potential_func
-        
+
         # Move up to the next caller in the stack.
         frame = frame.f_back
 
     # If function is not found in any ancestor's scope, return None.
     return None
-    
-
-    
-
-
-
-
-
