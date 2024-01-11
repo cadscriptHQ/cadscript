@@ -55,8 +55,7 @@ class Sketch:
       Returns:
         Sketch: The updated sketch object.
       """
-      action = lambda x: x.rect(size_x, size_y)
-      #action = lambda x: self.__rect_helper(x, size_x, size_y, center)
+      action = lambda x: self.__rect_helper(x, size_x, size_y, center)
       return self.__perform_action(action, positions)
 
     def cut_rect(self, size_x: DimensionDefinitionType, size_y: DimensionDefinitionType, *, center: CenterDefinitionType = True, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
