@@ -36,7 +36,7 @@ sketch1.chamfer(">X", 10)
 # The new rectangle will be "added", that is, it will be unioned with the first rectangle.
 # After that we add a circle with diameter 30, its center at x=50,y=0.
 sketch1.add_rect(50, 20, center="Y")
-sketch1.add_circle(d=30, positions=[(50,0)])
+sketch1.add_circle(d=30, pos=(50,0))
 #STEP 5
 # Now we cut a rectangle from the sketch.
 # The dimension in x direction is here given by a tuple. 
@@ -50,13 +50,13 @@ sketch1.cut_rect((-50,20), 16, center="Y")
 sketch1.fillet("not <X", 4)
 #STEP 7
 # Cutting a circle from the sketch, centered at x=50, y=0 with diameter 16.
-sketch1.cut_circle(d=16, positions=[(50,0)])
+sketch1.cut_circle(d=16, pos=(50,0))
 
 #STEP 8
 # Make a new sketch, add a rectangle and a circle.
 sketch2 = cadscript.make_sketch()
 sketch2.add_rect(70, 5, center=False)
-sketch2.add_circle(d=26, positions=[(0,10)])
+sketch2.add_circle(d=26, pos=(0,10))
 #STEP 9
 # We add a fillet now. We want only the point where the circle and the rectangle meet.
 # The search string ">>X" sorts all vertices in positive X direction.
@@ -67,7 +67,7 @@ sketch2.fillet(">>X[1]", 15)
 # The circle is centered at x=0,y=10 with diameter 12.
 # The rectangle ranges from -50 to 50 in x direction 
 # and -100 to 0 in y direction, effectively cutting off the lower half of the sketch.
-sketch2.cut_circle(d=12, positions=[(0,10)])
+sketch2.cut_circle(d=12, pos=(0,10))
 sketch2.cut_rect(100, (-100,0), center="X")
 
 #STEP 11
