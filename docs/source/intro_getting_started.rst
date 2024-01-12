@@ -65,3 +65,11 @@ Finally, we place the sketch on the top face of our object, rotate it 45 degrees
         * :py:meth:`Sketch.add_circle` 
         * :py:meth:`Sketch.add_rect` 
         * :py:meth:`Body.cut_extrude` 
+
+
+Second Example
+--------------
+
+.. cadscript-auto:: 
+    :source: ../examples/bracket.py
+

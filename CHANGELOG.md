@@ -1,9 +1,18 @@
 # Changelog
 
+## [0.4] in progress
+
+- new method: Body.intersect
+- renamed Body.fuse() to Body.add()
+- reordered params of cadscript.make_extrude, allowed passing of tuple for amount
+- removed method Sketch.finalize()
+- vertex selector support for Sketch.fillet() and Sketch.chamfer(). Also allow passing point(s)
+
+## [0.3] - 2024-01-03
+
+- Refactoring; API cleanup 
+
 ## [0.2] - 2023-11-26
 
 - Initial version on github
 
-## [0.3] - 2024-01-03
-
-- Refectoring; API cleanup 

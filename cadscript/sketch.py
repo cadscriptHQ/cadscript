@@ -4,316 +4,474 @@
 
 import cadquery as cq
 
-from typing import Any, Callable, Iterable, Optional, TypeVar
+from typing import Iterable, List, Optional, Union
 
-from .typedefs import DimensionDefinitionType, CenterDefinitionType, EdgeQueryType, Vector2DType, Vector3DType
+from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType
 from .export import export_sketch_DXF
 from .helpers import get_dimensions
+from .cqselectors import NearestToPointListSelector
+
 
 class Sketch:
     """
     Represents a 2D sketch. Sketch instances are typically created using :func:`cadscript.make_sketch`.
     """
     __sketch: cq.Sketch
-    __finalized_sketch: Optional[cq.Sketch]
 
     def __init__(self, sketch: cq.Sketch) -> None:
-      self.__sketch = sketch
-      self.__finalized_sketch = None
+        self.__sketch = sketch
 
+    def __perform_action(self,
+                         action,
+                         positions: Optional[Iterable[Vector2DType]]
+                         ) -> 'Sketch':
+        if positions:
+            self.__sketch = action(self.__sketch.push(positions))
+        else:
+            self.__sketch = action(self.__sketch)
+        self.__sketch.reset().clean()
+        return self
 
-    def finalize(self) -> 'Sketch':
-      self.__finalized_sketch = self.__sketch
-      return self
+    def __rect_helper(self,
+                      sketch,
+                      size_x: DimensionDefinitionType,
+                      size_y: DimensionDefinitionType,
+                      center: CenterDefinitionType,
+                      mode="a"
+                      ):
+        dim1, dim2 = get_dimensions([size_x, size_y], center)
+        x1, x2 = dim1
+        y1, y2 = dim2
+        p0 = cq.Vector(x1, y1)
+        p1 = cq.Vector(x2, y1)
+        p2 = cq.Vector(x2, y2)
+        p3 = cq.Vector(x1, y2)
+        return sketch.polygon([p0, p1, p2, p3, p0], mode=mode)
 
-    def __perform_action(self, action, positions: Optional[Iterable[Vector2DType]]) -> 'Sketch':
-      if positions:
-        self.__sketch = action(self.__sketch.push(positions))
-      else:
-        self.__sketch = action(self.__sketch)
-      self.__sketch.reset().clean()
-      return self
+    def __get_positions(self,
+                        positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]],
+                        pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]]
+                        ) -> Optional[List[Vector2DType]]:
+        if positions is not None and pos is not None:
+            raise ValueError("only one of positions and pos can be specified")
+        if positions is None and pos is None:
+            return None
+        p = positions if positions is not None else pos
+        pos_list = [p] if isinstance(p, tuple) else p
+        return pos_list
 
-    def __rect_helper(self, sketch, size_x: DimensionDefinitionType, size_y: DimensionDefinitionType, center: CenterDefinitionType, mode="a"):
-      dim1, dim2 = get_dimensions([size_x, size_y], center)
-      x1, x2 = dim1
-      y1, y2 = dim2
-      return sketch.polygon([cq.Vector(x1, y1), cq.Vector(x1, y2), cq.Vector(x2, y2), cq.Vector(x2, y1), cq.Vector(x1, y1)], mode=mode)
+    def add_rect(self,
+                 size_x: DimensionDefinitionType,
+                 size_y: DimensionDefinitionType,
+                 *,
+                 center: CenterDefinitionType = True,
+                 positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                 pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                 ) -> 'Sketch':
+        """
+        Adds a rectangle to the sketch object.
 
-    def add_rect(self, size_x: DimensionDefinitionType, size_y: DimensionDefinitionType, *, center: CenterDefinitionType = True, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
-      """
-      Adds a rectangle to the sketch object.
+        Args:
+            size_x (DimensionDefinitionType): The size of the rectangle along the x-axis.
+            size_y (DimensionDefinitionType): The size of the rectangle along the y-axis.
+            center (CenterDefinitionType, optional): Determines whether the rectangle is centered.
+                If False, the rectangle will start from the origin.
+                Can also be "X" or "Y" to center in only one direction. Defaults to True.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a rectangle is added for each of the entries,
+                specifying the offset as (x,y) tuple.
+                Defaults to None, which results in a single rectangle added with no offset.
+            pos: Shorthand for positions parameter, only use one of them.
 
-      Args:
-        size_x (DimensionDefinitionType): The size of the rectangle along the x-axis.
-        size_y (DimensionDefinitionType): The size of the rectangle along the y-axis.
-        center (CenterDefinitionType, optional): Determines whether the rectangle is centered. If False, the rectangle will start from the origin.
-            Can also be "X" or "Y" to center in only one direction. Defaults to True.
-        positions (Optional[Iterable[Vector2DType]], optional): If given, a rectangle is added for each of the entries, specifying the offset as (x,y) tuple. 
-            Defaults to None, which results in a single rectangle added with no offset.
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        action = lambda x: self.__rect_helper(x, size_x, size_y, center)
+        return self.__perform_action(action, self.__get_positions(positions, pos))
 
-      Returns:
-        Sketch: The updated sketch object.
-      """
-      action = lambda x: self.__rect_helper(x, size_x, size_y, center)
-      return self.__perform_action(action, positions)
+    def cut_rect(self,
+                 size_x: DimensionDefinitionType,
+                 size_y: DimensionDefinitionType,
+                 *,
+                 center: CenterDefinitionType = True,
+                 positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                 pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                 ) -> 'Sketch':
+        """
+        Cuts a rectangle from the sketch object.
 
-    def cut_rect(self, size_x: DimensionDefinitionType, size_y: DimensionDefinitionType, *, center: CenterDefinitionType = True, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
-      """
-      Cuts a rectangle from the sketch object.
+        Args:
+            size_x (DimensionDefinitionType): The size of the rectangle along the x-axis.
+            size_y (DimensionDefinitionType): The size of the rectangle along the y-axis.
+            center (CenterDefinitionType, optional): Determines whether the rectangle is centered.
+                If False, the rectangle will start from the origin.
+                Can also be "X" or "Y" to center in only one direction. Defaults to True.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a rectangle is cut for each of the entries,
+                specifying the offset as (x,y) tuple.
+                Defaults to None, which results in a single rectangle cut with no offset.
+            pos: Shorthand for positions parameter, only use one of them.
 
-      Args:
-        size_x (DimensionDefinitionType): The size of the rectangle along the x-axis.
-        size_y (DimensionDefinitionType): The size of the rectangle along the y-axis.
-        center (CenterDefinitionType, optional): Determines whether the rectangle is centered. If False, the rectangle will start from the origin.
-            Can also be "X" or "Y" to center in only one direction. Defaults to True.
-        positions (Optional[Iterable[Vector2DType]], optional): If given, a rectangle is cut for each of the entries, specifying the offset as (x,y) tuple. 
-            Defaults to None, which results in a single rectangle cut with no offset.
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        action = lambda x: self.__rect_helper(x, size_x, size_y, center, mode="s")
+        return self.__perform_action(action, self.__get_positions(positions, pos))
 
-      Returns:
-        Sketch: The updated sketch object.
-      """
-      action = lambda x: self.__rect_helper(x, size_x, size_y, center, mode="s")
-      return self.__perform_action(action, positions)
+    def __get_radius(self,
+                     r: Optional[float] = None,
+                     radius: Optional[float] = None,
+                     d: Optional[float] = None,
+                     diameter: Optional[float] = None
+                     ) -> float:
+        '''
+        Helper function to get the radius from the given parameters.
+        '''
+        # check only one parameter is specified
+        if sum(x is not None for x in [r, radius, d, diameter]) > 1:
+            raise ValueError("only one of r, radius, d, diameter can be specified")
+        if r is not None:
+            return r
+        elif radius is not None:
+            return radius
+        elif d is not None:
+            return d / 2
+        elif diameter is not None:
+            return diameter / 2
+        else:
+            raise ValueError("no radius/diameter specified")
 
-    def __get_radius(self, r:Optional[float]=None, radius:Optional[float]=None, d:Optional[float]=None, diameter:Optional[float]=None) -> float:
-      # check only one parameter is specified
-      if sum(x is not None for x in [r, radius, d, diameter]) > 1:
-        raise ValueError("only one of r, radius, d, diameter can be specified")
-      if r is not None:
-        return r
-      elif radius is not None:
-        return radius
-      elif d is not None:
-        return d / 2
-      elif diameter is not None:
-        return diameter / 2
-      else:
-        raise ValueError("no radius/diameter specified")
-      
-    def add_circle(self, *, r:Optional[float]=None, radius:Optional[float]=None, d:Optional[float]=None, diameter:Optional[float]=None, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
-      """
-      Adds a circle to the sketch. One of the parameters 'r', 'radius', 'd' or 'diameter' must be specified.
+    def add_circle(self,
+                   *,
+                   r: Optional[float] = None,
+                   radius: Optional[float] = None,
+                   d: Optional[float] = None,
+                   diameter: Optional[float] = None,
+                   positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                   pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                   ) -> 'Sketch':
+        """
+        Adds a circle to the sketch. One of the parameters 'r', 'radius', 'd' or 'diameter' must be specified.
 
-      Parameters:
-        r (Optional[float]): The radius of the circle.
-        radius (Optional[float]): The radius of the circle (alternative to 'r').
-        d (Optional[float]): The diameter of the circle.
-        diameter (Optional[float]): The diameter of the circle (alternative to 'd').
-        positions (Optional[Iterable[Vector2DType]]): If given, a circle is added for each of the entries, specifying the center as (x,y) tuple.  If None, a single circle will be added at the origin.
+        Parameters:
+            r (float, optional): The radius of the circle.
+            radius (float, optional): The radius of the circle (alternative to 'r').
+            d (float, optional): The diameter of the circle.
+            diameter (float, optional): The diameter of the circle (alternative to 'd').
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a circle is added for each of the entries,
+                specifying the center as (x,y) tuple.  If None, a single circle will be added at the origin.
+            pos: Shorthand for positions parameter, only use one of them.
 
-      Returns:
-        Sketch: The updated sketch object.
-      """
-      r = self.__get_radius(r, radius, d, diameter)    
-      action = lambda x: x.circle(r)
-      return self.__perform_action(action, positions)
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        r = self.__get_radius(r, radius, d, diameter)
+        action = lambda x: x.circle(r)
+        return self.__perform_action(action, self.__get_positions(positions, pos))
 
-    def cut_circle(self, *, r:Optional[float]=None, radius:Optional[float]=None, d:Optional[float]=None, diameter:Optional[float]=None, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
-      """
-      Cuts a circle from the sketch. One of the parameters 'r', 'radius', 'd' or 'diameter' must be specified.
+    def cut_circle(self,
+                   *,
+                   r: Optional[float] = None,
+                   radius: Optional[float] = None,
+                   d: Optional[float] = None,
+                   diameter: Optional[float] = None,
+                   positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                   pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                   ) -> 'Sketch':
+        """
+        Cuts a circle from the sketch. One of the parameters 'r', 'radius', 'd' or 'diameter' must be specified.
 
-      Parameters:
-        r (Optional[float]): The radius of the circle.
-        radius (Optional[float]): The radius of the circle (alternative to 'r').
-        d (Optional[float]): The diameter of the circle.
-        diameter (Optional[float]): The diameter of the circle (alternative to 'd').
-        positions (Optional[Iterable[Vector2DType]]): If given, a circle is cut for each of the entries, specifying the center as (x,y) tuple.  If None, a single circle will be cut at the origin.
+        Parameters:
+            r (float, optional): The radius of the circle.
+            radius (float, optional): The radius of the circle (alternative to 'r').
+            d (float, optional): The diameter of the circle.
+            diameter (float, optional): The diameter of the circle (alternative to 'd').
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a circle is cut for each of the entries,
+                specifying the center as (x,y) tuple.  If None, a single circle will be cut at the origin.
+            pos: Shorthand for positions parameter, only use one of them.
 
-      Returns:
-        Sketch: The updated sketch object.
-      """
-      r = self.__get_radius(r, radius, d, diameter)    
-      action = lambda x: x.circle(r, mode="s")
-      return self.__perform_action(action, positions)
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        r = self.__get_radius(r, radius, d, diameter)
+        action = lambda x: x.circle(r, mode="s")
+        return self.__perform_action(action, self.__get_positions(positions, pos))
 
-    def add_polygon(self, point_list: Iterable[Vector2DType], *, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
-      """
-      Adds a polygon to the sketch.
+    def add_polygon(self,
+                    point_list: Iterable[Vector2DType],
+                    *,
+                    positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                    pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                    ) -> 'Sketch':
+        """
+        Adds a polygon to the sketch.
 
-      Args:
-        point_list (Iterable[Vector2DType]): A list of points defining the polygon.
-        positions (Optional[Iterable[Vector2DType]], optional): If given, a polygon is added for each of the entries, specifying the offset as (x,y) tuple. 
-            Defaults to None, which results in a single polygon added with no offset.
+        Args:
+            point_list (Iterable[Vector2DType]): A list of points defining the polygon.
+                The points must be given in counter-clockwise order.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a polygon
+                is added for each of the entries, specifying the offset as (x,y) tuple.
+                Defaults to None, which results in a single polygon added with no offset.
+            pos: Shorthand for positions parameter, only use one of them.
 
-      Returns:
-        Sketch: The modified sketch object.
+        Returns:
+            Sketch: The modified sketch object.
 
-      """
-      action = lambda x: x.polygon(point_list)
-      return self.__perform_action(action, positions)
+        """
+        action = lambda x: x.polygon(point_list)
+        return self.__perform_action(action, self.__get_positions(positions, pos))
 
-    def cut_polygon(self, point_list: Iterable[Vector2DType], *, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
-      """
-      Cuts a polygon from the sketch.
+    def cut_polygon(self,
+                    point_list: Iterable[Vector2DType],
+                    *,
+                    positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                    pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                    ) -> 'Sketch':
+        """
+        Cuts a polygon from the sketch.
 
-      Args:
-        point_list (Iterable[Vector2DType]): A list of points defining the polygon.
-        positions (Optional[Iterable[Vector2DType]], optional): If given, a polygon is added for each of the entries, specifying the offset as (x,y) tuple. 
-            Defaults to None, which results in a single polygon added with no offset.
+        Args:
+            point_list (Iterable[Vector2DType]): A list of points defining the polygon.
+                The points must be given in counter-clockwise order.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a polygon is added for each of the entries,
+                specifying the offset as (x,y) tuple.
+                Defaults to None, which results in a single polygon added with no offset.
+            pos: Shorthand for positions parameter, only use one of them.
 
-      Returns:
-        Sketch: The modified sketch object.
+        Returns:
+            Sketch: The modified sketch object.
 
-      """
-      action = lambda x: x.polygon(point_list, mode="s")
-      return self.__perform_action(action, positions)
+        """
+        action = lambda x: x.polygon(point_list, mode="s")
+        return self.__perform_action(action, self.__get_positions(positions, pos))
 
-    def add_slot(self, w: float, h: float, *, angle: float = 0, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
-      """
-      Adds a slot to the sketch. The slot is defined by a width and height, and an angle of rotation. By default (rotation is 0), 
-      the slot is parallel to the x-axis. The width is the non-rounded part along the x-axis and the height is the extent along the y-axis.
-      The part is centered at the origin unless the positions paramter is specified.
+    def add_slot(self,
+                 w: float,
+                 h: float,
+                 *,
+                 angle: float = 0,
+                 positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                 pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                 ) -> 'Sketch':
+        """
+        Adds a slot to the sketch. The slot is defined by a width and height, and an angle of rotation. By default (rotation is 0),
+        the slot is parallel to the x-axis. The width is the non-rounded part along the x-axis and the height is
+        the extent along the y-axis. The part is centered at the origin unless the positions paramter is specified.
 
-      Args:
-        w (float): The width of the slot, the part without the rounded sides.
-        h (float): The height of the slot.
-        angle (float, optional): The angle of rotation for the slot. Defaults to 0, which means the slot is parallel to the x-axis.
-        positions (Optional[Iterable[Vector2DType]], optional): If given, a slot is added for each of the entries, specifying the 
-            its respective center as (x,y) tuple. Defaults to None, which results in a single slot added at the origin.
+        Args:
+            w (float): The width of the slot, the part without the rounded sides.
+            h (float): The height of the slot.
+            angle (float, optional): The angle of rotation for the slot. Defaults to 0, which means the slot is parallel to the x-axis.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a slot is added for each of the entries, specifying the
+                its respective center as (x,y) tuple. Defaults to None, which results in a single slot added at the origin.
+            pos: Shorthand for positions parameter, only use one of them.
 
-      Returns:
-        Sketch: The updated sketch object.
-      """
-      action = lambda x: x.slot(w, h, angle=angle)
-      return self.__perform_action(action, positions)    
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        action = lambda x: x.slot(w, h, angle=angle)
+        return self.__perform_action(action, self.__get_positions(positions, pos))
 
-    def cut_slot(self, w:float, h:float, *, angle:float=0, positions: Optional[Iterable[Vector2DType]] = None) -> 'Sketch':
-      """
-      Cuts a slot from sketch. The slot is defined by a width and height, and an angle of rotation. By default (rotation is 0), 
-      the slot is parallel to the x-axis. The width is the non-rounded part along the x-axis and the height is the extent along the y-axis.
-      The part is centered at the origin unless the positions paramter is specified.
+    def cut_slot(self,
+                 w: float,
+                 h: float,
+                 *,
+                 angle: float = 0,
+                 positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                 pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                 ) -> 'Sketch':
+        """
+        Cuts a slot from sketch. The slot is defined by a width and height, and an angle of rotation. By default (rotation is 0),
+        the slot is parallel to the x-axis. The width is the non-rounded part along the x-axis and the height is the extent
+        along the y-axis.
+        The part is centered at the origin unless the positions paramter is specified.
 
-      Args:
-        w (float): The width of the slot, the part without the rounded sides.
-        h (float): The height of the slot.
-        angle (float, optional): The angle of rotation for the slot. Defaults to 0, which means the slot is parallel to the x-axis.
-        positions (Optional[Iterable[Vector2DType]], optional): If given, a slot is added for each of the entries, specifying the 
-            its respective center as (x,y) tuple. Defaults to None, which results in a single slot added at the origin.
+        Args:
+            w (float): The width of the slot, the part without the rounded sides.
+            h (float): The height of the slot.
+            angle (float, optional): The angle of rotation for the slot. Defaults to 0, which means the slot is parallel to the x-axis.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a slot is added for each of the entries, specifying the
+                its respective center as (x,y) tuple. Defaults to None, which results in a single slot added at the origin.
+            pos: Shorthand for positions parameter, only use one of them.
 
-      Returns:
-        Sketch: The updated sketch object.
-      """
-      action = lambda x: x.slot(w, h, angle=angle, mode="s")
-      return self.__perform_action(action, positions)
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        action = lambda x: x.slot(w, h, angle=angle, mode="s")
+        return self.__perform_action(action, self.__get_positions(positions, pos))
 
-    def add_import_dxf(self, dxf_filename:str, *, positions: Optional[Iterable[Vector2DType]] = None, tolerance:float = 1e-3) -> 'Sketch':
-      """
-      Imports a DXF file and adds it to the sketch object. The DXF mus contain one or more closed loops from lines and curves.
+    def add_import_dxf(self,
+                       dxf_filename: str,
+                       *,
+                       positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                       pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                       tolerance: float = 1e-3
+                       ) -> 'Sketch':
+        """
+        Imports a DXF file and adds it to the sketch object. The DXF mus contain one or more closed loops from lines and curves.
 
-      Args:
-        dxf_filename (str): The filename of the DXF file to import.
-        positions (Optional[Iterable[Vector2DType]]): Optional positions to place the imported objects. If not provided, the objects will be placed at the origin.
-        tolerance (float): The tolerance to use for the import. Defaults to 1e-3.
+        Args:
+            dxf_filename (str): The filename of the DXF file to import.
+            positions (Vector2DType | Iterable[Vector2DType], optional): Optional positions to place the imported objects.
+                If not provided, the objects will be placed at the origin.
+            pos: Shorthand for positions parameter, only use one of them.
+            tolerance (float): The tolerance to use for the import. Defaults to 1e-3.
 
-      Returns:
-        Sketch: The updated sketch object.
+        Returns:
+            Sketch: The updated sketch object.
 
-      """
-      action = lambda x: x.importDXF(dxf_filename, tol=tolerance)
-      return self.__perform_action(action, positions)
+        """
+        action = lambda x: x.importDXF(dxf_filename, tol=tolerance)
+        return self.__perform_action(action, self.__get_positions(positions, pos))
 
-    def cut_import_dxf(self, dxf_filename:str, *, positions: Optional[Iterable[Vector2DType]] = None, tolerance:float = 1e-3) -> 'Sketch':
-      """
-      Imports a DXF file and cuts it from the sketch object. The DXF mus contain one or more closed loops from lines and curves.
+    def cut_import_dxf(self,
+                       dxf_filename: str,
+                       *,
+                       positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                       pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                       tolerance: float = 1e-3
+                       ) -> 'Sketch':
+        """
+        Imports a DXF file and cuts it from the sketch object. The DXF mus contain one or more closed loops from lines and curves.
 
-      Args:
-        dxf_filename (str): The filename of the DXF file to import.
-        positions (Optional[Iterable[Vector2DType]]): Optional positions to place the imported objects. If not provided, the objects will be placed at the origin.
-        tolerance (float): The tolerance to use for the import. Defaults to 1e-3.
+        Args:
+            dxf_filename (str): The filename of the DXF file to import.
+            positions (Vector2DType | Iterable[Vector2DType], optional): Optional positions to place the imported objects.
+                If not provided, the objects will be placed at the origin.
+            pos: Shorthand for positions parameter, only use one of them.
+            tolerance (float): The tolerance to use for the import. Defaults to 1e-3.
 
-      Returns:
-        Sketch: The updated sketch object.
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        action = lambda x: x.importDXF(dxf_filename, tol=tolerance, mode="s")
+        return self.__perform_action(action, self.__get_positions(positions, pos))
 
-      """
-      action = lambda x: x.importDXF(dxf_filename, tol=tolerance, mode="s")
-      return self.__perform_action(action, positions)
+    def _select_vertices(self,
+                         query: Union[str, Vector2DType, Iterable[Vector2DType]]
+                         ) -> bool:
+        '''
+        Selects vertices in the sketch. The query can be a search string, a point or a point list.
+        '''
+        if isinstance(query, str):
+            if query == "ALL" or query == "*":
+                self.__sketch.reset().vertices()
+                return True
+            else:
+                self.__sketch.reset().vertices(query)
+                return True
 
-    def fillet(self, edges_str:EdgeQueryType, amount:float) -> 'Sketch':
-      """
-      Fillets the edges of the sketch.
+        if isinstance(query, tuple):
+            vertex = (query[0], query[1], 0)
+            vertices = [vertex]
+        else:  # list
+            vertices = [(v[0], v[1], 0) for v in query]
+        self.__sketch.reset().vertices(NearestToPointListSelector(vertices))
+        return True
 
-      Args:
-        edges_str (EdgeQueryType): The edges to fillet. Can be "ALL" to fillet all edges.
-        amount (float): The fillet amount.
+    def fillet(self,
+               query: Union[str, Vector2DType, Iterable[Vector2DType]],
+               radius: float
+               ) -> 'Sketch':
+        """
+        Fillets corners of the sketch.
 
-      Returns:
-        Sketch: The modified sketch object.
-      """
-      #todo support edge selector
-      if edges_str == "ALL":
-        result = self.__sketch.reset().vertices().fillet(amount)
-      else:
-        raise ValueError("unknown edge selector")
-      self.__sketch = result
-      return self
+        Args:
+            query (str | Vector2DType | Iterable[Vector2DType]): The vertices to fillet.
+                Can be "ALL" or "*" to fillet all vertices.
+                You can also pass a point or a list of points to fillet the nearest vertices.
+            radius (float): The fillet radius.
 
-    def chamfer(self, edges_str:EdgeQueryType, amount:float) -> 'Sketch':
-      """
-      Chamfers the edges of the sketch.
+        Returns:
+            Sketch: The modified sketch object.
+        """
+        success = self._select_vertices(query)
+        if success:
+            self.__sketch.fillet(radius).clean().reset()
+        return self
 
-      Args:
-        edges_str (EdgeQueryType): The edges to chamfer. Can be "ALL" to chamfer all edges.
-        amount (float): The chamfer amount.
+    def chamfer(self,
+                query: Union[str, Vector2DType, Iterable[Vector2DType]],
+                amount: float
+                ) -> 'Sketch':
+        """
+        Chamfers corners of the sketch.
 
-      Returns:
-        Sketch: The modified sketch object.
-      """
-      #todo support edge selector
-      if edges_str == "ALL":
-        result = self.__sketch.reset().vertices().chamfer(amount)
-      else:
-        raise ValueError("unknown edge selector")
-      self.__sketch = result
-      return self
+        Args:
+            query (str | Vector2DType | Iterable[Vector2DType]): The vertices to chamfer.
+                Can be "ALL" or "*" to chamfer all vertices.
+                You can also pass a point or a list of points to chamfer the nearest vertices.
+            amount (float): The chamfer amount.
 
-    def export_dxf(self, filepath:str) -> None:
-      """
-      Export the sketch to a DXF file.
+        Returns:
+            Sketch: The modified sketch object.
+        """
+        success = self._select_vertices(query)
+        if success:
+            self.__sketch.chamfer(amount).clean().reset()
+        return self
 
-      Args:
-        filename (str): The name of the DXF file to export to. If passing a path, the parent directory must exist.
-      """
-      export_sketch_DXF(self.__sketch, filepath)
+    def export_dxf(self,
+                   filepath: str
+                   ) -> None:
+        """
+        Export the sketch to a DXF file.
 
-    def move(self, translationVector:Vector2DType) -> 'Sketch':
-      """
-      Moves the Sketch by the specified translation vector.
+        Args:
+            filename (str): The name of the DXF file to export to. If passing a path, the parent directory must exist.
+        """
+        export_sketch_DXF(self.__sketch, filepath)
 
-      Args:
-        translationVector (Vector2DType): The translation vector specifying the amount and direction of the movement.
+    def move(self,
+             translationVector: Vector2DType
+             ) -> 'Sketch':
+        """
+        Moves the Sketch by the specified translation vector.
 
-      Returns:
-        Sketch: The updated Sketch after the movement.
+        Args:
+            translationVector (Vector2DType): The translation vector specifying the amount and direction of the movement.
 
-      """
-      self.__sketch = self.__sketch.moved(cq.Location(cq.Vector(translationVector)))
-      return self
+        Returns:
+            Sketch: The updated Sketch after the movement.
+        """
+        self.__sketch = self.__sketch.moved(cq.Location(cq.Vector(translationVector)))
+        return self
 
-    def rotate(self, degrees) -> 'Sketch':
-      """
-      Rotates the sketch object by the specified number of degrees.
+    def rotate(self,
+               degrees
+               ) -> 'Sketch':
+        """
+        Rotates the sketch object by the specified number of degrees.
 
-      Args:
-        degrees (float): The number of degrees to rotate the sketch object.
+        Args:
+            degrees (float): The number of degrees to rotate the sketch object.
 
-      Returns:
-        Sketch: The rotated sketch object.
-      """
-      self.__sketch = self.__sketch.moved(cq.Location(cq.Vector(),cq.Vector(0, 0, 1), degrees))
-      return self
+        Returns:
+            Sketch: The rotated sketch object.
+        """
+        self.__sketch = self.__sketch.moved(cq.Location(cq.Vector(), cq.Vector(0, 0, 1), degrees))
+        return self
 
     def cq(self) -> cq.Sketch:
-      """
-      Returns the underlying CadQuery sketch object. Useful when mixing CadQuery and Cadscript code.
-      """
-      return self.__sketch
+        """
+        Returns the underlying CadQuery sketch object. Useful when mixing CadQuery and Cadscript code.
+        """
+        return self.__sketch
 
     def copy(self) -> 'Sketch':
-      """
-      Returns a copy of the sketch.
+        """
+        Returns a copy of the sketch.
 
-      Returns:
-        Sketch: The copied sketch.
-      """
-      return Sketch(self.__sketch.copy())
+        Returns:
+            Sketch: The copied sketch.
+        """
+        return Sketch(self.__sketch.copy())
+
+    def find_vertices(self,
+                      search: Optional[str] = None
+                      ) -> List[Vector2DType]:
+        if search is None or str == "ALL" or str == "*":
+            self.__sketch.vertices()  # select all vertices
+        else:
+            self.__sketch.vertices(search)  # select vertices matching search
+        pos_list = [(v.X, v.Y) for v in self.__sketch._selection if isinstance(v, cq.Vertex)]
+        self.__sketch.reset()  # delete selection again
+        return pos_list

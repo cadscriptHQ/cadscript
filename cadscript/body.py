@@ -5,26 +5,26 @@
 from typing import Tuple
 import cadquery as cq
 
-from .typedefs import DimensionDefinitionType, CenterDefinitionType, EdgeQueryType, Vector2DType, Vector3DType, AxisType, FaceQueryType
+from .typedefs import Vector3DType, AxisType
 from .sketch import Sketch
 
 
 class Body:
     """
-    Represents a 3D CAD object. They are typically created using make_* functions, e.g. 
-    :func:`cadscript.make_box` or :func:`cadscript.make_extrude`. 
+    Represents a 3D CAD object. They are typically created using make_* functions, e.g.
+    :func:`cadscript.make_box` or :func:`cadscript.make_extrude`.
     """
     __wp: cq.Workplane
 
     def __init__(self, workplane: cq.Workplane):
         self.__wp = workplane
 
-    def fillet(self, edgesStr: EdgeQueryType, amount: float) -> 'Body':
+    def fillet(self, edgesStr: str, amount: float) -> 'Body':
         """
         Fillets the specified edges of the body.
 
         Args:
-            edgesStr (EdgeQueryType): The edges to fillet.
+            edgesStr (str): The edges to fillet.
             amount (float): The radius of the fillet.
 
         Returns:
@@ -34,12 +34,12 @@ class Body:
         self.__wp = result
         return self
 
-    def chamfer(self, edgesStr: EdgeQueryType, amount: float) -> 'Body':
+    def chamfer(self, edgesStr: str, amount: float) -> 'Body':
         """
         Chamfers the specified edges of the body.
 
         Args:
-            edgesStr (EdgeQueryType): The edges to chamfer.
+            edgesStr (str): The edges to chamfer.
             amount (float): The distance of the chamfer.
 
         Returns:
@@ -62,7 +62,7 @@ class Body:
         loc = cq.Location(cq.Vector(translationVector))
         c = self.__wp.findSolid()
         c.move(loc)
-        wp = cq.Workplane(obj = c)
+        wp = cq.Workplane(obj=c)
         self.__wp = wp
         return self
 
@@ -79,14 +79,14 @@ class Body:
         """
         c = self.__wp.findSolid()
         if axis == "X":
-            c = c.rotate((0,0,0),(1,0,0), degrees)
+            c = c.rotate((0, 0, 0), (1, 0, 0), degrees)
         elif axis == "Y":
-            c = c.rotate((0,0,0),(0,1,0), degrees)
+            c = c.rotate((0, 0, 0), (0, 1, 0), degrees)
         elif axis == "Z":
-            c = c.rotate((0,0,0),(0,0,1), degrees)
+            c = c.rotate((0, 0, 0), (0, 0, 1), degrees)
         else:
             raise ValueError("axis unknown")
-        wp = cq.Workplane(obj = c)
+        wp = cq.Workplane(obj=c)
         self.__wp = wp
         return self
 
@@ -100,11 +100,11 @@ class Body:
         c1 = self.__wp.findSolid()
         c2 = tool_body.__wp.findSolid()
         c = c1.cut(c2)
-        wp = cq.Workplane(obj = c)
+        wp = cq.Workplane(obj=c)
         self.__wp = wp
         return self
 
-    def fuse(self, tool_body: 'Body') -> 'Body':
+    def add(self, tool_body: 'Body') -> 'Body':
         """
         Performs a boolean add operation with another body.
 
@@ -117,48 +117,65 @@ class Body:
         c1 = self.__wp.findSolid()
         c2 = tool_body.__wp.findSolid()
         c = c1.fuse(c2)
-        wp = cq.Workplane(obj = c)
+        wp = cq.Workplane(obj=c)
         self.__wp = wp
         return self
 
-    def add_extrude(self, faceStr : FaceQueryType, sketch: 'Sketch', amount: float) -> 'Body':
+    def intersect(self, tool_body: 'Body') -> 'Body':
+        """
+        Performs a boolean intersect operation with another body.
+
+        Args:
+            tool_body (Body): The body to intersect with this body.
+
+        Returns:
+            Body: The modified body object.
+        """
+        c1 = self.__wp.findSolid()
+        c2 = tool_body.__wp.findSolid()
+        c = c1.intersect(c2)
+        wp = cq.Workplane(obj=c)
+        self.__wp = wp
+        return self
+
+    def add_extrude(self, faceStr: str, sketch: 'Sketch', amount: float) -> 'Body':
         """
         Adds an extrusion to the specified face of the body using a sketch.
 
         Args:
-            faceStr (FaceQueryType): The face to extrude.
+            faceStr (str): The face to extrude.
             sketch (Sketch): The sketch to extrude.
             amount (float): The amount of extrusion.
 
         Returns:
             Body: The modified body object.
         """
-        result = self.__wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, "a")
+        result = self.__wp.faces(faceStr).workplane(origin=(0, 0, 0)).placeSketch(sketch.cq()).extrude(amount, "a")
         self.__wp = result
         return self
 
-    def cut_extrude(self, faceStr : FaceQueryType, sketch: 'Sketch', amount: float) -> 'Body':
+    def cut_extrude(self, faceStr: str, sketch: 'Sketch', amount: float) -> 'Body':
         """
         Adds a cut extrusion to the specified face of the body using a sketch.
 
         Args:
-            faceStr (FaceQueryType): The face to extrude.
+            faceStr (str): The face to extrude.
             sketch (Sketch): The sketch to extrude.
             amount (float): The amount of extrusion. For cutting you usually want to use a negative value to cut into the body.
 
         Returns:
             Body: The modified body object.
         """
-        result = self.__wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, "s")
+        result = self.__wp.faces(faceStr).workplane(origin=(0, 0, 0)).placeSketch(sketch.cq()).extrude(amount, "s")
         self.__wp = result
         return self
 
-    def make_extrude(self, faceStr : FaceQueryType, sketch: 'Sketch', amount: float) -> 'Body':
+    def make_extrude(self, faceStr: str, sketch: 'Sketch', amount: float) -> 'Body':
         """
         Creates a new body by extruding the specified face of the body using a sketch.
 
         Args:
-            faceStr (FaceQueryType): The face to extrude.
+            faceStr (str): The face to extrude.
             sketch (Sketch): The sketch to extrude.
             amount (float): The amount of extrusion.
 
@@ -168,9 +185,9 @@ class Body:
         Note:
             This function is different from :meth:`add_extrude` in that it creates a new body instead of modifying the existing one.
         """
-        result = self.__wp.faces(faceStr).workplane(origin=(0,0,0)).placeSketch(sketch.cq()).extrude(amount, False)
+        result = self.__wp.faces(faceStr).workplane(origin=(0, 0, 0)).placeSketch(sketch.cq()).extrude(amount, False)
         c = result.findSolid().copy()
-        wp = cq.Workplane(obj = c)
+        wp = cq.Workplane(obj=c)
         return Body(wp)
 
     def get_center(self) -> Vector3DType:
@@ -181,7 +198,7 @@ class Body:
             Vector3DType: The center of the bounding box.
         """
         bb = self.__wp.findSolid().BoundingBox()
-        return ((bb.xmin+bb.xmax)/2, (bb.ymin+bb.ymax)/2, (bb.zmin+bb.zmax)/2)
+        return ((bb.xmin + bb.xmax) / 2, (bb.ymin + bb.ymax) / 2, (bb.zmin + bb.zmax) / 2)
 
     def get_extent(self) -> Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
         """
@@ -197,7 +214,7 @@ class Body:
         """
         Exports the body to a STEP file.
 
-        Args:   
+        Args:
             filename (str): The filename to export to.
         """
         self.__wp.findSolid().exportStep(filename)
@@ -213,10 +230,10 @@ class Body:
 
     def render_svg(self, filename: str) -> None:
         """
-        Renders the body as an SVG illustration.   
+        Renders the body as an SVG illustration.
 
         Args:
-            filename (str): The filename to export to.     
+            filename (str): The filename to export to.
         """
         c = self.__wp.findSolid()
         cq.exporters.export(c,
@@ -242,9 +259,9 @@ class Body:
             Body: The newly created body object.
         """
         c = self.__wp.findSolid().copy()
-        wp = cq.Workplane(obj = c)
-        return Body(wp)    
-        
+        wp = cq.Workplane(obj=c)
+        return Body(wp)
+
     def cq(self) -> cq.Workplane:
         """
         Returns the underlying CadQuery workplane object. Useful when mixing CadQuery and Cadscript code.
@@ -253,4 +270,3 @@ class Body:
             cq.Workplane: The underlying CadQuery workplane object.
         """
         return self.__wp
-
