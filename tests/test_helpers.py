@@ -10,7 +10,7 @@ class DimensionsTest(unittest.TestCase):
 
     def assert_equal_tuple_iter(self, iter1, iter2):
         self.assertEqual(len(list(iter1)), len(list(iter2)))
-        for (a,b) in zip(iter1, iter2):
+        for (a, b) in zip(iter1, iter2):
             self.assertEqual(a, b)
 
     def test_2d_with_size(self):
@@ -56,16 +56,16 @@ class DimensionsTest(unittest.TestCase):
         self.assert_equal_tuple_iter(result, expected_result)
 
     def test_2d_flipped_size(self):
-        dimensions = [(2,-2), (-3, -4)]
+        dimensions = [(2, -2), (-3, -4)]
         center = True
-        expected_result = [(-2,2), (-4, -3)]
+        expected_result = [(-2, 2), (-4, -3)]
         result = helpers.get_dimensions(dimensions, center)
         self.assert_equal_tuple_iter(result, expected_result)
 
     def test_2d_tuple(self):
-        dimensions = ((2,-2), (-3, -4))
+        dimensions = ((2, -2), (-3, -4))
         center = True
-        expected_result = [(-2,2), (-4, -3)]
+        expected_result = [(-2, 2), (-4, -3)]
         result = helpers.get_dimensions(dimensions, center)
         self.assert_equal_tuple_iter(result, expected_result)
 
@@ -86,9 +86,10 @@ class DimensionsTest(unittest.TestCase):
     def test_3d_centered(self):
         dimensions = [2, 4, 6]
         center = True
-        expected_result = [(-1,1), (-2,2), (-3,3)]
+        expected_result = [(-1, 1), (-2, 2), (-3, 3)]
         result = helpers.get_dimensions(dimensions, center)
-        self.assert_equal_tuple_iter(result, expected_result)        
+        self.assert_equal_tuple_iter(result, expected_result)
+
 
 class CenterTest(unittest.TestCase):
 
@@ -149,8 +150,9 @@ class CenterTest(unittest.TestCase):
     def test_wrong_type(self):
         center = 123
         expected_result = (False, False, False)
-        result = helpers.get_center_flags(center) # type: ignore
+        result = helpers.get_center_flags(center)  # type: ignore
         self.assertEqual(result, expected_result)
 
+
 if __name__ == '__main__':
-    unittest.main()        
+    unittest.main()

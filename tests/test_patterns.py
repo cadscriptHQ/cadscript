@@ -6,11 +6,12 @@ import unittest
 from cadscript.patterns import pattern_grid
 from cadscript.patterns import pattern_rect
 
+
 class PatternRectTest(unittest.TestCase):
     def assertPatternEqual(self, result, expected):
-        self.assertEqual(result,expected)
+        self.assertEqual(result, expected)
 
-    def test_2x1_uncentered(self):  
+    def test_2x1_uncentered(self):
         nx = 2
         ny = 1
         expected_result = [
@@ -23,7 +24,7 @@ class PatternRectTest(unittest.TestCase):
         nx = 2
         ny = 4
         expected_result = [
-            (-1, -2), (-1, 2), (1, 2), (1, -2)            
+            (-1, -2), (-1, 2), (1, 2), (1, -2)
         ]
         result = pattern_rect(nx, ny, center=True)
         self.assertPatternEqual(result, expected_result)
@@ -32,7 +33,7 @@ class PatternRectTest(unittest.TestCase):
         nx = 2
         ny = 999
         expected_result = [
-            (-1, 0), (-1, 999), (1, 999), (1, 0)            
+            (-1, 0), (-1, 999), (1, 999), (1, 0)
         ]
         result = pattern_rect(nx, ny, center="X")
         self.assertPatternEqual(result, expected_result)
@@ -41,7 +42,7 @@ class PatternRectTest(unittest.TestCase):
         nx = 2
         ny = 4
         expected_result = [
-            (0, -2), (0, 2), (2, 2), (2, -2)            
+            (0, -2), (0, 2), (2, 2), (2, -2)
         ]
         result = pattern_rect(nx, ny, center="Y")
         self.assertPatternEqual(result, expected_result)
@@ -175,7 +176,7 @@ class PatternGridTest(unittest.TestCase):
         result = pattern_grid(nx, ny, size_x=0.0, size_y=0.0, center=False)
         self.assertPatternEqual(result, expected_result)
 
-    def test_1x1_spacing_uncentered(self):  
+    def test_1x1_spacing_uncentered(self):
         nx = 1
         ny = 1
         expected_result = [(0.0, 0.0)]
@@ -250,7 +251,7 @@ class PatternGridTest(unittest.TestCase):
             (0.0, 0.0), (0.5, 0.0), (1.0, 0.0), (1.5, 0.0),
             (0.0, 0.5), (0.5, 0.5), (1.0, 0.5), (1.5, 0.5),
             (0.0, 1.0), (0.5, 1.0), (1.0, 1.0), (1.5, 1.0),
-            (0.0, 1.5), (0.5, 1.5), (1.0, 1.5), (1.5, 1.5)            
+            (0.0, 1.5), (0.5, 1.5), (1.0, 1.5), (1.5, 1.5)
         ]
         result = pattern_grid(nx, ny, size_x=1.5, size_y=1.5, center=False)
         self.assertPatternEqual(result, expected_result)
@@ -337,42 +338,43 @@ class PatternGridTest(unittest.TestCase):
     # test for exception when both size and spacing are specified
     def test_exception_both_size_spacing(self):
         with self.assertRaises(ValueError):
-            result = pattern_grid(3, 3, size_x=1.0, size_y=1.0, spacing_x=1.0, spacing_y=1.0)
+            pattern_grid(3, 3, size_x=1.0, size_y=1.0, spacing_x=1.0, spacing_y=1.0)
 
     # test for exception when neither size nor spacing are specified
     def test_exception_neither_size_spacing(self):
         with self.assertRaises(ValueError):
-            result = pattern_grid(3, 3)
+            pattern_grid(3, 3)
 
     # test for exception when size is specified for x axis but not y
     def test_exception_size_one_axis_x(self):
         with self.assertRaises(ValueError):
-            result = pattern_grid(3, 3, size_x=1.0)
+            pattern_grid(3, 3, size_x=1.0)
 
     # test for exception when size is specified for y axis but not x
     def test_exception_size_one_axis_y(self):
         with self.assertRaises(ValueError):
-            result = pattern_grid(3, 3, size_y=1.0)
+            pattern_grid(3, 3, size_y=1.0)
 
     # test for exception when spacing is specified for x axis but not y
     def test_exception_spacing_one_axis_x(self):
         with self.assertRaises(ValueError):
-            result = pattern_grid(3, 3, spacing_x=1.0)
+            pattern_grid(3, 3, spacing_x=1.0)
 
     # test for exception when spacing is specified for y axis but not x
     def test_exception_spacing_one_axis_y(self):
         with self.assertRaises(ValueError):
-            result = pattern_grid(3, 3, spacing_y=1.0)
+            pattern_grid(3, 3, spacing_y=1.0)
 
     # test for exception when count_x is less than 1
     def test_exception_count_x_less_than_one(self):
         with self.assertRaises(ValueError):
-            result = pattern_grid(0, 3, size_x=1.0, size_y=1.0)
+            pattern_grid(0, 3, size_x=1.0, size_y=1.0)
 
     # test for exception when count_y is less than 1
     def test_exception_count_y_less_than_one(self):
         with self.assertRaises(ValueError):
-            result = pattern_grid(3, -1, size_x=1.0, size_y=1.0)
+            pattern_grid(3, -1, size_x=1.0, size_y=1.0)
+
 
 if __name__ == '__main__':
     unittest.main()

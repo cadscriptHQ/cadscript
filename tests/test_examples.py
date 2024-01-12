@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
-import cadscript 
+import cadscript
 from cadquery import cqgi
 import os
 import glob
 import pathlib
+
 
 class ExampleRunnerTest(unittest.TestCase):
 
@@ -23,15 +24,16 @@ class ExampleRunnerTest(unittest.TestCase):
         example_files = [f for f in example_files if not os.path.basename(f).startswith('private')]
 
         # run each example as a script
-        for example_file in example_files:            
-            with self.subTest(example = pathlib.Path(example_file).name):
+        for example_file in example_files:
+            with self.subTest(example=pathlib.Path(example_file).name):
                 try:
                     result = cqgi.parse(open(example_file).read()).build()
                     self.assertTrue(result.success)
                     self.assertIsNotNone(result.first_result)
                 except Exception as e:
                     # if the file fails to run, raise an error
-                    self.fail(f"Example file '{example_file}' failed to run, exception raised: {e}")      
+                    self.fail(f"Example file '{example_file}' failed to run, exception raised: {e}")
+
 
 if __name__ == '__main__':
-    unittest.main()        
+    unittest.main()
