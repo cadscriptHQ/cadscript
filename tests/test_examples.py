@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
-import cadscript
 from cadquery import cqgi
 import os
 import glob
