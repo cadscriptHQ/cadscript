@@ -303,7 +303,7 @@ if __name__ == "__main__":
         app.config = None
         app.confdir = "."
         setup(app)
-    except:
+    except Exception:
         pass
     pre_script, script, text = c.get_source_file(open(c.get_file('./examples/bracket.py')).read(), "2-14", True)
     pre_script, script, text = c.get_source_file(open(c.get_file('./examples/getting_started.py')).read(), None, None)
