@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.4] in progress
+## [0.4] - 2024-01-12
 
 - new method: Body.intersect
 - renamed Body.fuse() to Body.add()
