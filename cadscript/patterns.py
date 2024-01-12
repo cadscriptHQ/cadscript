@@ -64,39 +64,31 @@ def pattern_grid(
     if count_x < 1 or count_y < 1:
         raise ValueError("count_x and count_y must be greater than 0")
     center_x, center_y, _ = get_center_flags(center)
-    offset_x = 0
-    offset_y = 0
-
-    if count_x > 1:
-        if spacing_x is None and size_x is None:
-            raise ValueError("Either spacing_x or size_x must be specified")
-        if size_x is not None:
-            if spacing_x is not None:
-                raise ValueError("Only one of spacing_x or size_x must be specified")
-            (min_x, max_x) = get_dimension(size_x, center_x)
-            offset_x = min_x
-            spacing_x = (max_x - min_x) / (count_x - 1)
-        elif spacing_x is not None:
-            if center_x:
-                offset_x = -spacing_x * (count_x - 1) / 2
-    else:
-        spacing_x = 0
-
-    if count_y > 1:
-        if spacing_y is None and size_y is None:
-            raise ValueError("Either spacing_y or size_y must be specified")
-        if size_y is not None:
-            if spacing_y is not None:
-                raise ValueError("Only one of spacing_y or size_y must be specified")
-            (min_y, max_y) = get_dimension(size_y, center_y)
-            offset_y = min_y
-            spacing_y = (max_y - min_y) / (count_y - 1)
-        elif spacing_y is not None:
-            if center_y:
-                offset_y = -spacing_y * (count_y - 1) / 2
-    else:
-        spacing_y = 0
+    spacing_x, offset_x = __get_spacing(count_x, spacing_x, size_x, center_x, "_x")
+    spacing_y, offset_y = __get_spacing(count_y, spacing_y, size_y, center_y, "_y")
 
     for i, j in product(range(count_x), range(count_y)):
         locs.append((i * spacing_x + offset_x, j * spacing_y + offset_y))
     return locs
+
+
+def __get_spacing(count, spacing, size, center, dim_str):
+    '''
+    Helper function for pattern_grid(). Calculates the spacing and offset based on the given parameters.
+    '''
+    offset = 0
+    if count > 1:
+        if spacing is None and size is None:
+            raise ValueError(f"Either spacing{dim_str} or size{dim_str} must be specified")
+        if size is not None:
+            if spacing is not None:
+                raise ValueError(f"Only one of spacing{dim_str} or size{dim_str} must be specified")
+            min, max = get_dimension(size, center)
+            offset = min
+            spacing = (max - min) / (count - 1)
+        elif spacing is not None:
+            if center:
+                offset = -spacing * (count - 1) / 2
+    else:
+        spacing = 0
+    return (spacing, offset)
