@@ -146,7 +146,7 @@ def import_step(path):
 def show(item: Union[Body, Sketch, ConstructionPlane, Assembly]):
     '''
     If inside CQ-Editor, will display the item in the 3D view.
-    Otherwise will do nothing.
+    Otherwise save a STL or DXF into the system temp directory.
 
     Args:
         item: the item to show. Can be a :class:`Body` or a :class:`Sketch`
