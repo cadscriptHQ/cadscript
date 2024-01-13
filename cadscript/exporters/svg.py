@@ -95,7 +95,7 @@ def getPaths(lines_list):
     return svg_lines
 
 
-def getSVG(shape, opts=None):
+def get_svg(shape, opts=None):
     """
     Export a shape to SVG text.
 
@@ -125,7 +125,7 @@ def getSVG(shape, opts=None):
     d = {
         "width": 800,
         "height": 240,
-        "marginLeft": 200,
+        "marginLeft": 20,
         "marginTop": 20,
         "projectionOrigin": (0, 0, 0),
         "projectionDir": (-1.75, 1.1, 5),
@@ -160,11 +160,11 @@ def getSVG(shape, opts=None):
     default_style = {
         "visible": {
             "stroke": "rgb(0,0,0)",
-            "stroke-width": "1",
+            "stroke-width": ".2",
         },
         "hidden": {
             "stroke": "rgb(160,160,160)",
-            "stroke-width": "0.15",
+            "stroke-width": "0.1",
             "stroke-dasharray": "0.15,0.15",
         },
     }
@@ -222,9 +222,9 @@ def getSVG(shape, opts=None):
             BRepLib.BuildCurves3d_s(lines, TOLERANCE)
 
     # filter out empty items
-    lines_list = [(lines, style) 
-                  for (lines, style) 
-                  in lines_list 
+    lines_list = [(lines, style)
+                  for (lines, style)
+                  in lines_list
                   if lines is not None and not lines.IsNull()]
 
     svg_paths = getPaths(lines_list)
@@ -272,12 +272,12 @@ def getSVG(shape, opts=None):
     return svg
 
 
-def exportSVG(shape, fileName: str, opts=None):
+def render_svg(shape, fileName: str, opts=None):
     """
     Accept a cadquery shape, and export it to the provided file
     """
 
-    svg = getSVG(shape.val(), opts)
+    svg = get_svg(shape, opts)
     f = open(fileName, "w")
     f.write(svg)
     f.close()
