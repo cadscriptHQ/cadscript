@@ -201,18 +201,25 @@ def get_svg(shape, opts=None):
     # add hidden lines first (so they are in the background)
     if showHidden:
         for i, shape in enumerate(shapes):
-            style = styles[i]["hidden"]
             shape = shape.wrapped
-            lines_list.append((hlr_shapes.HCompound(shape), style))  # hidden sharp edges
-            lines_list.append((hlr_shapes.OutLineHCompound(shape), style))  # hidden contour edges
+            style = styles[i]["hidden"]
+            if style is not None:
+                lines_list.append((hlr_shapes.HCompound(shape), style))  # hidden sharp edges
+                lines_list.append((hlr_shapes.OutLineHCompound(shape), style))  # hidden contour edges
 
     # then add visible lines
     for i, shape in enumerate(shapes):
-        style = styles[i]["visible"]
         shape = shape.wrapped
-        lines_list.append((hlr_shapes.VCompound(shape), style))  # sharp edges
-        lines_list.append((hlr_shapes.Rg1LineVCompound(shape), style))  # smooth edges
-        lines_list.append((hlr_shapes.OutLineVCompound(shape), style))  # contour edges
+        if styles[i].get("smooth_edges"):
+            style = styles[i]["smooth_edges"]
+        else:
+            style = styles[i]["visible"]  # fallback to visible style    
+        if style is not None:
+            lines_list.append((hlr_shapes.Rg1LineVCompound(shape), style))  # smooth edges
+        style = styles[i]["visible"]
+        if style is not None:
+            lines_list.append((hlr_shapes.VCompound(shape), style))  # sharp edges
+            lines_list.append((hlr_shapes.OutLineVCompound(shape), style))  # contour edges
 
     # Fix the underlying geometry - otherwise we will get segfaults
     for (lines, style) in lines_list:

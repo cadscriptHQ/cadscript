@@ -1,12 +1,12 @@
 import cadscript as cad
-import cadscript.exporters.svg as svg_exporter
+import docs.ext.svg as svg_exporter
 
 s = cad.make_sketch()
 s.add_rect(40, 20)
 s.cut_circle(d=6)
 
-plate1 = cad.make_extrude("XY", s, -4)
-plate2 = cad.make_extrude("XY", s.rotate(90), (-8, -4))
+plate1 = cad.make_extrude("XY", s, -4).chamfer("|Z", 5)
+plate2 = cad.make_extrude("XY", s.rotate(90), (-12, -4)).fillet("|Z", 2)
 
 peg = cad.make_extrude("XY", cad.make_sketch().add_circle(d=6), -20)
 peg = peg.add(cad.make_extrude("XY", cad.make_sketch().add_circle(d=10), 5))
@@ -23,21 +23,25 @@ style1 = {
         "stroke": "rgb(90,90,90)",
         "stroke-width": ".2",
     },
-    "hidden": {
-        "stroke": "rgb(160,160,160)",
-        "stroke-width": "0.1",
-        "stroke-dasharray": "0.15,0.15",
+    "hidden": None,
+    "smooth_edges": {
+        "stroke": "rgb(0,0,0)",
+        "stroke-width": ".1",
     },
 }
 style2 = {
     "visible": {
-        "stroke": "rgb(200,0,0)",
+        "stroke": "rgb(0,0,200)",
         "stroke-width": ".3",
     },
     "hidden": {
-        "stroke": "rgb(255,160,160)",
+        "stroke": "rgb(160,160,255)",
         "stroke-width": "0.1",
         "stroke-dasharray": "0.15,0.15",
+    },
+    "smooth_edges": {
+        "stroke": "rgb(0,0,200)",
+        "stroke-width": ".1",
     },
 }
 
