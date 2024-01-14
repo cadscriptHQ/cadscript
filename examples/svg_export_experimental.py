@@ -5,17 +5,23 @@ s = cad.make_sketch()
 s.add_rect(40, 20)
 s.cut_circle(d=6)
 
-plate1 = cad.make_extrude("XY", s, -4).chamfer("|Z", 5)
-plate2 = cad.make_extrude("XY", s.rotate(90), (-12, -4)).fillet("|Z", 2)
+plate1 = cad.make_extrude("XY", s, -4).chamfer("|Z and >X", 5)
+plate2 = cad.make_extrude("XY", s.rotate(90), (-8, -4)).fillet("|Z", 2)
 
 peg = cad.make_extrude("XY", cad.make_sketch().add_circle(d=6), -20)
 peg = peg.add(cad.make_extrude("XY", cad.make_sketch().add_circle(d=10), 5))
 
 svg_options = {
-    "projectionDir": (-1.75, 4, 1),
+    "projectionOrigin": (0, 0, 0),
+    "projectionDir": (0, -10, 5),
+    "projectionXDir": (1, 0, 0),    
+    #"projectionDir": (-1.75, -2, 8),
     "showHidden": True,
     "width": 600,
     "height": 400,
+    "focus": 200,
+    "rotateAxis": "Z",
+    "rotateAngle": -30,
 }
 
 style1 = {

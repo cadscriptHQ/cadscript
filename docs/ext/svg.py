@@ -122,7 +122,7 @@ def get_svg(shape, opts=None):
     """
 
     # Available options and their defaults
-    d = {
+    options = {
         "width": 800,
         "height": 240,
         "marginLeft": 20,
@@ -133,29 +133,33 @@ def get_svg(shape, opts=None):
         "showAxes": True,
         "showHidden": True,
         "focus": None,
+        "rotateAxis": "Z",
+        "rotateAngle": 0,
     }
 
     if opts:
-        d.update(opts)
+        options.update(opts)
 
     uom = UNITS.MM
 
     # Handle the case where the height or width are None
-    width = d["width"]
+    width = options["width"]
     if width is not None:
-        width = float(d["width"])
-    height = d["height"]
-    if d["height"] is not None:
-        height = float(d["height"])
-    marginLeft = float(d["marginLeft"])
-    marginTop = float(d["marginTop"])
-    projectionOrigin = tuple(d["projectionOrigin"])
-    projectionDir = tuple(d["projectionDir"])
-    projectionXDir = tuple(d["projectionXDir"])
+        width = float(options["width"])
+    height = options["height"]
+    if options["height"] is not None:
+        height = float(options["height"])
+    marginLeft = float(options["marginLeft"])
+    marginTop = float(options["marginTop"])
+    projectionOrigin = tuple(options["projectionOrigin"])
+    projectionDir = tuple(options["projectionDir"])
+    projectionXDir = tuple(options["projectionXDir"])
+    rotateAxis = options["rotateAxis"]
+    rotateAngle = float(options["rotateAngle"])
 
-    showAxes = bool(d["showAxes"])
-    showHidden = bool(d["showHidden"])
-    focus = float(d["focus"]) if d.get("focus") else None
+    showAxes = bool(options["showAxes"])
+    showHidden = bool(options["showHidden"])
+    focus = float(options["focus"]) if options.get("focus") else None
 
     default_style = {
         "visible": {
@@ -169,16 +173,31 @@ def get_svg(shape, opts=None):
         },
     }
 
+    transform = id
+    if rotateAngle != 0:
+        rot_p1 = (0, 0, 0)
+        if rotateAxis == "X":
+            rot_p2 = (1, 0, 0)
+        elif rotateAxis == "Y":
+            rot_p2 = (0, 1, 0)
+        elif rotateAxis == "Z":
+            rot_p2 = (0, 0, 1)
+        else:
+            raise ValueError("Invalid rotateAxis value")
+
+        transform = lambda s: s.rotate(rot_p1, rot_p2, rotateAngle)
+
     shapes = []
     styles = []
     # test if shape is list of tupes
     if isinstance(shape, list):
         for (s, style) in shape:
-            shapes.append(s)
+            shapes.append(transform(s))
             styles.append(style)
     else:
-        shapes.append(shape)
+        shapes.append(transform(shape))
         styles.append(default_style)
+
 
     coordinate_system = gp_Ax2(gp_Pnt(*projectionOrigin), gp_Dir(*projectionDir), gp_Dir(*projectionXDir))
 
@@ -213,7 +232,7 @@ def get_svg(shape, opts=None):
         if styles[i].get("smooth_edges"):
             style = styles[i]["smooth_edges"]
         else:
-            style = styles[i]["visible"]  # fallback to visible style    
+            style = styles[i]["visible"]  # fallback to visible style
         if style is not None:
             lines_list.append((hlr_shapes.Rg1LineVCompound(shape), style))  # smooth edges
         style = styles[i]["visible"]
@@ -277,7 +296,7 @@ def get_svg(shape, opts=None):
     return svg
 
 
-if __name__ == "__main__":    
+if __name__ == "__main__":
 
     import cadscript as cad
 
@@ -330,4 +349,3 @@ if __name__ == "__main__":
 
     with open("private.svg", "w") as f:
         f.write(out_svg)
-
