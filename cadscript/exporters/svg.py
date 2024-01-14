@@ -198,23 +198,21 @@ def get_svg(shape, opts=None):
 
     lines_list = []  # list of lines as tuples of (lines, style)
 
+    # add hidden lines first (so they are in the background)
+    if showHidden:
+        for i, shape in enumerate(shapes):
+            style = styles[i]["hidden"]
+            shape = shape.wrapped
+            lines_list.append((hlr_shapes.HCompound(shape), style))  # hidden sharp edges
+            lines_list.append((hlr_shapes.OutLineHCompound(shape), style))  # hidden contour edges
+
+    # then add visible lines
     for i, shape in enumerate(shapes):
-
-        shape = shape.wrapped
         style = styles[i]["visible"]
-
+        shape = shape.wrapped
         lines_list.append((hlr_shapes.VCompound(shape), style))  # sharp edges
         lines_list.append((hlr_shapes.Rg1LineVCompound(shape), style))  # smooth edges
         lines_list.append((hlr_shapes.OutLineVCompound(shape), style))  # contour edges
-
-        if not showHidden:
-            continue
-
-        style = styles[i]["hidden"]
-
-        lines_list.append((hlr_shapes.HCompound(shape), style))  # hidden sharp edges
-        lines_list.append((hlr_shapes.OutLineHCompound(shape), style))  # hidden contour edges
-
 
     # Fix the underlying geometry - otherwise we will get segfaults
     for (lines, style) in lines_list:
