@@ -2,6 +2,8 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
+# example script also used to generate documentation
+
 # this is used by the documentation generation
 # DOCSTEP: 2,sketch1
 # DOCSTEP: ...3,sketch1
@@ -21,7 +23,13 @@
 import cadscript
 
 # STEP 2
-# Let's start with a sketch.
+# In this example we build a complex object by
+#
+# - creating two sketches
+# - extruding them
+# - intersecting the two extrusions
+#
+# Let's start with the first sketch.
 # We add a rectangle with width 70 and height 30, centered at the origin.
 sketch1 = cadscript.make_sketch()
 sketch1.add_rect(70, 30)
@@ -53,7 +61,7 @@ sketch1.fillet("not <X", 4)
 sketch1.cut_circle(d=16, pos=(50, 0))
 
 # STEP 8
-# Make a new sketch, add a rectangle and a circle.
+# now we create the second sketch. We start with a rectangle and a circle.
 sketch2 = cadscript.make_sketch()
 sketch2.add_rect(70, 5, center=False)
 sketch2.add_circle(d=26, pos=(0, 10))
