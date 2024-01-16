@@ -6,13 +6,16 @@ from pathlib import Path
 
 from json import dumps
 
-from cadquery import exporters, Assembly, Compound, Color, Sketch
+from cadquery import Assembly, Compound, Color, Sketch
 from cadquery import cqgi
+import cadquery
 from cadquery.occ_impl.assembly import toJSON
 from cadquery.occ_impl.jupyter_tools import DEFAULT_COLOR
 from docutils.parsers.rst import directives
 
 from cadquery.cq_directive import cq_directive_vtk, template_vtk, rendering_code
+
+from docs.ext.svg import get_svg
 
 
 prefix = """
@@ -54,6 +57,7 @@ class cadscript_directive(cq_directive_vtk):
         "source": directives.path,
         "text_from_comment": directives.flag,
         "steps": directives.unchanged,
+        "preset": directives.unchanged,
     }
 
     def get_file(self, path):
@@ -210,17 +214,56 @@ class cadscript_directive(cq_directive_vtk):
 
 
     def render_image(self, assy, options):
-        svg_options = {
-            "projectionDir": (-3, -6, -2.5),
-            "showAxes": False,
-            "showHidden": True,
-            "width": options.get("width", 600),
-            "height": options.get("height", 200),
-            "marginLeft": 20,
-            "marginTop": 20,
-            "focus": 200,
-        }
-        out_svg = exporters.getSVG(assy.toCompound(), svg_options)
+
+        preset = options.get("preset", "3D")
+        out_svg = ""
+
+        if preset == "3D":
+            svg_options = {
+                "projectionOrigin": (0, 0, 0),
+                "projectionDir": (0, -10, 5),
+                "projectionXDir": (1, 0, 0),
+                "showHidden": True,
+                "width": 600,
+                "height": 250,
+                "focus": 200,
+                "rotateAxis": "Z",
+                "rotateAngle": -30,
+            }
+
+            style1 = {
+                "visible": {
+                    "stroke": "rgb(0,0,0)",
+                    "stroke-width": ".2",
+                },
+                "hidden": None,
+                "smooth_edges": {
+                    "stroke": "rgb(0,0,0)",
+                    "stroke-width": "0.1",
+                },
+            }
+            style2 = {
+                "visible": {
+                    "stroke": "rgb(100,100,255)",
+                    "stroke-width": "0.1",
+                },
+                "hidden": {
+                    "stroke": "rgb(100,100,255)",
+                    "stroke-width": "0.02",
+                },
+            }
+            axisX = cadquery.Workplane().moveTo(-30, 0).lineTo(30, 0)
+            axisY = cadquery.Workplane().moveTo(0, -30).lineTo(0, 30)
+
+            shapes = [
+                (assy.toCompound(), style1),
+                (cadquery.Shape(axisX.toOCC()), style2),
+                (cadquery.Shape(axisY.toOCC()), style2),
+            ]
+            out_svg = get_svg(shapes, svg_options)
+        else:
+            raise Exception("Unknown preset: " + preset)
+
         out_svg = out_svg.replace("\n", "")
 
         return template_img.format(
@@ -240,6 +283,7 @@ class cadscript_auto_directive(cadscript_directive):
         "align": directives.unchanged,
         "interactive": directives.flag,
         "source": directives.path,
+        "preset": directives.unchanged,
     }
 
 
