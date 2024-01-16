@@ -14,8 +14,7 @@ peg = peg.add(cad.make_extrude("XY", cad.make_sketch().add_circle(d=10), 5))
 svg_options = {
     "projectionOrigin": (0, 0, 0),
     "projectionDir": (0, -10, 5),
-    "projectionXDir": (1, 0, 0),    
-    #"projectionDir": (-1.75, -2, 8),
+    "projectionXDir": (1, 0, 0),
     "showHidden": True,
     "width": 600,
     "height": 400,
@@ -26,7 +25,7 @@ svg_options = {
 
 style1 = {
     "visible": {
-        "stroke": "rgb(90,90,90)",
+        "stroke": "rgb(0,0,0)",
         "stroke-width": ".2",
     },
     "hidden": None,

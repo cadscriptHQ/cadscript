@@ -173,7 +173,7 @@ def get_svg(shape, opts=None):
         },
     }
 
-    transform = id
+    transform = lambda s: s
     if rotateAngle != 0:
         rot_p1 = (0, 0, 0)
         if rotateAxis == "X":
@@ -298,52 +298,65 @@ def get_svg(shape, opts=None):
 
 if __name__ == "__main__":
 
+    import cadquery as cq
     import cadscript as cad
 
     s = cad.make_sketch()
     s.add_rect(40, 20)
     s.cut_circle(d=6)
 
-    plate1 = cad.make_extrude("XY", s, -4)
-    plate2 = cad.make_extrude("XY", s.rotate(90), (-8, -4))
+    plate1 = cad.make_extrude("XY", s, -4).chamfer("|Z and >X", 5)
+    plate2 = cad.make_extrude("XY", s.rotate(90), (-8, -4)).fillet("|Z", 2)
 
     peg = cad.make_extrude("XY", cad.make_sketch().add_circle(d=6), -20)
     peg = peg.add(cad.make_extrude("XY", cad.make_sketch().add_circle(d=10), 5))
 
     svg_options = {
-        "projectionDir": (-1.75, 4, 1),
+        "projectionOrigin": (0, 0, 0),
+        "projectionDir": (0, -10, 5),
+        "projectionXDir": (1, 0, 0),
         "showHidden": True,
         "width": 600,
         "height": 400,
+        "focus": 200,
+        "rotateAxis": "Z",
+        "rotateAngle": -30,
     }
 
     style1 = {
         "visible": {
-            "stroke": "rgb(90,90,90)",
+            "stroke": "rgb(0,0,0)",
             "stroke-width": ".2",
         },
-        "hidden": {
-            "stroke": "rgb(160,160,160)",
+        "hidden": None,
+        "smooth_edges": {
+            "stroke": "rgb(0,0,0)",
             "stroke-width": "0.1",
-            "stroke-dasharray": "0.15,0.15",
         },
     }
     style2 = {
         "visible": {
-            "stroke": "rgb(200,0,0)",
-            "stroke-width": ".3",
+            "stroke": "rgb(100,100,255)",
+            "stroke-width": "0.1",
         },
         "hidden": {
-            "stroke": "rgb(255,160,160)",
-            "stroke-width": "0.1",
-            "stroke-dasharray": "0.15,0.15",
+            "stroke": "rgb(100,100,255)",
+            "stroke-width": "0.02",
         },
     }
 
+    axisX = cq.Workplane().moveTo(-30, 0).lineTo(30, 0)
+    axisY = cq.Workplane().moveTo(0, -30).lineTo(0, 30)
+
+    a = cad.Assembly()
+    a.add(plate1)
+    a.add(plate2)
+    a.add(peg)
+
     shapes = [
-        (plate1.cq().findSolid(), style1),
-        (plate2.cq().findSolid(), style1),
-        (peg.cq().findSolid(), style2),
+        (a.cq().toCompound(), style1),
+        (cq.Shape(axisX.toOCC()), style2),
+        (cq.Shape(axisY.toOCC()), style2),
     ]
     out_svg = get_svg(shapes, svg_options)
 
