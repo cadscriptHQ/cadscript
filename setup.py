@@ -4,7 +4,7 @@ setup(
     name='cadscript',
     description="A Python module for creating 3D models with scripts.",
     long_description="A Python module for creating 3D models with scripts.",
-    version='0.3.1',
+    version='0.4.0',
     url="https://github.com/cadscriptHQ/cadscript",
     license="Apache Public License 2.0",
     author='Andreas Kahler',

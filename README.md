@@ -1,3 +1,6 @@
+[![Unit Tests](https://github.com/cadscriptHQ/cadscript/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/cadscriptHQ/cadscript/actions/workflows/python-package.yml)
+[![Docs](https://readthedocs.org/projects/cadscript/badge/?version=latest)](https://cadscript.readthedocs.io/en/latest/?badge=latest)
+
 # Cadscript
 
 A Python module for creating 3D models with scripts.

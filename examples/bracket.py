@@ -26,9 +26,9 @@ import cadscript
 sketch1 = cadscript.make_sketch()
 sketch1.add_rect(70, 30)
 # STEP 3
-# Now we add a chamfer. ">X" selects all vertices with maximum X coordinate.
+# Now we add chamfers. ">X" selects all vertices with maximum X coordinate.
 # This will add a chamfer at the corners at the right side of the rectangle.
-# The chamfer will be 10mm long.
+# The chamfer will be symmetric, with a distance of 10mm.
 sketch1.chamfer(">X", 10)
 # STEP 4
 # We add another rectangle, this time with width 50 and height 20.
@@ -58,9 +58,13 @@ sketch2 = cadscript.make_sketch()
 sketch2.add_rect(70, 5, center=False)
 sketch2.add_circle(d=26, pos=(0, 10))
 # STEP 9
-# We add a fillet now. We want only the point where the circle and the rectangle meet.
-# The search string ">>X" sorts all vertices in positive X direction.
-# The "[1]" selects the second vertex in that list, which is the one we want.
+# We add a fillet now. We want only the point where the circle and the rectangle meet
+# at a sharp angle.
+# The search string ">>X" sorts all points (also called vertices) in positive X direction.
+# The "[1]" selects the second point in that list, which is the one we want.
+# ">>X[0]" would select the point where the circle and the rectangle meet at the bottom.
+# ">>X[2]" returns the corners of the rectangle at the right side. Here two points are selected,
+# because they both have the same X coordinate.
 sketch2.fillet(">>X[1]", 15)
 # STEP 10
 # Now we cut a circle and a rectangle from the sketch
@@ -73,13 +77,13 @@ sketch2.cut_rect(100, (-100, 0), center="X")
 # STEP 11
 # Now we place the first sketch on the XY plane and make an extrusion.
 # The extrusion will happen perpendicular to the plane, that is, in positive Z direction.
-# The extrusion amount is given as a tuple,
-# the first value is the start position, the second value is the end position.
-extr1 = cadscript.make_extrude("XY", sketch1, (-100, 100))
+extr1 = cadscript.make_extrude("XY", sketch1, 30)
 # STEP 12
 # Now we do the same for the second sketch.
 # We use the XZ plane this time, so the extrusion will happen in Y direction.
-extr2 = cadscript.make_extrude("XZ", sketch2, (-100, 100))
+# The extrusion amount is given as a tuple,
+# the first value is the start position, the second value is the end position.
+extr2 = cadscript.make_extrude("XZ", sketch2, (-20, 20))
 
 # STEP 13
 # Finally, we intersect the two extrusions.
