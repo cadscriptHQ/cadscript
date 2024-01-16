@@ -106,7 +106,7 @@ class cadscript_directive(cq_directive_vtk):
     def get_source_file(self, content, steps, text_from_comment):
 
         content = re.sub(r'^cadscript.show\(.*$', '', content, flags=re.MULTILINE)  # remove show() calls
-        text = ""
+        text = []
         pre_script = []
         content = content + "\n"  # fix problem with last line
         ellipsis = False
@@ -134,13 +134,15 @@ class cadscript_directive(cq_directive_vtk):
         if text_from_comment:
             # extract the text from the comment
             newscript = []
-            last_comment = ""
+            last_comment = []
             for part in script:
-                last_comment = ""
+                last_comment = []
                 new_part = ""
                 for line in part.split("\n")[:-1]:  # skip last empty item with [:-1]
-                    if line.startswith("#"):
-                        last_comment += line[1:].strip() + " "
+                    if line.startswith("# "):
+                        last_comment.append(line[2:])
+                    elif line.startswith("#"):
+                        last_comment.append(line[1:])
                     else:
                         new_part += line + "\n"
                 newscript.append(new_part)
@@ -160,7 +162,9 @@ class cadscript_directive(cq_directive_vtk):
         lines = []
 
         if len(text):
-            lines.extend(["", text, ""])
+            lines.append("")
+            lines.extend(text)
+            lines.append("")
 
         lines.extend(["", "::", ""])
         lines.extend(["    %s" % row.rstrip() for row in script.split("\n")])
@@ -349,5 +353,5 @@ if __name__ == "__main__":
         setup(app)
     except Exception:
         pass
-    pre_script, script, text = c.get_source_file(open(c.get_file('./examples/bracket.py')).read(), "2-14", True)
+    pre_script, script, text = c.get_source_file(open(c.get_file('./examples/bracket.py')).read(), "2", True)
     pre_script, script, text = c.get_source_file(open(c.get_file('./examples/getting_started.py')).read(), None, None)
