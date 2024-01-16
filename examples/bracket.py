@@ -77,13 +77,13 @@ sketch2.cut_rect(100, (-100, 0), center="X")
 # STEP 11
 # Now we place the first sketch on the XY plane and make an extrusion.
 # The extrusion will happen perpendicular to the plane, that is, in positive Z direction.
-# The extrusion amount is given as a tuple,
-# the first value is the start position, the second value is the end position.
-extr1 = cadscript.make_extrude("XY", sketch1, (-100, 100))
+extr1 = cadscript.make_extrude("XY", sketch1, 30)
 # STEP 12
 # Now we do the same for the second sketch.
 # We use the XZ plane this time, so the extrusion will happen in Y direction.
-extr2 = cadscript.make_extrude("XZ", sketch2, (-100, 100))
+# The extrusion amount is given as a tuple,
+# the first value is the start position, the second value is the end position.
+extr2 = cadscript.make_extrude("XZ", sketch2, (-20, 20))
 
 # STEP 13
 # Finally, we intersect the two extrusions.
