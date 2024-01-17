@@ -17,12 +17,13 @@ from .sketch import Sketch
 from .construction_plane import ConstructionPlane
 from .assembly import Assembly
 from .helpers import get_dimensions
-from .patterns import pattern_grid, pattern_rect # noqa
+from .patterns import pattern_grid, pattern_rect  # noqa
 
 
 def make_box(sizex: DimensionDefinitionType,
              sizey: DimensionDefinitionType,
              sizez: DimensionDefinitionType,
+             *,
              center: CenterDefinitionType = True
              ) -> 'Body':
     """
@@ -89,6 +90,8 @@ def make_extrude(plane: Union[ConstructionPlane, str],
 def make_text(text: str,
               size: float,
               height: float,
+              *,
+              center: CenterDefinitionType = True,
               font: str = "Arial",
               ):
     """
@@ -98,14 +101,20 @@ def make_text(text: str,
         text (str): The text to be created.
         size (float): The size of the text.
         height (float): The height of the text.
+        center (CenterDefinitionType, optional): Whether to center the text object at the origin. If False, the text will start from the origin.
+            Can also be "X", "Y" or "Z" to center in only one direction or "XY", "XZ", "YZ" to center in two directions.
+            Defaults to True which centers the text object in all directions.
         font (str, optional): The font of the text. Defaults to "Arial".
 
     Returns:
         Body: The 3D text object.
     """
     c = cq.Compound.makeText(text, size, height, font=font)
-    wp = cq.Workplane(obj=c)
-    return Body(wp)
+    body = Body(cq.Workplane(obj=c))
+    (extendx, extendy, extendz) = body.get_extent()
+    (startx, _), (starty, _), (startz, _) = get_dimensions(
+        [extendx[1] - extendx[0], extendy[1] - extendy[0], extendz[1] - extendz[0]], center)
+    return body.move((startx - extendx[0], starty - extendy[0], startz - extendz[0]))
 
 
 def make_construction_plane(plane: Union[ConstructionPlane, str], offset: Optional[float] = None):

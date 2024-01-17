@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5] - work in progress
+
+- make_box(): center param accessible as named param only
+- make:text(): added center param, center as default
+
 ## [0.4] - 2024-01-12
 
 - new method: Body.intersect
