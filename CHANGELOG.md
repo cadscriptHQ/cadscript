@@ -4,6 +4,7 @@
 
 - make_box(): center param accessible as named param only
 - make:text(): added center param, center as default
+- added add_ellipse and cut_ellipse()
 
 ## [0.4] - 2024-01-12
 

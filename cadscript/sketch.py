@@ -4,7 +4,7 @@
 
 import cadquery as cq
 
-from typing import Iterable, List, Optional, Union
+from typing import Iterable, List, Optional, Union, Tuple
 
 from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType
 from .export import export_sketch_DXF
@@ -39,9 +39,7 @@ class Sketch:
                       center: CenterDefinitionType,
                       mode="a"
                       ):
-        dim1, dim2 = get_dimensions([size_x, size_y], center)
-        x1, x2 = dim1
-        y1, y2 = dim2
+        (x1, x2), (y1, y2) = get_dimensions([size_x, size_y], center)
         p0 = cq.Vector(x1, y1)
         p1 = cq.Vector(x2, y1)
         p2 = cq.Vector(x2, y2)
@@ -50,12 +48,13 @@ class Sketch:
 
     def __get_positions(self,
                         positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]],
-                        pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]]
+                        pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]],
+                        default: Optional[List[Vector2DType]] = None
                         ) -> Optional[List[Vector2DType]]:
         if positions is not None and pos is not None:
             raise ValueError("only one of positions and pos can be specified")
         if positions is None and pos is None:
-            return None
+            return default
         p = positions if positions is not None else pos
         pos_list = [p] if isinstance(p, tuple) else p
         return pos_list
@@ -194,6 +193,78 @@ class Sketch:
         r = self.__get_radius(r, radius, d, diameter)
         action = lambda x: x.circle(r, mode="s")
         return self.__perform_action(action, self.__get_positions(positions, pos))
+
+    def add_ellipse(self,
+                    size_x: DimensionDefinitionType,
+                    size_y: DimensionDefinitionType,
+                    *,
+                    angle: float = 0,
+                    center: CenterDefinitionType = True,
+                    positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                    pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                    ) -> 'Sketch':
+        """
+        Adds an ellipse to the sketch object.
+
+        Args:
+            size_x (DimensionDefinitionType): The size of the ellipse along the x-axis.
+            size_y (DimensionDefinitionType): The size of the ellipse along the y-axis.
+            angle (float, optional): The angle of rotation. Defaults to 0.
+            center (CenterDefinitionType, optional): Determines whether the ellipse is centered.
+                If False, the ellipse will start from the origin.
+                Can also be "X" or "Y" to center in only one direction. Defaults to True.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a ellipse is added for each of the entries,
+                specifying the offset as (x,y) tuple.
+                Defaults to None, which results in a single ellipse added with no offset.
+            pos: Shorthand for positions parameter, only use one of them.
+
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        return self.__ellipse(size_x, size_y, "a", angle, center, positions, pos)
+
+    def cut_ellipse(self,
+                    size_x: DimensionDefinitionType,
+                    size_y: DimensionDefinitionType,
+                    *,
+                    angle: float = 0,
+                    center: CenterDefinitionType = True,
+                    positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                    pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                    ) -> 'Sketch':
+        """
+        Cuts an ellipse from the sketch object.
+
+        Args:
+            size_x (DimensionDefinitionType): The size of the ellipse along the x-axis.
+            size_y (DimensionDefinitionType): The size of the ellipse along the y-axis.
+            angle (float, optional): The angle of rotation. Defaults to 0.
+            center (CenterDefinitionType, optional): Determines whether the ellipse is centered.
+                If False, the ellipse will start from the origin.
+                Can also be "X" or "Y" to center in only one direction. Defaults to True.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a ellipse is cuts for each of the entries,
+                specifying the offset as (x,y) tuple.
+                Defaults to None, which results in a single ellipse cut with no offset.
+            pos: Shorthand for positions parameter, only use one of them.
+
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        return self.__ellipse(size_x, size_y, "s", angle, center, positions, pos)
+
+    def __ellipse(self,
+                  size_x: DimensionDefinitionType,
+                  size_y: DimensionDefinitionType,
+                  mode: str,
+                  angle: float = 0,
+                  center: CenterDefinitionType = True,
+                  positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                  pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                  ) -> 'Sketch':
+        (x1, x2), (y1, y2) = get_dimensions([size_x, size_y], center)
+        action = lambda x: x.ellipse((x2 - x1) / 2.0, (y2 - y1) / 2.0, angle=angle, mode=mode)
+        pos_list = self.__get_positions(positions, pos, [(0, 0)])
+        return self.__perform_action(action, [(x + (x1 + x2) / 2.0, y + (y1 + y2) / 2.0) for (x, y) in pos_list])
 
     def add_polygon(self,
                     point_list: Iterable[Vector2DType],
@@ -475,3 +546,16 @@ class Sketch:
         pos_list = [(v.X, v.Y) for v in self.__sketch._selection if isinstance(v, cq.Vertex)]
         self.__sketch.reset()  # delete selection again
         return pos_list
+    
+    def get_extent(self) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+        """
+        Returns the extent of the bounding box of the sketch.
+        """
+        faces = [s for s in self.__sketch.faces() if isinstance(s, cq.Shape)]
+        if not faces:
+            return ((0, 0), (0, 0))
+
+        bb = faces[0].BoundingBox()
+        for s in faces[1:]:
+            bb.add(s.BoundingBox())
+        return ((bb.xmin, bb.xmax), (bb.ymin, bb.ymax))
