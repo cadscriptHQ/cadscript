@@ -3,8 +3,11 @@
 ## [0.5] - work in progress
 
 - make_box(): center param accessible as named param only
-- make:text(): added center param, center as default
+- make_text(): added center param, center as default
 - added add_ellipse and cut_ellipse()
+- added angle param to add/cut_rect()
+- added add/cut_slot variant with 2 points
+- added add/cut/intersect_sketch()
 
 ## [0.4] - 2024-01-12
 
