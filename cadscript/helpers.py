@@ -2,7 +2,7 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Iterable, Iterator, Tuple
+from typing import Iterable, Iterator, Tuple, Optional
 
 from .typedefs import CenterDefinitionType, DimensionDefinitionType, Vector2DType
 
@@ -62,3 +62,26 @@ def get_dimension(dimension: DimensionDefinitionType, center: bool) -> Vector2DT
     """
     t = (dimension, center)
     return __handle_size(t)
+
+
+def get_radius(r: Optional[float] = None,
+               radius: Optional[float] = None,
+               d: Optional[float] = None,
+               diameter: Optional[float] = None
+               ) -> float:
+    '''
+    Helper function to get the radius from the given parameters.
+    '''
+    # check only one parameter is specified
+    if sum(x is not None for x in [r, radius, d, diameter]) > 1:
+        raise ValueError("only one of r, radius, d, diameter can be specified")
+    if r is not None:
+        return r
+    elif radius is not None:
+        return radius
+    elif d is not None:
+        return d / 2
+    elif diameter is not None:
+        return diameter / 2
+    else:
+        raise ValueError("no radius/diameter specified")

@@ -9,7 +9,7 @@ from typing import Iterable, List, Optional, Union, Tuple
 
 from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType
 from .export import export_sketch_DXF
-from .helpers import get_dimensions
+from .helpers import get_dimensions, get_radius
 from .cqselectors import NearestToPointListSelector
 
 
@@ -127,28 +127,6 @@ class Sketch:
         action = lambda x: self.__rect_helper(x, size_x, size_y, angle, center, mode=Mode.Substract)
         return self.__perform_action(action, self.__get_positions(positions, pos))
 
-    def __get_radius(self,
-                     r: Optional[float] = None,
-                     radius: Optional[float] = None,
-                     d: Optional[float] = None,
-                     diameter: Optional[float] = None
-                     ) -> float:
-        '''
-        Helper function to get the radius from the given parameters.
-        '''
-        # check only one parameter is specified
-        if sum(x is not None for x in [r, radius, d, diameter]) > 1:
-            raise ValueError("only one of r, radius, d, diameter can be specified")
-        if r is not None:
-            return r
-        elif radius is not None:
-            return radius
-        elif d is not None:
-            return d / 2
-        elif diameter is not None:
-            return diameter / 2
-        else:
-            raise ValueError("no radius/diameter specified")
 
     def add_circle(self,
                    *,
@@ -174,7 +152,7 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        r = self.__get_radius(r, radius, d, diameter)
+        r = get_radius(r, radius, d, diameter)
         action = lambda x: x.circle(r)
         return self.__perform_action(action, self.__get_positions(positions, pos))
 
@@ -202,7 +180,7 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        r = self.__get_radius(r, radius, d, diameter)
+        r = get_radius(r, radius, d, diameter)
         action = lambda x: x.circle(r, mode=Mode.Substract)
         return self.__perform_action(action, self.__get_positions(positions, pos))
 
@@ -456,7 +434,7 @@ class Sketch:
                          positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
                          pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                          ) -> 'Sketch':
-        radius = self.__get_radius(r, radius, d, diameter)
+        radius = get_radius(r, radius, d, diameter)
         x1, y1 = start
         x2, y2 = end
         dx, dy = x2 - x1, y2 - y1

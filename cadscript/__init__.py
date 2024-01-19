@@ -16,8 +16,10 @@ from .body import Body
 from .sketch import Sketch
 from .construction_plane import ConstructionPlane
 from .assembly import Assembly
-from .helpers import get_dimensions
+from .helpers import get_center_flags, get_dimensions, get_radius
 from .patterns import pattern_grid, pattern_rect  # noqa
+
+from OCP.BRepPrimAPI import BRepPrimAPI_MakeSphere
 
 
 def make_box(sizex: DimensionDefinitionType,
@@ -42,6 +44,36 @@ def make_box(sizex: DimensionDefinitionType,
     """
     dimx, dimy, dimz = get_dimensions([sizex, sizey, sizez], center)
     return __make_box_min_max(dimx[0], dimx[1], dimy[0], dimy[1], dimz[0], dimz[1])
+
+
+def make_sphere(*,
+                r: Optional[float] = None,
+                radius: Optional[float] = None,
+                d: Optional[float] = None,
+                diameter: Optional[float] = None,
+                center: CenterDefinitionType = True
+                ) -> 'Body':
+    """
+    Create a spherical body with the given radius or diameter.
+
+    Args:
+        r (float, optional): The radius of the sphere (alternative to 'radius', 'd' or 'diameter').
+        radius (float, optional): The radius of the sphere (alternative to 'r', 'd' or 'diameter').
+        d (float, optional): The diameter of the sphere (alternative to 'r', 'radius' or 'diameter').
+        diameter (float, optional): The diameter of the sphere (alternative to 'r', 'radius' or 'd').
+        center (CenterDefinitionType, optional): Whether to center the box at the sphere. If False, the box will start from the origin.
+            Can also be "X", "Y" or "Z" to center in only one direction or "XY", "XZ", "YZ" to center in two directions.
+            Defaults to True which centers the box in all directions.
+
+    Returns:
+        Body: The created spherical body.
+    """
+    radius = get_radius(r, radius, d, diameter)
+    cx, cy, cz = get_center_flags(center)
+    center_point = cq.Vector(0 if cx else radius, 0 if cy else radius, 0 if cz else radius)
+    solid = cq.Solid(BRepPrimAPI_MakeSphere(center_point.toPnt(), radius).Shape())
+    wp = cq.Workplane(obj=solid)
+    return Body(wp)
 
 
 def __make_box_min_max(x1: float,
