@@ -85,3 +85,18 @@ def get_radius(r: Optional[float] = None,
         return diameter / 2
     else:
         raise ValueError("no radius/diameter specified")
+
+def get_height(h: Optional[float] = None,
+               height: Optional[float] = None
+               ) -> float:
+    '''
+    Helper function to get the height from the given parameters.
+    '''
+    # check only one parameter is specified
+    if sum(x is not None for x in [h, height]) > 1:
+        raise ValueError("only one of h and height can be specified")
+    if h is not None:
+        return h
+    if height is not None:
+        return height
+    raise ValueError("no height specified")

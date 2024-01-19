@@ -16,7 +16,7 @@ from .body import Body
 from .sketch import Sketch
 from .construction_plane import ConstructionPlane
 from .assembly import Assembly
-from .helpers import get_center_flags, get_dimensions, get_radius
+from .helpers import get_center_flags, get_dimensions, get_height, get_radius
 from .patterns import pattern_grid, pattern_rect  # noqa
 
 from OCP.BRepPrimAPI import BRepPrimAPI_MakeSphere
@@ -44,6 +44,18 @@ def make_box(sizex: DimensionDefinitionType,
     """
     dimx, dimy, dimz = get_dimensions([sizex, sizey, sizez], center)
     return __make_box_min_max(dimx[0], dimx[1], dimy[0], dimy[1], dimz[0], dimz[1])
+
+
+def __make_box_min_max(x1: float,
+                       x2: float,
+                       y1: float,
+                       y2: float,
+                       z1: float,
+                       z2: float
+                       ) -> 'Body':
+    solid = cq.Solid.makeBox(x2 - x1, y2 - y1, z2 - z1).move(cq.Location(cq.Vector(x1, y1, z1)))
+    wp = cq.Workplane(obj=solid)
+    return Body(wp)
 
 
 def make_sphere(*,
@@ -76,16 +88,41 @@ def make_sphere(*,
     return Body(wp)
 
 
-def __make_box_min_max(x1: float,
-                       x2: float,
-                       y1: float,
-                       y2: float,
-                       z1: float,
-                       z2: float
-                       ) -> 'Body':
-    solid = cq.Solid.makeBox(x2 - x1, y2 - y1, z2 - z1).move(cq.Location(cq.Vector(x1, y1, z1)))
+def make_cylinder(*,
+                  h: Optional[float] = None,
+                  height: Optional[float] = None,
+                  r: Optional[float] = None,
+                  radius: Optional[float] = None,
+                  d: Optional[float] = None,
+                  diameter: Optional[float] = None,
+                  center: CenterDefinitionType = True
+                  ) -> 'Body':
+    """
+    Create a cylinder with the given height and radius or diameter. The cylinder is aligned along the z-axis.
+
+    Args:
+        h (float, optional): The height of the cylinder (alternative to 'height' parameter).
+        height (float, optional): The height of the cylinder (alternative to 'h' parameter).
+        r (float, optional): The radius of the cylinder (alternative to 'radius', 'd' or 'diameter').
+        radius (float, optional): The radius of the cylinder (alternative to 'r', 'd' or 'diameter').
+        d (float, optional): The diameter of the cylinder (alternative to 'r', 'radius' or 'diameter').
+        diameter (float, optional): The diameter of the cylinder (alternative to 'r', 'radius' or 'd').
+        center (CenterDefinitionType, optional): Whether to center the box at the cylinder. If False, the box will start from the origin.
+            Can also be "X", "Y" or "Z" to center in only one direction or "XY", "XZ", "YZ" to center in two directions.
+            Defaults to True which centers the box in all directions.
+
+    Returns:
+        Body: The created body.
+    """
+    radius = get_radius(r, radius, d, diameter)
+    cx, cy, cz = get_center_flags(center)
+    height = get_height(h, height)
+    base_center = cq.Vector(0 if cx else radius, 0 if cy else radius, -height / 2 if cz else 0)
+    solid = cq.Solid.makeCylinder(radius, height, base_center)
     wp = cq.Workplane(obj=solid)
     return Body(wp)
+
+
 
 
 def make_extrude(plane: Union[ConstructionPlane, str],
