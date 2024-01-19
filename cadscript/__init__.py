@@ -111,12 +111,15 @@ def make_cylinder(*,
         diameter (float, optional): The diameter of the cylinder (alternative to 'r', 'radius' or 'd').
         center (CenterDefinitionType, optional): Whether to center the box at the cylinder. If False, the box will start from the origin.
             Can also be "X", "Y" or "Z" to center in only one direction or "XY", "XZ", "YZ" to center in two directions.
+            if "base" is specified, the cylinder will be centered at the base, e.g. in XY if direction is "Z".
             Defaults to True which centers the box in all directions.
         direction (str, optional): The direction of the cylinder axis. Can be one of "X", "Y" or "Z". Defaults to "Z".
 
     Returns:
         Body: The created body.
     """
+    if isinstance(center, str) and center.lower() == "base":
+        center = "XY" if direction == "Z" else "XZ" if direction == "Y" else "YZ"
     radius = get_radius(r, radius, d, diameter)
     cx, cy, cz = get_center_flags(center)
     height = get_height(h, height)
