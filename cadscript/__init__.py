@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 import time
 import inspect
-from typing import Optional, Union, Tuple
+from typing import Literal, Optional, Union, Tuple
 
 import cadquery as cq
 
@@ -95,10 +95,12 @@ def make_cylinder(*,
                   radius: Optional[float] = None,
                   d: Optional[float] = None,
                   diameter: Optional[float] = None,
-                  center: CenterDefinitionType = True
+                  center: CenterDefinitionType = True,
+                  direction: Optional[Literal["X", "Y", "Z"]] = "Z"
                   ) -> 'Body':
     """
-    Create a cylinder with the given height and radius or diameter. The cylinder is aligned along the z-axis.
+    Create a cylinder with the given height and radius or diameter. 
+    The cylinder is aligned along the z-axis, unless specified otherwise using the 'direction' parameter.
 
     Args:
         h (float, optional): The height of the cylinder (alternative to 'height' parameter).
@@ -110,6 +112,7 @@ def make_cylinder(*,
         center (CenterDefinitionType, optional): Whether to center the box at the cylinder. If False, the box will start from the origin.
             Can also be "X", "Y" or "Z" to center in only one direction or "XY", "XZ", "YZ" to center in two directions.
             Defaults to True which centers the box in all directions.
+        direction (str, optional): The direction of the cylinder axis. Can be one of "X", "Y" or "Z". Defaults to "Z".
 
     Returns:
         Body: The created body.
@@ -117,8 +120,15 @@ def make_cylinder(*,
     radius = get_radius(r, radius, d, diameter)
     cx, cy, cz = get_center_flags(center)
     height = get_height(h, height)
+    dir = cq.Vector(0, 0, 1)
     base_center = cq.Vector(0 if cx else radius, 0 if cy else radius, -height / 2 if cz else 0)
-    solid = cq.Solid.makeCylinder(radius, height, base_center)
+    if direction == "X":
+        dir = cq.Vector(1, 0, 0)
+        base_center = cq.Vector(-height / 2 if cx else 0, 0 if cy else radius, 0 if cz else radius)
+    elif direction == "Y":
+        dir = cq.Vector(0, 1, 0)
+        base_center = cq.Vector(0 if cx else radius, -height / 2 if cy else 0, 0 if cz else radius)
+    solid = cq.Solid.makeCylinder(radius, height, base_center, dir)
     wp = cq.Workplane(obj=solid)
     return Body(wp)
 
