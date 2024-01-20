@@ -1,5 +1,3 @@
-.. _examples:
-
 .. currentmodule:: cadscript
 
 Getting Started

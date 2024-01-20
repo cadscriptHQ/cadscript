@@ -37,7 +37,7 @@ template_img = """
 
 .. raw:: html
 
-    <div class="cq" style="text-align:{txt_align};float:left;">
+    <div class="{html_class}">
         {out_svg}
     </div>
     <div style="clear:both;">
@@ -51,13 +51,13 @@ class cadscript_directive(cq_directive_vtk):
     option_spec = {
         "height": directives.length_or_unitless,
         "width": directives.length_or_percentage_or_unitless,
-        "align": directives.unchanged,
         "select": directives.unchanged,
         "interactive": directives.flag,
         "source": directives.path,
         "text_from_comment": directives.flag,
         "steps": directives.unchanged,
         "preset": directives.unchanged,
+        "side-by-side": directives.flag,
     }
 
     def get_file(self, path):
@@ -89,8 +89,8 @@ class cadscript_directive(cq_directive_vtk):
                 content = f.read()
                 pre_script, script, text = self.get_source_file(content, options.get("steps", None), "text_from_comment" in options)
         else:
-            # use inline code
-            script = "".join(script)
+            # else use inline code
+            script = "\n".join(script)        
 
         # add the prefix and postfix
         plot_code = prefix + "\n" + pre_script + "\n" + script + "\n" + postfix.format(result_var=result_var)
@@ -162,9 +162,21 @@ class cadscript_directive(cq_directive_vtk):
         if len(text):
             lines.extend(["", text, ""])
 
+        if "side-by-side" in options:
+            lines.append(".. raw:: html")
+            lines.append("")
+            lines.append("    <div class=\"side-by-side\"><div class=\"leftside\">")
+            lines.append("")
+
         lines.extend(["", "::", ""])
         lines.extend(["    %s" % row.rstrip() for row in script.split("\n")])
         lines.append("")
+
+        if "side-by-side" in options:
+            lines.append(".. raw:: html")
+            lines.append("")
+            lines.append("    </div>")
+            lines.append("")
 
         try:
             result = cqgi.parse(plot_code).build()
@@ -198,6 +210,11 @@ class cadscript_directive(cq_directive_vtk):
             traceback.print_exc()
             assy = Assembly(Compound.makeText("CQGI error", 10, 5))
 
+        if "side-by-side" in options:
+            lines.append("")
+            lines.append(".. raw:: html")
+            lines.append("")
+            lines.append("    </div>")
         lines.append("")
 
         return lines
@@ -207,7 +224,6 @@ class cadscript_directive(cq_directive_vtk):
         return template_vtk.format(
             data=data,
             element="document.currentScript.parentNode",
-            txt_align=options.get("align", "left"),
             width=options.get("width", "100%"),
             height=options.get("height", "500px"),
         ).splitlines()
@@ -216,6 +232,7 @@ class cadscript_directive(cq_directive_vtk):
     def render_image(self, assy, options):
 
         preset = options.get("preset", "3D")
+        side_by_side = "side-by-side" in options
         out_svg = ""
 
         if preset == "3D":
@@ -224,8 +241,7 @@ class cadscript_directive(cq_directive_vtk):
                 "projectionDir": (0, -10, 5),
                 "projectionXDir": (1, 0, 0),
                 "showHidden": True,
-                "width": 600,
-                "height": 250,
+                "width": 400 if side_by_side else 600,
                 "focus": 200,
                 "rotateAxis": "Z",
                 "rotateAngle": -30,
@@ -268,9 +284,9 @@ class cadscript_directive(cq_directive_vtk):
 
         return template_img.format(
             out_svg=out_svg,
-            txt_align=options.get("align", "left"),
+            html_class="rightside" if "side-by-side" in options else "cq",
             width="100%",
-            height=options.get("height", "300") + "px",
+            height="100%",
         ).splitlines()
 
 
@@ -280,10 +296,10 @@ class cadscript_auto_directive(cadscript_directive):
     option_spec = {
         "height": directives.length_or_unitless,
         "width": directives.length_or_percentage_or_unitless,
-        "align": directives.unchanged,
         "interactive": directives.flag,
         "source": directives.path,
         "preset": directives.unchanged,
+        "side-by-side": directives.flag,
     }
 
 
@@ -328,6 +344,8 @@ def setup(app):
     app.add_directive("cadquery", cq_directive_vtk)
     app.add_directive('cadscript', cadscript_directive)
     app.add_directive('cadscript-auto', cadscript_auto_directive)
+
+    app.add_css_file("cadscript.css")
 
     # add vtk.js
     app.add_js_file("vtk.js")
