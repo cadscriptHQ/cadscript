@@ -243,6 +243,7 @@ class Body:
             raise Exception("pos_list not set, should not happen")
 
         wp: cq.Workplane = self.__wp.faces(faceStr).workplane(origin=(0, 0, 0)).pushPoints(pos_list)
+
         if countersink_angle is not None:
             # countersink hole
             if counterbore_depth is not None:
@@ -250,7 +251,7 @@ class Body:
             if r2 == 0:
                 raise ValueError("r2 must be specified if countersink_angle is specified")
             wp = wp.cskHole(diameter=r * 2, cskDiameter=r2 * 2, cskAngle=countersink_angle, depth=depth)
-        if counterbore_depth is not None:
+        elif counterbore_depth is not None:
             # counterbore hole
             if r2 == 0:
                 raise ValueError("r2 must be specified if counterbore_depth is specified")
