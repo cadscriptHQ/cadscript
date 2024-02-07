@@ -2,7 +2,7 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Iterable, Iterator, Tuple, Optional
+from typing import Iterable, Iterator, List, Tuple, Optional, Union
 
 from .typedefs import CenterDefinitionType, DimensionDefinitionType, Vector2DType
 
@@ -64,10 +64,11 @@ def get_dimension(dimension: DimensionDefinitionType, center: bool) -> Vector2DT
     return __handle_size(t)
 
 
-def get_radius(r: Optional[float] = None,
-               radius: Optional[float] = None,
-               d: Optional[float] = None,
-               diameter: Optional[float] = None
+def get_radius(r: Optional[float],
+               radius: Optional[float],
+               d: Optional[float],
+               diameter: Optional[float],
+               raise_err_if_none: bool = True
                ) -> float:
     '''
     Helper function to get the radius from the given parameters.
@@ -83,8 +84,10 @@ def get_radius(r: Optional[float] = None,
         return d / 2
     elif diameter is not None:
         return diameter / 2
-    else:
+    if raise_err_if_none:
         raise ValueError("no radius/diameter specified")
+    return 0
+
 
 def get_height(h: Optional[float] = None,
                height: Optional[float] = None
@@ -100,3 +103,16 @@ def get_height(h: Optional[float] = None,
     if height is not None:
         return height
     raise ValueError("no height specified")
+
+
+def get_positions(positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]],
+                  pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]],
+                  default: Optional[List[Vector2DType]] = None
+                  ) -> Optional[List[Vector2DType]]:
+    if positions is not None and pos is not None:
+        raise ValueError("only one of positions and pos can be specified")
+    if positions is None and pos is None:
+        return default
+    p = positions if positions is not None else pos
+    pos_list = [p] if isinstance(p, tuple) else p
+    return pos_list

@@ -9,7 +9,7 @@ from typing import Iterable, List, Optional, Union, Tuple
 
 from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType
 from .export import export_sketch_DXF
-from .helpers import get_dimensions, get_radius
+from .helpers import get_dimensions, get_radius, get_positions
 from .cqselectors import NearestToPointListSelector
 
 
@@ -54,19 +54,6 @@ class Sketch:
         p3 = cq.Vector(x1, y2)
         return sketch.polygon([p0, p1, p2, p3, p0], angle=angle, mode=mode)
 
-    def __get_positions(self,
-                        positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]],
-                        pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]],
-                        default: Optional[List[Vector2DType]] = None
-                        ) -> Optional[List[Vector2DType]]:
-        if positions is not None and pos is not None:
-            raise ValueError("only one of positions and pos can be specified")
-        if positions is None and pos is None:
-            return default
-        p = positions if positions is not None else pos
-        pos_list = [p] if isinstance(p, tuple) else p
-        return pos_list
-
     def add_rect(self,
                  size_x: DimensionDefinitionType,
                  size_y: DimensionDefinitionType,
@@ -95,7 +82,7 @@ class Sketch:
             Sketch: The updated sketch object.
         """
         action = lambda x: self.__rect_helper(x, size_x, size_y, angle, center)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
     def cut_rect(self,
                  size_x: DimensionDefinitionType,
@@ -125,7 +112,7 @@ class Sketch:
             Sketch: The updated sketch object.
         """
         action = lambda x: self.__rect_helper(x, size_x, size_y, angle, center, mode=Mode.Substract)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
 
     def add_circle(self,
@@ -154,7 +141,7 @@ class Sketch:
         """
         r = get_radius(r, radius, d, diameter)
         action = lambda x: x.circle(r)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
     def cut_circle(self,
                    *,
@@ -182,7 +169,7 @@ class Sketch:
         """
         r = get_radius(r, radius, d, diameter)
         action = lambda x: x.circle(r, mode=Mode.Substract)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
     def add_ellipse(self,
                     size_x: DimensionDefinitionType,
@@ -253,7 +240,7 @@ class Sketch:
                   ) -> 'Sketch':
         (x1, x2), (y1, y2) = get_dimensions([size_x, size_y], center)
         action = lambda x: x.ellipse((x2 - x1) / 2.0, (y2 - y1) / 2.0, angle=angle, mode=mode)
-        pos_list = self.__get_positions(positions, pos, [(0, 0)])
+        pos_list = get_positions(positions, pos, [(0, 0)])
         return self.__perform_action(action, [(x + (x1 + x2) / 2.0, y + (y1 + y2) / 2.0) for (x, y) in pos_list])
 
     def add_polygon(self,
@@ -278,7 +265,7 @@ class Sketch:
 
         """
         action = lambda x: x.polygon(point_list)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
     def cut_polygon(self,
                     point_list: Iterable[Vector2DType],
@@ -302,7 +289,7 @@ class Sketch:
 
         """
         action = lambda x: x.polygon(point_list, mode=Mode.Substract)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
 
     def add_slot(self,
@@ -526,7 +513,7 @@ class Sketch:
                          ) -> 'Sketch':
         res = cq.Compound.makeCompound([sketch.__sketch._faces])
         action = lambda x: x.face(res, angle=angle, mode=mode)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
 
     def add_import_dxf(self,
@@ -551,7 +538,7 @@ class Sketch:
 
         """
         action = lambda x: x.importDXF(dxf_filename, tol=tolerance)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
     def cut_import_dxf(self,
                        dxf_filename: str,
@@ -574,7 +561,7 @@ class Sketch:
             Sketch: The updated sketch object.
         """
         action = lambda x: x.importDXF(dxf_filename, tol=tolerance, mode=Mode.Substract)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
     def _select_vertices(self,
                          query: Union[str, Vector2DType, Iterable[Vector2DType]]

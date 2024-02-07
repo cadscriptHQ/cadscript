@@ -2,10 +2,12 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Tuple
+from typing import Iterable, Optional, Tuple, Union
 import cadquery as cq
 
-from .typedefs import Vector3DType, AxisType
+from .helpers import get_positions, get_radius
+
+from .typedefs import Vector2DType, Vector3DType, AxisType
 from .sketch import Sketch
 
 
@@ -189,6 +191,77 @@ class Body:
         c = result.findSolid().copy()
         wp = cq.Workplane(obj=c)
         return Body(wp)
+
+    def cut_hole(self,
+                 faceStr: str,
+                 *,
+                 r: Optional[float] = None,
+                 radius: Optional[float] = None,
+                 d: Optional[float] = None,
+                 diameter: Optional[float] = None,
+                 depth: Optional[float] = None,
+                 positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                 pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                 countersink_angle: Optional[float] = None,
+                 counterbore_depth: Optional[float] = None,
+                 r2: Optional[float] = None,
+                 radius2: Optional[float] = None,
+                 d2: Optional[float] = None,
+                 diameter2: Optional[float] = None,
+                 ) -> 'Body':
+        """
+        Cuts a hole into the body. It can be a regular hole, a countersink hole or a counterbore hole.
+        For all types of holes, you can specify the diameter of the hole using one of the `r`, `radius`, `d` or `diameter` parameters.
+        To create a countersink hole, specify the `countersink_angle` parameter and also give the diameter of the countersink 
+        using one of the `r2`, `radius2`, `d2` or `diameter2` parameters.
+        To create a counterbore hole, specify the `counterbore_depth` parameter. Specify the counterbore by giving 
+        the diameter of the counterbore using one of the `r2`, `radius2`, `d2` or `diameter2` parameters and the depth 
+        of the counterbore using the `counterbore_depth` parameter.
+
+        Args:
+            faceStr (str): The face to cut the hole into.
+            r (Optional[float]): The radius of the hole.
+            radius (Optional[float]): The radius of the hole (alternative to 'r').
+            d (Optional[float]): The diameter of the hole.
+            diameter (Optional[float]): The diameter of the hole (alternative to 'd').
+            depth (Optional[float]): The depth of the hole. If not specified, the hole will go through the entire body.
+            positions (Optional[Union[Vector2DType, Iterable[Vector2DType]]]): If given, a hole is cut for each of the entries,
+                specifying the center as (x,y) tuple.  If None, a single hole will be cut at the origin.
+            pos (Optional[Union[Vector2DType, Iterable[Vector2DType]]]): Shorthand for positions parameter, only use one of them.
+            countersink_angle (Optional[float]): The angle of the countersink. A typical value is 90 or 82 degrees.
+            counterbore_depth (Optional[float]): The depth of the counterbore.
+            r2 (Optional[float]): The radius of the countersink or counterbore.
+            radius2 (Optional[float]): The radius of the countersink or counterbore (alternative to 'r2').
+            d2 (Optional[float]): The diameter of the countersink or counterbore.
+            diameter2 (Optional[float]): The diameter of the countersink or counterbore (alternative to 'd2').
+        """
+        r = get_radius(r, radius, d, diameter)
+        r2 = get_radius(r2, radius2, d2, diameter2, False)
+        pos_list = get_positions(positions, pos, default=[(0, 0)])
+
+        if pos_list is None:
+            raise Exception("pos_list not set, should not happen")
+
+        wp: cq.Workplane = self.__wp.faces(faceStr).workplane(origin=(0, 0, 0)).pushPoints(pos_list)
+        if countersink_angle is not None:
+            # countersink hole
+            if counterbore_depth is not None:
+                raise ValueError("counterbore_depth must not be specified if countersink_angle is specified")
+            if r2 == 0:
+                raise ValueError("r2 must be specified if countersink_angle is specified")
+            wp = wp.cskHole(diameter=r * 2, cskDiameter=r2 * 2, cskAngle=countersink_angle, depth=depth)
+        if counterbore_depth is not None:
+            # counterbore hole
+            if r2 == 0:
+                raise ValueError("r2 must be specified if counterbore_depth is specified")
+            wp = wp.cboreHole(diameter=r * 2, cboreDiameter=r2 * 2, cboreDepth=counterbore_depth, depth=depth)
+        else:
+            # regular hole
+            wp = wp.hole(diameter=r * 2, depth=depth)
+        self.__wp = wp
+        return self
+
+
 
     def get_center(self) -> Vector3DType:
         """
