@@ -9,6 +9,7 @@
 - added add/cut_slot variant with 2 points
 - added add/cut/intersect_sketch()
 - added make_sphere() and make_cylinder()
+- added cut_hole()
 
 ## [0.4] - 2024-01-12
 
