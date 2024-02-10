@@ -58,12 +58,23 @@ class BodyMoveTest(unittest.TestCase):
         box.move_to_origin(False)
         self.assertEqual(box.get_extent(), ((-1, 1), (-1, 1), (-1, 1)))
 
+    def test_return_type_move_to_origin(self):
+        box = cadscript.make_box(1, 1, 1, center=True)
+        test_obj = box.move_to_origin()
+        self.assertIsInstance(test_obj, cadscript.Body)
+
 
     def test_box_move(self):
         box = cadscript.make_box(2, 2, 2, center=False)
         box.move((1, 2, 3))
         self.assertEqual(box.get_extent(), ((1, 3), (2, 4), (3, 5)))
-    
+
+    def test_return_type_move(self):
+        box = cadscript.make_box(1, 1, 1, center=True)
+        test_obj = box.move((1, 1, 1))
+        self.assertIsInstance(test_obj, cadscript.Body)
+
+
     def test_box_center_x(self):
         box = cadscript.make_box(2, 4, 6, center=False)
         box.center("X")
@@ -83,7 +94,7 @@ class BodyMoveTest(unittest.TestCase):
         box = cadscript.make_box(2, 4, 6, center=False)
         box.center("XY")
         self.assertEqual(box.get_extent(), ((-1, 1), (-2, 2), (0, 6)))
-    
+
     def test_box_center_xz(self):
         box = cadscript.make_box(2, 4, 6, center=False)
         box.center("XZ")
@@ -102,7 +113,7 @@ class BodyMoveTest(unittest.TestCase):
     def test_box_center_true(self):
         box = cadscript.make_box(2, 4, 6, center=False)
         box.center(True)
-        self.assertEqual(box.get_extent(), ((-1, 1), (-2, 2), (-3, 3))) 
+        self.assertEqual(box.get_extent(), ((-1, 1), (-2, 2), (-3, 3)))
 
     def test_box_center(self):
         box = cadscript.make_box(2, 4, 6, center=False)
@@ -113,6 +124,12 @@ class BodyMoveTest(unittest.TestCase):
         box = cadscript.make_box(2, 4, 6, center=False)
         box.center(False)
         self.assertEqual(box.get_extent(), ((0, 2), (0, 4), (0, 6)))
+
+    def test_return_type_center(self):
+        box = cadscript.make_box(1, 1, 1, center=True)
+        test_obj = box.center()
+        self.assertIsInstance(test_obj, cadscript.Body)
+
 
 if __name__ == '__main__':
     unittest.main()

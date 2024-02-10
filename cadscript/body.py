@@ -284,7 +284,7 @@ class Body:
         bb = self.__wp.findSolid().BoundingBox()
         return ((bb.xmin, bb.xmax), (bb.ymin, bb.ymax), (bb.zmin, bb.zmax))
 
-    def center(self, center: CenterDefinitionType = True):
+    def center(self, center: CenterDefinitionType = True) -> 'Body':
         """
         Centers the body at the origin.
 
@@ -302,10 +302,10 @@ class Body:
             return -(dim_max - dim_min) / 2 if centered else 0
 
         move_vector = tuple(map(get_translate_value, zip(dim, center_flags)))
-        self.move(move_vector)
+        return self.move(move_vector)
 
 
-    def move_to_origin(self, axis: CenterDefinitionType = True):
+    def move_to_origin(self, axis: CenterDefinitionType = True) -> 'Body':
         """
         Moves the body to the origin, i.e. that the lower corner of the bounding box is at the origin.
 
@@ -324,7 +324,7 @@ class Body:
             return -dim_min if _axis else 0
 
         move_vector = tuple(map(get_translate_value, zip(dim, axis_flags)))
-        self.move(move_vector)
+        return self.move(move_vector)
 
 
 
