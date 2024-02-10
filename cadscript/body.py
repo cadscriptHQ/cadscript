@@ -5,9 +5,9 @@
 from typing import Iterable, Optional, Tuple, Union
 import cadquery as cq
 
-from .helpers import get_positions, get_radius
+from .helpers import get_center_flags, get_positions, get_radius
 
-from .typedefs import Vector2DType, Vector3DType, AxisType
+from .typedefs import CenterDefinitionType, Vector2DType, Vector3DType, AxisType
 from .sketch import Sketch
 
 
@@ -283,6 +283,50 @@ class Body:
         """
         bb = self.__wp.findSolid().BoundingBox()
         return ((bb.xmin, bb.xmax), (bb.ymin, bb.ymax), (bb.zmin, bb.zmax))
+
+    def center(self, center: CenterDefinitionType = True):
+        """
+        Centers the body at the origin.
+
+        Args:
+            center (CenterDefinitionType, optional): Whether to center the object. If False, the object will be not moved
+                Can also be "X", "Y" or "Z" to center in only one direction or "XY", "XZ", "YZ" to center in two directions.
+                The other directions will be unchanged.
+                Defaults to True which centers the box in all directions.
+        """
+        dim = self.get_extent()
+        center_flags = get_center_flags(center)
+
+        def get_translate_value(entry) -> float:
+            (dim_min, dim_max), centered = entry
+            return -(dim_max - dim_min) / 2 if centered else 0
+
+        move_vector = tuple(map(get_translate_value, zip(dim, center_flags)))
+        self.move(move_vector)
+
+
+    def move_to_origin(self, axis: CenterDefinitionType = True):
+        """
+        Moves the body to the origin, i.e. that the lower corner of the bounding box is at the origin.
+
+        Args:
+            axis (CenterDefinitionType, optional): 
+                Can be "X", "Y" or "Z" to move the object in only one direction or "XY", "XZ", "YZ" to move
+                it in two directions. The other directions will be unchanged.
+                Defaults to True which moves the box in all directions.
+                If False, the object will be not moved at all.
+        """
+        dim = self.get_extent()
+        axis_flags = get_center_flags(axis)
+
+        def get_translate_value(entry) -> float:
+            (dim_min, _), _axis = entry
+            return -dim_min if _axis else 0
+
+        move_vector = tuple(map(get_translate_value, zip(dim, axis_flags)))
+        self.move(move_vector)
+
+
 
     def export_step(self, filename: str) -> None:
         """
