@@ -17,7 +17,7 @@ from .sketch import Sketch
 from .construction_plane import ConstructionPlane
 from .assembly import Assembly
 from .helpers import get_center_flags, get_dimensions, get_height, get_radius
-from .patterns import pattern_grid, pattern_rect  # noqa
+from .patterns import pattern_grid, pattern_rect, pattern_distribute  # noqa
 
 from OCP.BRepPrimAPI import BRepPrimAPI_MakeSphere
 
