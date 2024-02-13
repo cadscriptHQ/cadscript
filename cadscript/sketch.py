@@ -7,9 +7,9 @@ from math import pi
 
 from typing import Iterable, List, Optional, Union, Tuple
 
-from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType
+from .typedefs import Axis2DType, DimensionDefinitionType, CenterDefinition2DType, Vector2DType
 from .export import export_sketch_DXF
-from .helpers import get_dimensions, get_radius, get_positions
+from .helpers import get_center_flags, get_dimensions, get_radius, get_positions
 from .cqselectors import NearestToPointListSelector
 
 
@@ -44,7 +44,7 @@ class Sketch:
                       size_x: DimensionDefinitionType,
                       size_y: DimensionDefinitionType,
                       angle: float,
-                      center: CenterDefinitionType,
+                      center: CenterDefinition2DType,
                       mode=Mode.Add
                       ):
         (x1, x2), (y1, y2) = get_dimensions([size_x, size_y], center)
@@ -59,7 +59,7 @@ class Sketch:
                  size_y: DimensionDefinitionType,
                  *,
                  angle: float = 0,
-                 center: CenterDefinitionType = True,
+                 center: CenterDefinition2DType = True,
                  positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
                  pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                  ) -> 'Sketch':
@@ -70,7 +70,7 @@ class Sketch:
             size_x (DimensionDefinitionType): The size of the rectangle along the x-axis.
             size_y (DimensionDefinitionType): The size of the rectangle along the y-axis.
             angle (float, optional): The angle of rotation. Defaults to 0.
-            center (CenterDefinitionType, optional): Determines whether the rectangle is centered.
+            center (CenterDefinition2DType, optional): Determines whether the rectangle is centered.
                 If False, the rectangle will start from the origin.
                 Can also be "X" or "Y" to center in only one direction. Defaults to True.
             positions (Vector2DType | Iterable[Vector2DType], optional): If given, a rectangle is added for each of the entries,
@@ -89,7 +89,7 @@ class Sketch:
                  size_y: DimensionDefinitionType,
                  *,
                  angle: float = 0,
-                 center: CenterDefinitionType = True,
+                 center: CenterDefinition2DType = True,
                  positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
                  pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                  ) -> 'Sketch':
@@ -100,7 +100,7 @@ class Sketch:
             size_x (DimensionDefinitionType): The size of the rectangle along the x-axis.
             size_y (DimensionDefinitionType): The size of the rectangle along the y-axis.
             angle (float, optional): The angle of rotation. Defaults to 0.
-            center (CenterDefinitionType, optional): Determines whether the rectangle is centered.
+            center (CenterDefinition2DType, optional): Determines whether the rectangle is centered.
                 If False, the rectangle will start from the origin.
                 Can also be "X" or "Y" to center in only one direction. Defaults to True.
             positions (Vector2DType | Iterable[Vector2DType], optional): If given, a rectangle is cut for each of the entries,
@@ -176,7 +176,7 @@ class Sketch:
                     size_y: DimensionDefinitionType,
                     *,
                     angle: float = 0,
-                    center: CenterDefinitionType = True,
+                    center: CenterDefinition2DType = True,
                     positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
                     pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                     ) -> 'Sketch':
@@ -187,7 +187,7 @@ class Sketch:
             size_x (DimensionDefinitionType): The size of the ellipse along the x-axis.
             size_y (DimensionDefinitionType): The size of the ellipse along the y-axis.
             angle (float, optional): The angle of rotation. Defaults to 0.
-            center (CenterDefinitionType, optional): Determines whether the ellipse is centered.
+            center (CenterDefinition2DType, optional): Determines whether the ellipse is centered.
                 If False, the ellipse will start from the origin.
                 Can also be "X" or "Y" to center in only one direction. Defaults to True.
             positions (Vector2DType | Iterable[Vector2DType], optional): If given, a ellipse is added for each of the entries,
@@ -205,7 +205,7 @@ class Sketch:
                     size_y: DimensionDefinitionType,
                     *,
                     angle: float = 0,
-                    center: CenterDefinitionType = True,
+                    center: CenterDefinition2DType = True,
                     positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
                     pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                     ) -> 'Sketch':
@@ -216,7 +216,7 @@ class Sketch:
             size_x (DimensionDefinitionType): The size of the ellipse along the x-axis.
             size_y (DimensionDefinitionType): The size of the ellipse along the y-axis.
             angle (float, optional): The angle of rotation. Defaults to 0.
-            center (CenterDefinitionType, optional): Determines whether the ellipse is centered.
+            center (CenterDefinition2DType, optional): Determines whether the ellipse is centered.
                 If False, the ellipse will start from the origin.
                 Can also be "X" or "Y" to center in only one direction. Defaults to True.
             positions (Vector2DType | Iterable[Vector2DType], optional): If given, a ellipse is cuts for each of the entries,
@@ -234,7 +234,7 @@ class Sketch:
                   size_y: DimensionDefinitionType,
                   mode: str,
                   angle: float = 0,
-                  center: CenterDefinitionType = True,
+                  center: CenterDefinition2DType = True,
                   positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
                   pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                   ) -> 'Sketch':
@@ -652,6 +652,70 @@ class Sketch:
         """
         self.__sketch = self.__sketch.moved(cq.Location(cq.Vector(translationVector)))
         return self
+    
+
+    def move_to_origin(self, axis: CenterDefinition2DType = True) -> 'Sketch':
+        """
+        Moves the sketch to the origin, i.e. that the lower corner of the bounding box is at the origin.
+
+        Args:
+            axis (CenterDefinition2DType, optional): 
+                Can be "X" or "Y" to move the object in only one direction or True which moves the sketch in both directions.
+                If False, the sketch will be not moved at all.
+                Defaults to True.
+        """
+        dim = self.get_extent()
+        axis_flags = get_center_flags(axis)
+
+        def get_translate_value(entry) -> float:
+            (dim_min, _), _axis = entry
+            return -dim_min if _axis else 0
+
+        move_vector = tuple(map(get_translate_value, zip(dim, axis_flags)))
+        return self.move(move_vector)    
+
+    def center(self, center: CenterDefinition2DType = True) -> 'Sketch':
+        """
+        Centers the sketch at the origin.
+
+        Args:
+            center (CenterDefinition2DType, optional): 
+                Can be "X" or "Y" to move the object in only one direction or True which moves the sketch in both directions.
+                If False, the sketch will be not moved at all.
+                Defaults to True.
+
+        """
+        dim = self.get_extent()
+        center_flags = get_center_flags(center)
+
+        def get_translate_value(entry) -> float:
+            (dim_min, dim_max), centered = entry
+            return -(dim_min + dim_max) / 2 if centered else 0
+
+        move_vector = tuple(map(get_translate_value, zip(dim, center_flags)))
+        return self.move(move_vector)
+    
+    def mirror(self, axis: Axis2DType, copy_and_merge: bool = True) -> 'Sketch':
+        """
+        Mirrors the sketch object.
+
+        Args:
+            axis (Axis2DType): The axis to mirror the sketch object along.
+            copy_and_merge (bool, optional): If True, the sketch is mirrored and merged with the original sketch.
+                If False, the original sketch is replaced by the mirrored sketch. Defaults to True.
+
+        Returns:
+            Sketch: The mirrored sketch object.
+        """
+        res = cq.Compound.makeCompound([self.__sketch._faces])
+        mirror_plane = "YZ" if axis == "X" else "XZ" if axis == "Y" else None
+        if mirror_plane is None:
+            raise ValueError("Invalid axis. Must be 'X' or 'Y'")
+        mirrored = cq.Sketch().face(cq.Compound.makeCompound(res.mirror(mirror_plane)))
+        if not copy_and_merge:
+            self.__sketch = mirrored
+            return self
+        return self.add_sketch(Sketch(mirrored))
 
     def rotate(self,
                degrees

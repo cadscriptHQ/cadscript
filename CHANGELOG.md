@@ -11,6 +11,7 @@
 - added make_sphere() and make_cylinder()
 - added Body.cut_hole()
 - added Body.move_to_origin() Body.center() and Body.mirror()
+- added Sketch.move_to_origin() Sketch.center() and Sketch.mirror()
 
 ## [0.4] - 2024-01-12
 
