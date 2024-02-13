@@ -9,7 +9,7 @@ from .typedefs import DimensionDefinitionType, CenterDefinitionType
 from .helpers import get_center_flags, get_dimension, get_dimensions
 
 
-def pattern_rect(sizex: float, sizey: float, center: CenterDefinitionType = True):
+def pattern_rect(sizex: DimensionDefinitionType, sizey: DimensionDefinitionType, center: CenterDefinitionType = True):
     """
     Generate a rectangular pattern.
 
