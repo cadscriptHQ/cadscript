@@ -111,7 +111,7 @@ class BodyMoveTest(unittest.TestCase):
         self.assertEqual(box.get_extent(), ((-1, 1), (-2, 2), (-3, 3)))
 
     def test_box_center_true(self):
-        box = cadscript.make_box(2, 4, 6, center=False)
+        box = cadscript.make_box((2, 4), (2, 6), (-10, -4), center=False)
         box.center(True)
         self.assertEqual(box.get_extent(), ((-1, 1), (-2, 2), (-3, 3)))
 

@@ -9,8 +9,8 @@
 - added add/cut_slot variant with 2 points
 - added add/cut/intersect_sketch()
 - added make_sphere() and make_cylinder()
-- added cut_hole()
-- added Body.move_to_origin() and Body.center()
+- added Body.cut_hole()
+- added Body.move_to_origin() Body.center() and Body.mirror()
 
 ## [0.4] - 2024-01-12
 

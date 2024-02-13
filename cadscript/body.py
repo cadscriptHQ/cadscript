@@ -299,7 +299,7 @@ class Body:
 
         def get_translate_value(entry) -> float:
             (dim_min, dim_max), centered = entry
-            return -(dim_max - dim_min) / 2 if centered else 0
+            return -(dim_min + dim_max) / 2 if centered else 0
 
         move_vector = tuple(map(get_translate_value, zip(dim, center_flags)))
         return self.move(move_vector)
@@ -313,7 +313,7 @@ class Body:
             axis (CenterDefinitionType, optional): 
                 Can be "X", "Y" or "Z" to move the object in only one direction or "XY", "XZ", "YZ" to move
                 it in two directions. The other directions will be unchanged.
-                Defaults to True which moves the box in all directions.
+                Defaults to True which moves the body in all directions.
                 If False, the object will be not moved at all.
         """
         dim = self.get_extent()
@@ -326,6 +326,26 @@ class Body:
         move_vector = tuple(map(get_translate_value, zip(dim, axis_flags)))
         return self.move(move_vector)
 
+    def mirror(self, axis: AxisType, copy_and_merge: bool = True) -> 'Body':
+        """
+        Mirrors the body.
+
+        Args:
+            axis (AxisType): The axis to mirror the object along.
+            copy_and_merge (bool, optional): If True, the body is mirrored and merged with the original body.
+                If False, the original sketch is replaced by the mirrored body. Defaults to True.
+
+        Returns:
+            Sketch: The mirrored body object.
+        """
+        mirror_plane = "XY" if axis == "Z" else "YZ" if axis == "X" else "XZ" if axis == "Y" else None
+        if mirror_plane is None:
+            raise ValueError("invalid axis")
+        mirrored = self.__wp.findSolid().mirror(mirror_plane)
+        if not copy_and_merge:
+            self.__wp = cq.Workplane(obj=mirrored)
+            return self
+        return self.add(Body(cq.Workplane(obj=mirrored)))
 
 
     def export_step(self, filename: str) -> None:
