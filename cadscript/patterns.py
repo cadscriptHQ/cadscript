@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from itertools import product
-from math import floor
+from math import ceil, floor
 from typing import Literal, Optional, List, Tuple
 
 from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType
@@ -43,7 +43,7 @@ def pattern_distribute(
         min_spacing_x: float = 0.0,
         min_spacing_y: float = 0.0) -> List[Vector2DType]:
     """
-    Generate a grid pattern that evenly distributes tiles on a rectangle.
+    Generate a grid pattern that evenly distributes tiles of fixed size on a rectangle.
 
     Args:
         size_x (DimensionDefinitionType): The width of the rectangle.
@@ -69,9 +69,9 @@ def pattern_distribute(
         List[Vector2DType]: A list of (x, y) coordinates representing the locations of the tiles.
 
     Remarks:
-        * If count_x or count_y is not specified, the maximum number of tiles that fit will be used.
-        * if tile_size_x is greater than size_x or tile_size_y is greater than size_y, no tiles will be generated.
-        * If count_x or count_y is 1, the result with be centered in the corresponding direction.
+        - If count_x or count_y is not specified, the maximum number of tiles that fit will be used.
+        - if tile_size_x is greater than size_x or tile_size_y is greater than size_y, no tiles will be generated.
+        - If count_x or count_y is 1, the result with be centered in the corresponding direction.
 
     """
     if tile_size_x <= 0 or tile_size_y <= 0:
@@ -107,6 +107,97 @@ def __distribute_tile(size: DimensionDefinitionType,
     delta = (max_val - min_val - tile_size) / (count - 1)
     tile_offset = tile_size / 2 if use_center else 0
     return [min_val + i * delta + tile_offset for i in range(count)]
+
+
+def pattern_distribute_stretch(size_x: DimensionDefinitionType,
+                               size_y: DimensionDefinitionType,
+                               *,
+                               count_x: Optional[int] = None,
+                               count_y: Optional[int] = None,
+                               min_tile_size_x: Optional[int] = None,
+                               max_tile_size_x: Optional[int] = None,
+                               min_tile_size_y: Optional[int] = None,
+                               max_tile_size_y: Optional[int] = None,
+                               spacing_x: float = 0.0,
+                               spacing_y: float = 0.0,
+                               center: CenterDefinitionType = True
+                               ) -> List[Tuple[Tuple[float, float], Tuple[float, float]]]:
+    """
+    Generate a grid pattern that evenly distributes tiles of variable size on a rectangle.
+
+    Args:
+        size_x (DimensionDefinitionType): The width of the rectangle.
+        size_y (DimensionDefinitionType): The height of the rectangle.
+        count_x (int, optional): The number of tiles in the x-direction.
+            If not specified, the values of min_tile_size_x and max_tile_size_x will be used
+            to calculate the number of tiles that fit.
+        count_y (int, optional): The number of tiles in the y-direction.
+            If not specified, the values of min_tile_size_y and max_tile_size_y will be used
+            to calculate the number of tiles that fit.        
+        min_tile_size_x (int, optional): The minimum size of the tiles in the x-direction.
+        max_tile_size_x (int, optional): The maximum size of the tiles in the x-direction.
+        min_tile_size_y (int, optional): The minimum size of the tiles in the y-direction.
+        max_tile_size_y (int, optional): The maximum size of the tiles in the y-direction.
+        spacing_x (float, optional): The spacing between tiles in the x-direction.
+            Defaults to 0.
+        spacing_y (float, optional): The spacing between tiles in the y-direction.
+            Defaults to 0.
+        center (CenterDefinitionType, optional): Determines whether the rectangle is centered around the origin.
+            If True, the rectangle will be centered. Can also be "X" or "Y" to center in only one direction.
+            If False, the rectangle will start from the origin. Defaults to True.
+
+    Returns:
+        List[Tuple[Tuple[float, float], Tuple[float, float]]]: A list of tuples representing the tiles.
+        Each tuple contains two tuples representing the min and max values of the tile in the x and y directions.
+        E.g. [((x_min, x_max), (y_min, y_max))] is the result for a single tile.
+
+    Remarks:
+        - If count_x or is not specified, the values of min_tile_size_x and max_tile_size_x
+          will be used to calculate the number of tiles that fit.
+        - If min_tile_size_x is given, the algorithm will use as many tiles as possible to fit the size.
+          If min_tile_size_x is greater than the rectangle size, no tiles will be generated.
+        - If max_tile_size_x is given, the algorithm will only use as few tiles as possible to fit the size.
+        - If both min_tile_size_x and max_tile_size_x are given, the algorithm will use as few tiles as possible,
+          but will return no tiles if the size is less than min_tile_size_x.
+        - All the remarks for the x-direction also apply to the y-direction with the corresponding parameters.
+    """
+    center_x, center_y, _ = get_center_flags(center)
+    if count_x is None and min_tile_size_x is None and max_tile_size_x is None:
+        raise ValueError("Either count_x or min_tile_size_x and max_tile_size_x must be specified")
+
+    count_x, tile_size_x = __get_ditribute_stretch_count(size_x, count_x, min_tile_size_x, max_tile_size_x, spacing_x, center_x)
+    count_y, tile_size_y = __get_ditribute_stretch_count(size_y, count_y, min_tile_size_y, max_tile_size_y, spacing_y, center_y)
+    if count_x == 0 or count_y == 0:
+        return []
+    pos_list = pattern_distribute(size_x, size_y, tile_size_x, tile_size_y, count_x=count_x,
+                                  count_y=count_y, center=center, result_pos="origin")
+    return [((x, x + tile_size_x), (y, y + tile_size_y)) for x, y in pos_list]
+
+
+def __get_ditribute_stretch_count(size, count, min_tile_size, max_tile_size, spacing, center):
+    """
+    Helper function for pattern_distribute_strech(). 
+    Calculates the count and tile size based on the given parameters.
+    """
+    min_val, max_val = get_dimension(size, center)
+    extent = max_val - min_val
+    calc_size = lambda _count: (spacing + extent) / _count - spacing
+    if count is not None:
+        return (count, calc_size(count))
+    if min_tile_size is not None and extent < min_tile_size:
+        # no tiles fit
+        return (0, 0)
+    elif max_tile_size is not None:
+        # minimize the number of tiles
+        _count = ceil((extent + spacing) / (max_tile_size + spacing))
+        return (_count, calc_size(_count))
+    elif min_tile_size is not None:
+        # maximize the number of tiles
+        _count = floor((extent + spacing) / (min_tile_size + spacing))
+        return (_count, calc_size(_count))
+    raise Exception("cadscript internal error - should not reach this point")
+
+
 
 
 def pattern_grid(
