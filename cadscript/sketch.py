@@ -246,7 +246,8 @@ class Sketch:
                     point_list: Iterable[Vector2DType],
                     *,
                     positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
-                    pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                    pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                    auto_close: bool = True
                     ) -> 'Sketch':
         """
         Adds a polygon to the sketch.
@@ -258,11 +259,20 @@ class Sketch:
                 is added for each of the entries, specifying the offset as (x,y) tuple.
                 Defaults to None, which results in a single polygon added with no offset.
             pos: Shorthand for positions parameter, only use one of them.
+            auto_close (bool, optional): If True, the polygon will be automatically closed by adding a line 
+                from the last point to the first. If False, in the given point list, the last point is 
+                expected to be the same as the first point.
+                Defaults to True.
 
         Returns:
             Sketch: The modified sketch object.
 
         """
+        point_list = list(point_list)
+        if len(point_list) < 3:
+            raise ValueError("A polygon must have at least 3 points")
+        if auto_close:
+            point_list.append(point_list[0])
         action = lambda x: x.polygon(point_list)
         return self.__perform_action(action, get_positions(positions, pos))
 
