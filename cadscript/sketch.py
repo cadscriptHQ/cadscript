@@ -13,17 +13,16 @@ from .helpers import get_center_flags, get_dimensions, get_radius, get_positions
 from .cqselectors import NearestToPointListSelector
 
 
-class Mode:
-    Add = "a"
-    Substract = "s"
-    Intersect = "i"
-
-
 class Sketch:
     """
     Represents a 2D sketch. Sketch instances are typically created using :func:`cadscript.make_sketch`.
     """
     __sketch: cq.Sketch
+
+    class CqMode:
+        Add: cq.sketch.Modes = "a"
+        Substract: cq.sketch.Modes = "s"
+        Intersect: cq.sketch.Modes = "i"
 
     def __init__(self, sketch: cq.Sketch) -> None:
         self.__sketch = sketch
@@ -40,12 +39,12 @@ class Sketch:
         return self
 
     def __rect_helper(self,
-                      sketch,
+                      sketch: cq.Sketch,
                       size_x: DimensionDefinitionType,
                       size_y: DimensionDefinitionType,
                       angle: float,
                       center: CenterDefinition2DType,
-                      mode=Mode.Add
+                      mode: cq.sketch.Modes = "a"
                       ):
         (x1, x2), (y1, y2) = get_dimensions([size_x, size_y], center)
         p0 = cq.Vector(x1, y1)
@@ -111,7 +110,7 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        action = lambda x: self.__rect_helper(x, size_x, size_y, angle, center, mode=Mode.Substract)
+        action = lambda x: self.__rect_helper(x, size_x, size_y, angle, center, mode=Sketch.CqMode.Substract)
         return self.__perform_action(action, get_positions(positions, pos))
 
 
@@ -168,7 +167,7 @@ class Sketch:
             Sketch: The updated sketch object.
         """
         r = get_radius(r, radius, d, diameter)
-        action = lambda x: x.circle(r, mode=Mode.Substract)
+        action = lambda x: x.circle(r, mode="s")
         return self.__perform_action(action, get_positions(positions, pos))
 
     def add_ellipse(self,
@@ -198,7 +197,7 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        return self.__ellipse(size_x, size_y, Mode.Add, angle, center, positions, pos)
+        return self.__ellipse(size_x, size_y, Sketch.CqMode.Add, angle, center, positions, pos)
 
     def cut_ellipse(self,
                     size_x: DimensionDefinitionType,
@@ -227,7 +226,7 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        return self.__ellipse(size_x, size_y, Mode.Substract, angle, center, positions, pos)
+        return self.__ellipse(size_x, size_y, Sketch.CqMode.Substract, angle, center, positions, pos)
 
     def __ellipse(self,
                   size_x: DimensionDefinitionType,
@@ -288,7 +287,7 @@ class Sketch:
             Sketch: The modified sketch object.
 
         """
-        action = lambda x: x.polygon(point_list, mode=Mode.Substract)
+        action = lambda x: x.polygon(point_list, mode=Sketch.CqMode.Substract)
         return self.__perform_action(action, get_positions(positions, pos))
 
 
@@ -336,9 +335,11 @@ class Sketch:
             Sketch: The updated sketch object.
         """
         if width is not None and height is not None:
-            return self.__slot_w_h(width, height, mode=Mode.Add, angle=angle, positions=positions, pos=pos)
+            return self.__slot_w_h(width, height, mode=Sketch.CqMode.Add, angle=angle,
+                                   positions=positions, pos=pos)
         if start is not None and end is not None:
-            return self.__slot_start_end(start, end, mode=Mode.Add, r=r, radius=radius, d=d, diameter=diameter, positions=positions, pos=pos)
+            return self.__slot_start_end(start, end, mode=Sketch.CqMode.Add, r=r, radius=radius, d=d, diameter=diameter,
+                                         positions=positions, pos=pos)
         raise ValueError("invalid parameters. Either width and height or start and end must be specified")
 
 
@@ -386,9 +387,11 @@ class Sketch:
             Sketch: The updated sketch object.
         """
         if width is not None and height is not None:
-            return self.__slot_w_h(width, height, mode=Mode.Substract, angle=angle, positions=positions, pos=pos)
+            return self.__slot_w_h(width, height, mode=Sketch.CqMode.Substract, angle=angle,
+                                   positions=positions, pos=pos)
         if start is not None and end is not None:
-            return self.__slot_start_end(start, end, mode=Mode.Substract, r=r, radius=radius, d=d, diameter=diameter, positions=positions, pos=pos)
+            return self.__slot_start_end(start, end, mode=Sketch.CqMode.Substract, r=r, radius=radius, d=d, diameter=diameter,
+                                         positions=positions, pos=pos)
         raise ValueError("invalid parameters. Either width and height or start and end must be specified")
 
 
@@ -456,7 +459,7 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        return self.__combine_sketch(sketch, Mode.Add, angle=angle, positions=positions, pos=pos)
+        return self.__combine_sketch(sketch, Sketch.CqMode.Add, angle=angle, positions=positions, pos=pos)
 
     def cut_sketch(self,
                    sketch: 'Sketch',
@@ -478,7 +481,7 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        return self.__combine_sketch(sketch, Mode.Substract, angle=angle, positions=positions, pos=pos)
+        return self.__combine_sketch(sketch, Sketch.CqMode.Substract, angle=angle, positions=positions, pos=pos)
 
 
     def intersect_sketch(self,
@@ -501,7 +504,7 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        return self.__combine_sketch(sketch, Mode.Intersect, angle=angle, positions=positions, pos=pos)
+        return self.__combine_sketch(sketch, Sketch.CqMode.Intersect, angle=angle, positions=positions, pos=pos)
 
     def __combine_sketch(self,
                          sketch: 'Sketch',
@@ -560,7 +563,7 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        action = lambda x: x.importDXF(dxf_filename, tol=tolerance, mode=Mode.Substract)
+        action = lambda x: x.importDXF(dxf_filename, tol=tolerance, mode=Sketch.CqMode.Substract)
         return self.__perform_action(action, get_positions(positions, pos))
 
     def _select_vertices(self,
@@ -652,7 +655,7 @@ class Sketch:
         """
         self.__sketch = self.__sketch.moved(cq.Location(cq.Vector(translationVector)))
         return self
-    
+
 
     def move_to_origin(self, axis: CenterDefinition2DType = True) -> 'Sketch':
         """
@@ -672,7 +675,7 @@ class Sketch:
             return -dim_min if _axis else 0
 
         move_vector = tuple(map(get_translate_value, zip(dim, axis_flags)))
-        return self.move(move_vector)    
+        return self.move(move_vector)
 
     def center(self, center: CenterDefinition2DType = True) -> 'Sketch':
         """
@@ -694,7 +697,7 @@ class Sketch:
 
         move_vector = tuple(map(get_translate_value, zip(dim, center_flags)))
         return self.move(move_vector)
-    
+
     def mirror(self, axis: Axis2DType, copy_and_merge: bool = True) -> 'Sketch':
         """
         Mirrors the sketch object.
