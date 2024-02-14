@@ -240,6 +240,8 @@ class Sketch:
         (x1, x2), (y1, y2) = get_dimensions([size_x, size_y], center)
         action = lambda x: x.ellipse((x2 - x1) / 2.0, (y2 - y1) / 2.0, angle=angle, mode=mode)
         pos_list = get_positions(positions, pos, [(0, 0)])
+        if not pos_list:
+            raise Exception("cadscript internal error: should not reach this point")
         return self.__perform_action(action, [(x + (x1 + x2) / 2.0, y + (y1 + y2) / 2.0) for (x, y) in pos_list])
 
     def add_polygon(self,
@@ -259,9 +261,9 @@ class Sketch:
                 is added for each of the entries, specifying the offset as (x,y) tuple.
                 Defaults to None, which results in a single polygon added with no offset.
             pos: Shorthand for positions parameter, only use one of them.
-            auto_close (bool, optional): If True, the polygon will be automatically closed by adding a line 
-                from the last point to the first. If False, in the given point list, the last point is 
-                expected to be the same as the first point.
+            auto_close (bool, optional): If True, the polygon will be automatically closed by
+                adding a line  from the last point to the first. If False, in the given point list,
+                the last point is expected to be the same as the first point.
                 Defaults to True.
 
         Returns:
@@ -672,7 +674,7 @@ class Sketch:
         Moves the sketch to the origin, i.e. that the lower corner of the bounding box is at the origin.
 
         Args:
-            axis (CenterDefinition2DType, optional): 
+            axis (CenterDefinition2DType, optional):
                 Can be "X" or "Y" to move the object in only one direction or True which moves the sketch in both directions.
                 If False, the sketch will be not moved at all.
                 Defaults to True.
@@ -685,6 +687,8 @@ class Sketch:
             return -dim_min if _axis else 0
 
         move_vector = tuple(map(get_translate_value, zip(dim, axis_flags)))
+        if not isinstance(move_vector, tuple) or len(move_vector) != 2:
+            raise Exception("cadscript internal error: should not reach this point")
         return self.move(move_vector)
 
     def center(self, center: CenterDefinition2DType = True) -> 'Sketch':
@@ -692,7 +696,7 @@ class Sketch:
         Centers the sketch at the origin.
 
         Args:
-            center (CenterDefinition2DType, optional): 
+            center (CenterDefinition2DType, optional):
                 Can be "X" or "Y" to move the object in only one direction or True which moves the sketch in both directions.
                 If False, the sketch will be not moved at all.
                 Defaults to True.
@@ -706,6 +710,8 @@ class Sketch:
             return -(dim_min + dim_max) / 2 if centered else 0
 
         move_vector = tuple(map(get_translate_value, zip(dim, center_flags)))
+        if not isinstance(move_vector, tuple) or len(move_vector) != 2:
+            raise Exception("cadscript internal error: should not reach this point")
         return self.move(move_vector)
 
     def mirror(self, axis: Axis2DType, copy_and_merge: bool = True) -> 'Sketch':
