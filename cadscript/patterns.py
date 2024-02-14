@@ -4,7 +4,7 @@
 
 from itertools import product
 from math import floor
-from typing import Literal, Optional, List
+from typing import Literal, Optional, List, Tuple
 
 from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType
 from .helpers import get_center_flags, get_dimension, get_dimensions
@@ -154,7 +154,7 @@ def pattern_grid(
     return locs
 
 
-def __get_spacing(count, spacing, size, center, dim_str) -> tuple[float, float]:
+def __get_spacing(count, spacing, size, center, dim_str) -> Tuple[float, float]:
     '''
     Helper function for pattern_grid(). Calculates the spacing and offset based on the given parameters.
     '''
