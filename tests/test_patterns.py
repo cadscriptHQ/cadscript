@@ -704,6 +704,83 @@ class PatternDistributeTest(PatternTestBase):
         ]
         self.assertPatternEqual(result, expected_result)
 
+    def test_3x3_min_spacing_x_1(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, min_spacing_x=min_spacing)
+        expected_result = [
+            (0.5, 0.5), (2.5, 0.5),
+            (0.5, 1.5), (2.5, 1.5),
+            (0.5, 2.5), (2.5, 2.5)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_min_spacing_y_1(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, min_spacing_y=min_spacing)
+        expected_result = [
+            (0.5, 0.5), (1.5, 0.5), (2.5, 0.5),
+            (0.5, 2.5), (1.5, 2.5), (2.5, 2.5)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_min_spacing_xy_1(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, min_spacing_x=min_spacing, min_spacing_y=min_spacing)
+        expected_result = [
+            (0.5, 0.5), (2.5, 0.5),
+            (0.5, 2.5), (2.5, 2.5)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_min_spacing_xy_1_center(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True, min_spacing_x=min_spacing, min_spacing_y=min_spacing)
+        expected_result = [
+            (-1.0, -1.0), (1.0, -1.0),
+            (-1.0, 1.0), (1.0, 1.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_min_spacing_xy_2_center(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 2
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True, min_spacing_x=min_spacing, min_spacing_y=min_spacing)
+        expected_result = [
+            (0, 0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x1_min_spacing_xy_2_center(self):
+        size_x = 1
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 2
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True, min_spacing_x=min_spacing, min_spacing_y=min_spacing)
+        expected_result = [
+            (0, 0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+        
 
 if __name__ == '__main__':
     unittest.main()

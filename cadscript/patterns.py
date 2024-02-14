@@ -4,13 +4,15 @@
 
 from itertools import product
 from math import floor
-from typing import Literal, Optional
+from typing import Literal, Optional, List
 
-from .typedefs import DimensionDefinitionType, CenterDefinitionType
+from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType
 from .helpers import get_center_flags, get_dimension, get_dimensions
 
 
-def pattern_rect(sizex: DimensionDefinitionType, sizey: DimensionDefinitionType, center: CenterDefinitionType = True):
+def pattern_rect(sizex: DimensionDefinitionType,
+                 sizey: DimensionDefinitionType,
+                 center: CenterDefinitionType = True) -> List[Vector2DType]:
     """
     Generate a rectangular pattern.
 
@@ -37,7 +39,9 @@ def pattern_distribute(
         count_x: Optional[int] = None,
         count_y: Optional[int] = None,
         center: CenterDefinitionType = True,
-        result_pos: Literal["center", "origin"] = "center"):
+        result_pos: Literal["center", "origin"] = "center",
+        min_spacing_x: float = 0.0,
+        min_spacing_y: float = 0.0) -> List[Vector2DType]:
     """
     Generate a grid pattern that evenly distributes tiles on a rectangle.
 
@@ -46,14 +50,20 @@ def pattern_distribute(
         size_y (DimensionDefinitionType): The height of the rectangle.
         tile_size_x (float): The width of the tiles.
         tile_size_y (float): The height of the tiles.
-        count_x (int, optional): The number of tiles in the x-direction. If not specified, the maximum number of tiles that fit will be used.
-        count_y (int, optional): The number of tiles in the y-direction. If not specified, the maximum number of tiles that fit will be used.
+        count_x (int, optional): The number of tiles in the x-direction. 
+            If not specified, the maximum number of tiles that fit will be used.
+        count_y (int, optional): The number of tiles in the y-direction. 
+            If not specified, the maximum number of tiles that fit will be used.
         center (CenterDefinitionType, optional): Determines whether the rectangle is centered around the origin. 
             If True, the rectangle will be centered. Can also be "X" or "Y" to center in only one direction.
             If False, the rectangle will start from the origin. Defaults to True.
         result_pos (Literal["center", "origin"], optional): Determines the position of the points in the resulting list.
             If "center", the points will be denote the center of the tiles.
             If "origin", the points will denote the bottom-left corner of the tiles. Defaults to "center".
+        min_spacing_x (float, optional): The minimum spacing between tiles in the x-direction.
+            Defaults to 0. Only used if count_x is not specified.
+        min_spacing_y (float, optional): The minimum spacing between tiles in the y-direction.
+            Defaults to 0. Only used if count_y is not specified.
 
     Returns:
         List[Vector2DType]: A list of (x, y) coordinates representing the locations of the tiles.
@@ -68,19 +78,24 @@ def pattern_distribute(
         raise ValueError("tile_size must be greater than 0")
     center_x, center_y, _ = get_center_flags(center)
     use_center = result_pos == "center"
-    locations_x = __distribute_tile(size_x, tile_size_x, count_x, center_x, use_center)
-    locations_y = __distribute_tile(size_y, tile_size_y, count_y, center_y, use_center)
+    locations_x = __distribute_tile(size_x, tile_size_x, count_x, center_x, use_center, min_spacing_x)
+    locations_y = __distribute_tile(size_y, tile_size_y, count_y, center_y, use_center, min_spacing_y)
 
     return list(product(locations_x, locations_y))
 
 
-def __distribute_tile(size: DimensionDefinitionType, tile_size: float, count: Optional[int], center: bool, use_center: bool):
+def __distribute_tile(size: DimensionDefinitionType,
+                      tile_size: float,
+                      count: Optional[int],
+                      center: bool,
+                      use_center: bool,
+                      min_spacing: float) -> List[float]:
     """
     Helper function for pattern_tile(). Distributes tiles in one direction.
     """
     min_val, max_val = get_dimension(size, center)
     if count is None:
-        count = floor((max_val - min_val) / tile_size)
+        count = floor((max_val - min_val + min_spacing) / (tile_size + min_spacing))
     if count < 1:
         # no tiles fit
         return []
@@ -102,7 +117,7 @@ def pattern_grid(
         spacing_y: Optional[float] = None,
         size_x: Optional[DimensionDefinitionType] = None,
         size_y: Optional[DimensionDefinitionType] = None,
-        center: CenterDefinitionType = True):
+        center: CenterDefinitionType = True) -> List[Vector2DType]:
     """
     Generate a grid pattern of locations based on the given parameters.
 
@@ -139,7 +154,7 @@ def pattern_grid(
     return locs
 
 
-def __get_spacing(count, spacing, size, center, dim_str):
+def __get_spacing(count, spacing, size, center, dim_str) -> tuple[float, float]:
     '''
     Helper function for pattern_grid(). Calculates the spacing and offset based on the given parameters.
     '''
