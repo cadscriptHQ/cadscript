@@ -50,11 +50,11 @@ def pattern_distribute(
         size_y (DimensionDefinitionType): The height of the rectangle.
         tile_size_x (float): The width of the tiles.
         tile_size_y (float): The height of the tiles.
-        count_x (int, optional): The number of tiles in the x-direction. 
+        count_x (int, optional): The number of tiles in the x-direction.
             If not specified, the maximum number of tiles that fit will be used.
-        count_y (int, optional): The number of tiles in the y-direction. 
+        count_y (int, optional): The number of tiles in the y-direction.
             If not specified, the maximum number of tiles that fit will be used.
-        center (CenterDefinitionType, optional): Determines whether the rectangle is centered around the origin. 
+        center (CenterDefinitionType, optional): Determines whether the rectangle is centered around the origin.
             If True, the rectangle will be centered. Can also be "X" or "Y" to center in only one direction.
             If False, the rectangle will start from the origin. Defaults to True.
         result_pos (Literal["center", "origin"], optional): Determines the position of the points in the resulting list.
