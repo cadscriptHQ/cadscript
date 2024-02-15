@@ -27,6 +27,7 @@
     // E731: Do not assign a lambda expression, use a def
     // W291: trailing whitespace (dont show warnings, but fix then when running autopep8)
     // W504: Line break occurred after a binary operator
+    // in case more igores are added, please also add them to python-package.yml
     "--max-complexity=10"
   ],
   "autopep8.args": [
