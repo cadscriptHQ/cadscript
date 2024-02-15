@@ -13,25 +13,25 @@ class SketchMirrorTest(unittest.TestCase):
         s = cadscript.make_sketch()
         s.add_rect(10, 10, center=False)
         s.mirror("X")
-        self.assertEqual(s.get_extent(), Interval2D.from_tuples((-10, 10), (0, 10)))
+        self.assertEqual(s.get_extent(), Interval2D(-10, 10, 0, 10))
 
     def test_sketch_mirror_y(self):
         s = cadscript.make_sketch()
         s.add_rect(10, 10, center=False)
         s.mirror("Y")
-        self.assertEqual(s.get_extent(), Interval2D.from_tuples((0, 10), (-10, 10)))
+        self.assertEqual(s.get_extent(), Interval2D(0, 10, -10, 10))
 
     def test_sketch_mirror_x_no_copy(self):
         s = cadscript.make_sketch()
         s.add_rect(10, 10, center=False)
         s.mirror("X", copy_and_merge=False)
-        self.assertEqual(s.get_extent(), Interval2D.from_tuples((-10, 0), (0, 10)))
+        self.assertEqual(s.get_extent(), Interval2D(-10, 0, 0, 10))
 
     def test_sketch_mirror_y_no_copy(self):
         s = cadscript.make_sketch()
         s.add_rect(10, 10, center=False)
         s.mirror("Y", copy_and_merge=False)
-        self.assertEqual(s.get_extent(), Interval2D.from_tuples((0, 10), (-10, 0)))
+        self.assertEqual(s.get_extent(), Interval2D(0, 10, -10, 0))
 
     def test_invalid_axis(self):
         s = cadscript.make_sketch()

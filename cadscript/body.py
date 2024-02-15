@@ -301,7 +301,7 @@ class Body:
             (dim_min, dim_max), centered = entry
             return -(dim_min + dim_max) / 2 if centered else 0
 
-        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xyz(), center_flags)))
+        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xyz, center_flags)))
         return self.move(move_vector)
 
 
@@ -323,7 +323,7 @@ class Body:
             (dim_min, _), _axis = entry
             return -dim_min if _axis else 0
 
-        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xyz(), axis_flags)))
+        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xyz, axis_flags)))
         return self.move(move_vector)
 
     def mirror(self, axis: AxisType, copy_and_merge: bool = True) -> 'Body':

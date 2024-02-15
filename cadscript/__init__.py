@@ -42,8 +42,8 @@ def make_box(sizex: DimensionDefinitionType,
         Body: The created box-shaped body.
     """
     dimension = get_dimensions_3d([sizex, sizey, sizez], center)
-    solid = cq.Solid.makeBox(dimension.size_x(), dimension.size_y(), dimension.size_z())
-    solid = solid.move(cq.Location(dimension.min_corner()))
+    solid = cq.Solid.makeBox(dimension.size_x, dimension.size_y, dimension.size_z)
+    solid = solid.move(cq.Location(dimension.min_corner))
     wp = cq.Workplane(obj=solid)
     return Body(wp)
 
@@ -154,7 +154,7 @@ def make_extrude(plane: Union[ConstructionPlane, str],
     else:
         dim = get_dimension(amount, False)
         start_plane = make_construction_plane(plane, dim.min)
-        return make_extrude(start_plane, sketch, dim.size())
+        return make_extrude(start_plane, sketch, dim.size)
 
 
 def make_text(text: str,

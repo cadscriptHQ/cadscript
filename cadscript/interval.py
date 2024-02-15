@@ -46,12 +46,15 @@ class Interval1D:
     def max(self) -> float:
         return self.x1
 
+    @property
     def size(self) -> float:
         return self.x2 - self.x1
 
+    @property
     def tuple(self) -> Tuple[float, float]:
         return (self.x1, self.x2)
 
+    @property
     def center(self) -> float:
         return (self.x1 + self.x2) / 2
 
@@ -119,39 +122,51 @@ class Interval2D:
     def max_y(self) -> float:
         return self.y2
 
+    @property
     def size_x(self) -> float:
         return self.x2 - self.x1
 
+    @property
     def size_y(self) -> float:
         return self.y2 - self.y1
 
+    @property
     def extent_x(self) -> Interval1D:
         return Interval1D(self.x1, self.x2)
 
+    @property
     def extent_y(self) -> Interval1D:
         return Interval1D(self.y1, self.y2)
 
+    @property
     def tuple_x(self) -> Tuple[float, float]:
         return (self.x1, self.x2)
 
+    @property
     def tuple_y(self) -> Tuple[float, float]:
         return (self.y1, self.y2)
 
+    @property
     def tuple_xy(self) -> Tuple[Tuple[float, float], Tuple[float, float]]:
-        return (self.tuple_x(), self.tuple_y())
+        return (self.tuple_x, self.tuple_y)
 
+    @property
     def min_corner(self) -> Vector2DType:
         return (self.x1, self.y1)
 
+    @property
     def max_corner(self) -> Vector2DType:
         return (self.x2, self.y2)
 
+    @property
     def center(self) -> Vector2DType:
         return ((self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2)
 
+    @property
     def center_x(self) -> float:
         return (self.x1 + self.x2) / 2
 
+    @property
     def center_y(self) -> float:
         return (self.y1 + self.y2) / 2
 
@@ -247,51 +262,67 @@ class Interval3D:
     def max_z(self) -> float:
         return self.z2
 
+    @property
     def size_x(self) -> float:
         return self.x2 - self.x1
 
+    @property
     def size_y(self) -> float:
         return self.y2 - self.y1
 
+    @property
     def size_z(self) -> float:
         return self.z2 - self.z1
 
+    @property
     def extent_x(self) -> Interval1D:
         return Interval1D(self.x1, self.x2)
 
+    @property
     def extent_y(self) -> Interval1D:
         return Interval1D(self.y1, self.y2)
 
+    @property
     def extent_z(self) -> Interval1D:
         return Interval1D(self.z1, self.z2)
 
+    @property
     def tuple_x(self) -> Tuple[float, float]:
         return (self.x1, self.x2)
 
+    @property
     def tuple_y(self) -> Tuple[float, float]:
         return (self.y1, self.y2)
 
+    @property
     def tuple_z(self) -> Tuple[float, float]:
         return (self.z1, self.z2)
 
+    @property
     def tuple_xyz(self) -> Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
-        return (self.tuple_x(), self.tuple_y(), self.tuple_z())
+        return (self.tuple_x, self.tuple_y, self.tuple_z)
 
+    @property
     def min_corner(self) -> Vector3DType:
         return (self.x1, self.y1, self.z1)
 
+    @property
     def max_corner(self) -> Vector3DType:
         return (self.x2, self.y2, self.z2)
 
+    @property
     def center(self) -> Vector3DType:
         return ((self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2, (self.z1 + self.z2) / 2)
 
+    @property
     def center_x(self) -> float:
         return (self.x1 + self.x2) / 2
 
+    @property
     def center_y(self) -> float:
         return (self.y1 + self.y2) / 2
 
+    @property
     def center_z(self) -> float:
         return (self.z1 + self.z2) / 2
 

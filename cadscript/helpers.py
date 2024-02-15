@@ -69,7 +69,7 @@ def get_dimensions_2d(dimensions: Iterable[DimensionDefinitionType], center: Cen
 
     """
     dim1, dim2 = __get_dimensions(dimensions, center)
-    return Interval2D.from_tuples(dim1.tuple(), dim2.tuple())
+    return Interval2D.from_tuples(dim1.tuple, dim2.tuple)
 
 
 def get_dimensions_3d(dimensions: Iterable[DimensionDefinitionType], center: CenterDefinitionType) -> Interval3D:
@@ -86,7 +86,7 @@ def get_dimensions_3d(dimensions: Iterable[DimensionDefinitionType], center: Cen
 
     """
     dim1, dim2, dim3 = __get_dimensions(dimensions, center)
-    return Interval3D.from_tuples(dim1.tuple(), dim2.tuple(), dim3.tuple())
+    return Interval3D.from_tuples(dim1.tuple, dim2.tuple, dim3.tuple)
 
 
 def get_radius(r: Optional[float],

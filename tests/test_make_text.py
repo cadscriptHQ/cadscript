@@ -13,22 +13,22 @@ class MakeTextTest(unittest.TestCase):
         height = 5
         epsilon = 1e-5
         text = cadscript.make_text("TEST", size, height, center=False)
-        (xmin, xmax), (ymin, ymax), (zmin, zmax) = text.get_extent().tuple_xyz()
-        self.assertAlmostEqual(xmin, 0, delta=epsilon)
-        self.assertGreater(xmax, 1)
-        self.assertAlmostEqual(ymin, 0, delta=epsilon)
-        self.assertGreater(ymax, 1)
-        self.assertAlmostEqual(zmin, 0, delta=epsilon)
-        self.assertAlmostEqual(zmax, height, delta=epsilon)
+        dim = text.get_extent()
+        self.assertAlmostEqual(dim.min_x, 0, delta=epsilon)
+        self.assertGreater(dim.max_x, 1)
+        self.assertAlmostEqual(dim.min_y, 0, delta=epsilon)
+        self.assertGreater(dim.max_y, 1)
+        self.assertAlmostEqual(dim.min_z, 0, delta=epsilon)
+        self.assertAlmostEqual(dim.max_z, height, delta=epsilon)
 
         text = cadscript.make_text("TEST", size, height, center=True)
-        (xmin2, xmax2), (ymin2, ymax2), (zmin2, zmax2) = text.get_extent().tuple_xyz()
-        self.assertAlmostEqual(-xmin2, xmax2, delta=epsilon)
-        self.assertAlmostEqual(-ymin2, ymax2, delta=epsilon)
-        self.assertAlmostEqual(-zmin2, zmax2, delta=epsilon)
-        self.assertAlmostEqual(xmax - xmin, xmax2 - xmin2, delta=epsilon)
-        self.assertAlmostEqual(ymax - ymin, ymax2 - ymin2, delta=epsilon)
-        self.assertAlmostEqual(zmax - zmin, zmax2 - zmin2, delta=epsilon)
+        dim2 = text.get_extent()
+        self.assertAlmostEqual(-dim2.min_x, dim2.max_x, delta=epsilon)
+        self.assertAlmostEqual(-dim2.min_y, dim2.max_y, delta=epsilon)
+        self.assertAlmostEqual(-dim2.min_z, dim2.max_z, delta=epsilon)
+        self.assertAlmostEqual(dim.size_x, dim2.size_x, delta=epsilon)
+        self.assertAlmostEqual(dim.size_y, dim2.size_y, delta=epsilon)
+        self.assertAlmostEqual(dim.size_z, dim2.size_z, delta=epsilon)
 
 
 

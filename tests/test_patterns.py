@@ -41,7 +41,7 @@ class PatternSet:
 
 class PatternSet2:
     def __init__(self, data: list[Interval2D]):
-        self.data = [(PatternTuple(d.tuple_x()), PatternTuple(d.tuple_y())) for d in data]
+        self.data = [(PatternTuple(d.tuple_x), PatternTuple(d.tuple_y)) for d in data]
 
     def __eq__(self, other):
         if len(self.data) != len(other.data):

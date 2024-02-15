@@ -96,16 +96,16 @@ def __distribute_tile(size: DimensionDefinitionType,
     """
     dim = get_dimension(size, center)
     if count is None:
-        count = floor((dim.size() + min_spacing) / (tile_size + min_spacing))
+        count = floor((dim.size + min_spacing) / (tile_size + min_spacing))
     if count < 1:
         # no tiles fit
         return []
     if count == 1:
         # only one tile fits, return the center
         tile_offset = 0 if use_center else -tile_size / 2
-        return [dim.center() + tile_offset]
+        return [dim.center + tile_offset]
     # distribute
-    delta = (dim.size() - tile_size) / (count - 1)
+    delta = (dim.size - tile_size) / (count - 1)
     tile_offset = tile_size / 2 if use_center else 0
     return [dim.min + i * delta + tile_offset for i in range(count)]
 
@@ -179,7 +179,7 @@ def __get_ditribute_stretch_count(size, count, min_tile_size, max_tile_size, spa
     Calculates the count and tile size based on the given parameters.
     """
     dim = get_dimension(size, center)
-    extent = dim.size()
+    extent = dim.size
     calc_size = lambda _count: (spacing + extent) / _count - spacing
     if count is not None:
         return (count, calc_size(count))
@@ -257,7 +257,7 @@ def __get_spacing(count, spacing, size, center, dim_str) -> Tuple[float, float]:
                 raise ValueError(f"Only one of spacing{dim_str} or size{dim_str} must be specified")
             dim = get_dimension(size, center)
             offset = dim.min
-            spacing = dim.size() / (count - 1)
+            spacing = dim.size / (count - 1)
         elif spacing is not None:
             if center:
                 offset = -spacing * (count - 1) / 2

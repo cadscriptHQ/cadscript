@@ -239,11 +239,11 @@ class Sketch:
                   pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                   ) -> 'Sketch':
         dim = get_dimensions_2d([size_x, size_y], center)
-        action = lambda x: x.ellipse(dim.size_x() / 2.0, dim.size_y() / 2.0, angle=angle, mode=mode)
+        action = lambda x: x.ellipse(dim.size_x / 2.0, dim.size_y / 2.0, angle=angle, mode=mode)
         pos_list = get_positions(positions, pos, [(0, 0)])
         if not pos_list:
             raise Exception("cadscript internal error: should not reach this point")
-        return self.__perform_action(action, [(x + dim.center_x(), y + dim.center_y()) for (x, y) in pos_list])
+        return self.__perform_action(action, [(x + dim.center_x, y + dim.center_y) for (x, y) in pos_list])
 
     def add_polygon(self,
                     point_list: Iterable[Vector2DType],
@@ -687,7 +687,7 @@ class Sketch:
             (dim_min, _), _axis = entry
             return -dim_min if _axis else 0
 
-        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xy(), axis_flags)))
+        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xy, axis_flags)))
         if not isinstance(move_vector, tuple) or len(move_vector) != 2:
             raise Exception("cadscript internal error: should not reach this point")
         return self.move(move_vector)
@@ -710,7 +710,7 @@ class Sketch:
             (dim_min, dim_max), centered = entry
             return -(dim_min + dim_max) / 2 if centered else 0
 
-        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xy(), center_flags)))
+        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xy, center_flags)))
         if not isinstance(move_vector, tuple) or len(move_vector) != 2:
             raise Exception("cadscript internal error: should not reach this point")
         return self.move(move_vector)
