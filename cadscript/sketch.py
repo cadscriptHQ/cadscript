@@ -5,11 +5,12 @@
 import cadquery as cq
 from math import pi
 
-from typing import Iterable, List, Optional, Union, Tuple
+from typing import Iterable, List, Optional, Union
 
+from .interval import Interval2D
 from .typedefs import Axis2DType, DimensionDefinitionType, CenterDefinition2DType, Vector2DType
 from .export import export_sketch_DXF
-from .helpers import get_center_flags, get_dimensions, get_radius, get_positions
+from .helpers import get_center_flags, get_dimensions_2d, get_radius, get_positions
 from .cqselectors import NearestToPointListSelector
 
 
@@ -46,11 +47,11 @@ class Sketch:
                       center: CenterDefinition2DType,
                       mode: cq.sketch.Modes = "a"
                       ):
-        (x1, x2), (y1, y2) = get_dimensions([size_x, size_y], center)
-        p0 = cq.Vector(x1, y1)
-        p1 = cq.Vector(x2, y1)
-        p2 = cq.Vector(x2, y2)
-        p3 = cq.Vector(x1, y2)
+        dim = get_dimensions_2d([size_x, size_y], center)
+        p0 = cq.Vector(dim.x1, dim.y1)
+        p1 = cq.Vector(dim.x2, dim.y1)
+        p2 = cq.Vector(dim.x2, dim.y2)
+        p3 = cq.Vector(dim.x1, dim.y2)
         return sketch.polygon([p0, p1, p2, p3, p0], angle=angle, mode=mode)
 
     def add_rect(self,
@@ -237,12 +238,12 @@ class Sketch:
                   positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
                   pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                   ) -> 'Sketch':
-        (x1, x2), (y1, y2) = get_dimensions([size_x, size_y], center)
-        action = lambda x: x.ellipse((x2 - x1) / 2.0, (y2 - y1) / 2.0, angle=angle, mode=mode)
+        dim = get_dimensions_2d([size_x, size_y], center)
+        action = lambda x: x.ellipse(dim.size_x() / 2.0, dim.size_y() / 2.0, angle=angle, mode=mode)
         pos_list = get_positions(positions, pos, [(0, 0)])
         if not pos_list:
             raise Exception("cadscript internal error: should not reach this point")
-        return self.__perform_action(action, [(x + (x1 + x2) / 2.0, y + (y1 + y2) / 2.0) for (x, y) in pos_list])
+        return self.__perform_action(action, [(x + dim.center_x(), y + dim.center_y()) for (x, y) in pos_list])
 
     def add_polygon(self,
                     point_list: Iterable[Vector2DType],
@@ -686,7 +687,7 @@ class Sketch:
             (dim_min, _), _axis = entry
             return -dim_min if _axis else 0
 
-        move_vector = tuple(map(get_translate_value, zip(dim, axis_flags)))
+        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xy(), axis_flags)))
         if not isinstance(move_vector, tuple) or len(move_vector) != 2:
             raise Exception("cadscript internal error: should not reach this point")
         return self.move(move_vector)
@@ -709,7 +710,7 @@ class Sketch:
             (dim_min, dim_max), centered = entry
             return -(dim_min + dim_max) / 2 if centered else 0
 
-        move_vector = tuple(map(get_translate_value, zip(dim, center_flags)))
+        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xy(), center_flags)))
         if not isinstance(move_vector, tuple) or len(move_vector) != 2:
             raise Exception("cadscript internal error: should not reach this point")
         return self.move(move_vector)
@@ -777,15 +778,15 @@ class Sketch:
         self.__sketch.reset()  # delete selection again
         return pos_list
 
-    def get_extent(self) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+    def get_extent(self) -> Interval2D:
         """
         Returns the extent of the bounding box of the sketch.
         """
         faces = [s for s in self.__sketch.faces() if isinstance(s, cq.Shape)]
         if not faces:
-            return ((0, 0), (0, 0))
+            return Interval2D(0, 0, 0, 0)
 
         bb = faces[0].BoundingBox()
         for s in faces[1:]:
             bb.add(s.BoundingBox())
-        return ((bb.xmin, bb.xmax), (bb.ymin, bb.ymax))
+        return Interval2D(bb.xmin, bb.xmax, bb.ymin, bb.ymax)

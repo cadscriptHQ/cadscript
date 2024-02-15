@@ -6,8 +6,9 @@ from itertools import product
 from math import ceil, floor
 from typing import Literal, Optional, List, Tuple
 
+from .interval import Interval2D
 from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType
-from .helpers import get_center_flags, get_dimension, get_dimensions
+from .helpers import get_center_flags, get_dimension, get_dimensions_2d
 
 
 def pattern_rect(sizex: DimensionDefinitionType,
@@ -26,8 +27,8 @@ def pattern_rect(sizex: DimensionDefinitionType,
     Returns:
         list: A list of tuples representing the vertices of the rectangle in clockwise order.
     """
-    dimx, dimy = get_dimensions([sizex, sizey], center)
-    return [(dimx[0], dimy[0]), (dimx[0], dimy[1]), (dimx[1], dimy[1]), (dimx[1], dimy[0])]
+    dim = get_dimensions_2d([sizex, sizey], center)
+    return [(dim.min_x, dim.min_y), (dim.min_x, dim.max_y), (dim.max_x, dim.max_y), (dim.max_x, dim.min_y)]
 
 
 def pattern_distribute(
@@ -93,20 +94,20 @@ def __distribute_tile(size: DimensionDefinitionType,
     """
     Helper function for pattern_tile(). Distributes tiles in one direction.
     """
-    min_val, max_val = get_dimension(size, center)
+    dim = get_dimension(size, center)
     if count is None:
-        count = floor((max_val - min_val + min_spacing) / (tile_size + min_spacing))
+        count = floor((dim.size() + min_spacing) / (tile_size + min_spacing))
     if count < 1:
         # no tiles fit
         return []
     if count == 1:
         # only one tile fits, return the center
         tile_offset = 0 if use_center else -tile_size / 2
-        return [(min_val + max_val) / 2 + tile_offset]
+        return [dim.center() + tile_offset]
     # distribute
-    delta = (max_val - min_val - tile_size) / (count - 1)
+    delta = (dim.size() - tile_size) / (count - 1)
     tile_offset = tile_size / 2 if use_center else 0
-    return [min_val + i * delta + tile_offset for i in range(count)]
+    return [dim.min + i * delta + tile_offset for i in range(count)]
 
 
 def pattern_distribute_stretch(size_x: DimensionDefinitionType,
@@ -121,7 +122,7 @@ def pattern_distribute_stretch(size_x: DimensionDefinitionType,
                                spacing_x: float = 0.0,
                                spacing_y: float = 0.0,
                                center: CenterDefinitionType = True
-                               ) -> List[Tuple[Tuple[float, float], Tuple[float, float]]]:
+                               ) -> List[Interval2D]:
     """
     Generate a grid pattern that evenly distributes tiles of variable size on a rectangle.
 
@@ -133,7 +134,7 @@ def pattern_distribute_stretch(size_x: DimensionDefinitionType,
             to calculate the number of tiles that fit.
         count_y (int, optional): The number of tiles in the y-direction.
             If not specified, the values of min_tile_size_y and max_tile_size_y will be used
-            to calculate the number of tiles that fit.        
+            to calculate the number of tiles that fit.
         min_tile_size_x (int, optional): The minimum size of the tiles in the x-direction.
         max_tile_size_x (int, optional): The maximum size of the tiles in the x-direction.
         min_tile_size_y (int, optional): The minimum size of the tiles in the y-direction.
@@ -147,9 +148,7 @@ def pattern_distribute_stretch(size_x: DimensionDefinitionType,
             If False, the rectangle will start from the origin. Defaults to True.
 
     Returns:
-        List[Tuple[Tuple[float, float], Tuple[float, float]]]: A list of tuples representing the tiles.
-        Each tuple contains two tuples representing the min and max values of the tile in the x and y directions.
-        E.g. [((x_min, x_max), (y_min, y_max))] is the result for a single tile.
+        List[Interval2D]: A list of Interval2D objects representing the tiles.
 
     Remarks:
         - If count_x or is not specified, the values of min_tile_size_x and max_tile_size_x
@@ -171,16 +170,16 @@ def pattern_distribute_stretch(size_x: DimensionDefinitionType,
         return []
     pos_list = pattern_distribute(size_x, size_y, tile_size_x, tile_size_y, count_x=count_x,
                                   count_y=count_y, center=center, result_pos="origin")
-    return [((x, x + tile_size_x), (y, y + tile_size_y)) for x, y in pos_list]
+    return [Interval2D(x, x + tile_size_x, y, y + tile_size_y) for x, y in pos_list]
 
 
 def __get_ditribute_stretch_count(size, count, min_tile_size, max_tile_size, spacing, center):
     """
-    Helper function for pattern_distribute_strech(). 
+    Helper function for pattern_distribute_strech().
     Calculates the count and tile size based on the given parameters.
     """
-    min_val, max_val = get_dimension(size, center)
-    extent = max_val - min_val
+    dim = get_dimension(size, center)
+    extent = dim.size()
     calc_size = lambda _count: (spacing + extent) / _count - spacing
     if count is not None:
         return (count, calc_size(count))
@@ -256,9 +255,9 @@ def __get_spacing(count, spacing, size, center, dim_str) -> Tuple[float, float]:
         if size is not None:
             if spacing is not None:
                 raise ValueError(f"Only one of spacing{dim_str} or size{dim_str} must be specified")
-            min, max = get_dimension(size, center)
-            offset = min
-            spacing = (max - min) / (count - 1)
+            dim = get_dimension(size, center)
+            offset = dim.min
+            spacing = dim.size() / (count - 1)
         elif spacing is not None:
             if center:
                 offset = -spacing * (count - 1) / 2

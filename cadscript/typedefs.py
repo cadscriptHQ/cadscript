@@ -6,7 +6,7 @@ from typing import Literal, Union, Tuple
 
 Vector2DType = Tuple[float, float]
 Vector3DType = Tuple[float, float, float]
-DimensionDefinitionType = Union[Vector2DType, float]
+DimensionDefinitionType = Union[Tuple[float, float], float]
 CenterDefinitionType = Union[Literal["X", "Y", "Z", "XY", "XZ", "YZ", "XYZ"], bool]
 CenterDefinition2DType = Union[Literal["X", "Y", "XY"], bool]
 AxisType = Literal["X", "Y", "Z"]

@@ -11,7 +11,7 @@ class SketchTest(unittest.TestCase):
     def test_ellipse_extend_uncentered(self):
         s = cadscript.make_sketch()
         s.add_ellipse(20, 10, center=False)
-        (xmin, xmax), (ymin, ymax) = s.get_extent()
+        (xmin, xmax), (ymin, ymax) = s.get_extent().tuple_xy()
         self.assertAlmostEqual(xmin, 0)
         self.assertAlmostEqual(xmax, 20)
         self.assertAlmostEqual(ymin, 0)
@@ -20,7 +20,7 @@ class SketchTest(unittest.TestCase):
     def test_ellipse_extend_centered(self):
         s = cadscript.make_sketch()
         s.add_ellipse(20, 10, center=True)
-        (xmin, xmax), (ymin, ymax) = s.get_extent()
+        (xmin, xmax), (ymin, ymax) = s.get_extent().tuple_xy()
         self.assertAlmostEqual(xmin, -10)
         self.assertAlmostEqual(xmax, 10)
         self.assertAlmostEqual(ymin, -5)
@@ -29,7 +29,7 @@ class SketchTest(unittest.TestCase):
     def test_ellipse_extend_rotated90(self):
         s = cadscript.make_sketch()
         s.add_ellipse(20, 10, angle=90)
-        (xmin, xmax), (ymin, ymax) = s.get_extent()
+        (xmin, xmax), (ymin, ymax) = s.get_extent().tuple_xy()
         self.assertAlmostEqual(xmin, -5)
         self.assertAlmostEqual(xmax, 5)
         self.assertAlmostEqual(ymin, -10)

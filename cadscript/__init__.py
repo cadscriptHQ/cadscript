@@ -6,17 +6,16 @@ from pathlib import Path
 import tempfile
 import time
 import inspect
-from typing import Literal, Optional, Union, Tuple
+from typing import Literal, Optional, Union
 
 import cadquery as cq
-
 from .typedefs import DimensionDefinitionType, CenterDefinitionType
 
 from .body import Body
 from .sketch import Sketch
 from .construction_plane import ConstructionPlane
 from .assembly import Assembly
-from .helpers import get_center_flags, get_dimensions, get_height, get_radius
+from .helpers import get_center_flags, get_dimension, get_dimensions_3d, get_height, get_radius
 from .patterns import pattern_grid, pattern_rect, pattern_distribute, pattern_distribute_stretch  # noqa
 
 from OCP.BRepPrimAPI import BRepPrimAPI_MakeSphere
@@ -42,18 +41,9 @@ def make_box(sizex: DimensionDefinitionType,
     Returns:
         Body: The created box-shaped body.
     """
-    dimx, dimy, dimz = get_dimensions([sizex, sizey, sizez], center)
-    return __make_box_min_max(dimx[0], dimx[1], dimy[0], dimy[1], dimz[0], dimz[1])
-
-
-def __make_box_min_max(x1: float,
-                       x2: float,
-                       y1: float,
-                       y2: float,
-                       z1: float,
-                       z2: float
-                       ) -> 'Body':
-    solid = cq.Solid.makeBox(x2 - x1, y2 - y1, z2 - z1).move(cq.Location(cq.Vector(x1, y1, z1)))
+    dimension = get_dimensions_3d([sizex, sizey, sizez], center)
+    solid = cq.Solid.makeBox(dimension.size_x(), dimension.size_y(), dimension.size_z())
+    solid = solid.move(cq.Location(dimension.min_corner()))
     wp = cq.Workplane(obj=solid)
     return Body(wp)
 
@@ -99,7 +89,7 @@ def make_cylinder(*,
                   direction: Optional[Literal["X", "Y", "Z"]] = "Z"
                   ) -> 'Body':
     """
-    Create a cylinder with the given height and radius or diameter. 
+    Create a cylinder with the given height and radius or diameter.
     The cylinder is aligned along the z-axis, unless specified otherwise using the 'direction' parameter.
 
     Args:
@@ -140,7 +130,7 @@ def make_cylinder(*,
 
 def make_extrude(plane: Union[ConstructionPlane, str],
                  sketch: Sketch,
-                 amount: Union[float, Tuple[float, float]]
+                 amount: DimensionDefinitionType
                  ) -> 'Body':
     """
     Create an extrusion from a sketch.
@@ -162,11 +152,9 @@ def make_extrude(plane: Union[ConstructionPlane, str],
         extr = wp.placeSketch(sketch.cq()).extrude(amount, False)
         return Body(extr)
     else:
-        # test that the tuple has two elements
-        if not isinstance(amount, tuple) or len(amount) != 2:
-            raise ValueError("amount must be a float or a tuple of two floats")
-        start_plane = make_construction_plane(plane, amount[0])
-        return make_extrude(start_plane, sketch, amount[1] - amount[0])
+        dim = get_dimension(amount, False)
+        start_plane = make_construction_plane(plane, dim.min)
+        return make_extrude(start_plane, sketch, dim.size())
 
 
 def make_text(text: str,
@@ -183,7 +171,8 @@ def make_text(text: str,
         text (str): The text to be created.
         size (float): The size of the text.
         height (float): The height of the text.
-        center (CenterDefinitionType, optional): Whether to center the text object at the origin. If False, the text will start from the origin.
+        center (CenterDefinitionType, optional): Whether to center the text object at the origin.
+            If False, the text will start from the origin.
             Can also be "X", "Y" or "Z" to center in only one direction or "XY", "XZ", "YZ" to center in two directions.
             Defaults to True which centers the text object in all directions.
         font (str, optional): The font of the text. Defaults to "Arial".
@@ -193,10 +182,7 @@ def make_text(text: str,
     """
     c = cq.Compound.makeText(text, size, height, font=font)
     body = Body(cq.Workplane(obj=c))
-    (extendx, extendy, extendz) = body.get_extent()
-    (startx, _), (starty, _), (startz, _) = get_dimensions(
-        [extendx[1] - extendx[0], extendy[1] - extendy[0], extendz[1] - extendz[0]], center)
-    return body.move((startx - extendx[0], starty - extendy[0], startz - extendz[0]))
+    return body.move_to_origin().center(center)
 
 
 def make_construction_plane(plane: Union[ConstructionPlane, str], offset: Optional[float] = None):

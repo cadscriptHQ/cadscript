@@ -2,7 +2,6 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
-from re import T
 import unittest
 import cadscript
 
@@ -14,7 +13,7 @@ class MakeTextTest(unittest.TestCase):
         height = 5
         epsilon = 1e-5
         text = cadscript.make_text("TEST", size, height, center=False)
-        (xmin, xmax), (ymin, ymax), (zmin, zmax) = text.get_extent()
+        (xmin, xmax), (ymin, ymax), (zmin, zmax) = text.get_extent().tuple_xyz()
         self.assertAlmostEqual(xmin, 0, delta=epsilon)
         self.assertGreater(xmax, 1)
         self.assertAlmostEqual(ymin, 0, delta=epsilon)
@@ -23,7 +22,7 @@ class MakeTextTest(unittest.TestCase):
         self.assertAlmostEqual(zmax, height, delta=epsilon)
 
         text = cadscript.make_text("TEST", size, height, center=True)
-        (xmin2, xmax2), (ymin2, ymax2), (zmin2, zmax2) = text.get_extent()
+        (xmin2, xmax2), (ymin2, ymax2), (zmin2, zmax2) = text.get_extent().tuple_xyz()
         self.assertAlmostEqual(-xmin2, xmax2, delta=epsilon)
         self.assertAlmostEqual(-ymin2, ymax2, delta=epsilon)
         self.assertAlmostEqual(-zmin2, zmax2, delta=epsilon)

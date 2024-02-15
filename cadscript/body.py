@@ -2,11 +2,11 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Union
 import cadquery as cq
 
+from .interval import Interval3D
 from .helpers import get_center_flags, get_positions, get_radius
-
 from .typedefs import CenterDefinitionType, Vector2DType, Vector3DType, AxisType
 from .sketch import Sketch
 
@@ -212,10 +212,10 @@ class Body:
         """
         Cuts a hole into the body. It can be a regular hole, a countersink hole or a counterbore hole.
         For all types of holes, you can specify the diameter of the hole using one of the `r`, `radius`, `d` or `diameter` parameters.
-        To create a countersink hole, specify the `countersink_angle` parameter and also give the diameter of the countersink 
+        To create a countersink hole, specify the `countersink_angle` parameter and also give the diameter of the countersink
         using one of the `r2`, `radius2`, `d2` or `diameter2` parameters.
-        To create a counterbore hole, specify the `counterbore_depth` parameter. Specify the counterbore by giving 
-        the diameter of the counterbore using one of the `r2`, `radius2`, `d2` or `diameter2` parameters and the depth 
+        To create a counterbore hole, specify the `counterbore_depth` parameter. Specify the counterbore by giving
+        the diameter of the counterbore using one of the `r2`, `radius2`, `d2` or `diameter2` parameters and the depth
         of the counterbore using the `counterbore_depth` parameter.
 
         Args:
@@ -274,15 +274,15 @@ class Body:
         bb = self.__wp.findSolid().BoundingBox()
         return ((bb.xmin + bb.xmax) / 2, (bb.ymin + bb.ymax) / 2, (bb.zmin + bb.zmax) / 2)
 
-    def get_extent(self) -> Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float]]:
+    def get_extent(self) -> Interval3D:
         """
         Returns the extent of the bounding box of the body.
 
         Returns:
-            Tuple[Tuple[float, float], Tuple[float, float], Tuple[float, float]]: The extent of the bounding box.
+            Interval3D: The extent of the bounding box.
         """
         bb = self.__wp.findSolid().BoundingBox()
-        return ((bb.xmin, bb.xmax), (bb.ymin, bb.ymax), (bb.zmin, bb.zmax))
+        return Interval3D(bb.xmin, bb.xmax, bb.ymin, bb.ymax, bb.zmin, bb.zmax)
 
     def center(self, center: CenterDefinitionType = True) -> 'Body':
         """
@@ -301,7 +301,7 @@ class Body:
             (dim_min, dim_max), centered = entry
             return -(dim_min + dim_max) / 2 if centered else 0
 
-        move_vector = tuple(map(get_translate_value, zip(dim, center_flags)))
+        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xyz(), center_flags)))
         return self.move(move_vector)
 
 
@@ -310,7 +310,7 @@ class Body:
         Moves the body to the origin, i.e. that the lower corner of the bounding box is at the origin.
 
         Args:
-            axis (CenterDefinitionType, optional): 
+            axis (CenterDefinitionType, optional):
                 Can be "X", "Y" or "Z" to move the object in only one direction or "XY", "XZ", "YZ" to move
                 it in two directions. The other directions will be unchanged.
                 Defaults to True which moves the body in all directions.
@@ -323,7 +323,7 @@ class Body:
             (dim_min, _), _axis = entry
             return -dim_min if _axis else 0
 
-        move_vector = tuple(map(get_translate_value, zip(dim, axis_flags)))
+        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xyz(), axis_flags)))
         return self.move(move_vector)
 
     def mirror(self, axis: AxisType, copy_and_merge: bool = True) -> 'Body':

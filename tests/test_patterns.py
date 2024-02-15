@@ -6,6 +6,7 @@ from typing import Tuple
 import unittest
 
 from cadscript.patterns import pattern_grid, pattern_rect, pattern_distribute, pattern_distribute_stretch
+from cadscript.interval import Interval2D
 
 
 class PatternTuple:
@@ -39,8 +40,8 @@ class PatternSet:
 
 
 class PatternSet2:
-    def __init__(self, data: list[Tuple[Tuple[float, float], Tuple[float, float]]]):
-        self.data = [(PatternTuple(data1), PatternTuple(data2)) for data1, data2 in data]
+    def __init__(self, data: list[Interval2D]):
+        self.data = [(PatternTuple(d.tuple_x()), PatternTuple(d.tuple_y())) for d in data]
 
     def __eq__(self, other):
         if len(self.data) != len(other.data):
@@ -814,7 +815,7 @@ class PatternDistributeStretchTest(PatternTestBase):
         size_y = 2
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
         expected_result = [
-            ((-1, 1), (-1, 1))
+            Interval2D.from_tuples((-1, 1), (-1, 1))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -825,7 +826,7 @@ class PatternDistributeStretchTest(PatternTestBase):
         size_y = 4
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
         expected_result = [
-            ((-3, 3), (-2, 2))
+            Interval2D.from_tuples((-3, 3), (-2, 2))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -836,7 +837,7 @@ class PatternDistributeStretchTest(PatternTestBase):
         size_y = 10
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y, center=False)
         expected_result = [
-            ((0, 1), (0, 10))
+            Interval2D.from_tuples((0, 1), (0, 10))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -847,8 +848,8 @@ class PatternDistributeStretchTest(PatternTestBase):
         size_y = 2
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
         expected_result = [
-            ((-1, 0), (-1, 1)),
-            ((0, 1), (-1, 1))
+            Interval2D.from_tuples((-1, 0), (-1, 1)),
+            Interval2D.from_tuples((0, 1), (-1, 1))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -859,9 +860,9 @@ class PatternDistributeStretchTest(PatternTestBase):
         size_y = 4
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
         expected_result = [
-            ((-3, -1), (-2, 2)),
-            ((-1, 1), (-2, 2)),
-            ((1, 3), (-2, 2))
+            Interval2D.from_tuples((-3, -1), (-2, 2)),
+            Interval2D.from_tuples((-1, 1), (-2, 2)),
+            Interval2D.from_tuples((1, 3), (-2, 2))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -872,8 +873,8 @@ class PatternDistributeStretchTest(PatternTestBase):
         size_y = 4
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
         expected_result = [
-            ((-3, 3), (-2, 0)),
-            ((-3, 3), (0, 2))
+            Interval2D.from_tuples((-3, 3), (-2, 0)),
+            Interval2D.from_tuples((-3, 3), (0, 2))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -884,10 +885,10 @@ class PatternDistributeStretchTest(PatternTestBase):
         size_y = 4
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
         expected_result = [
-            ((-3, 3), (-2, -1)),
-            ((-3, 3), (-1, 0)),
-            ((-3, 3), (0, 1)),
-            ((-3, 3), (1, 2))
+            Interval2D.from_tuples((-3, 3), (-2, -1)),
+            Interval2D.from_tuples((-3, 3), (-1, 0)),
+            Interval2D.from_tuples((-3, 3), (0, 1)),
+            Interval2D.from_tuples((-3, 3), (1, 2))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -898,10 +899,10 @@ class PatternDistributeStretchTest(PatternTestBase):
         size_y = 4
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
         expected_result = [
-            ((-3, 0), (-2, 0)),
-            ((0, 3), (-2, 0)),
-            ((-3, 0), (0, 2)),
-            ((0, 3), (0, 2))
+            Interval2D.from_tuples((-3, 0), (-2, 0)),
+            Interval2D.from_tuples((0, 3), (-2, 0)),
+            Interval2D.from_tuples((-3, 0), (0, 2)),
+            Interval2D.from_tuples((0, 3), (0, 2))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -914,8 +915,8 @@ class PatternDistributeStretchTest(PatternTestBase):
         spacing_y = 2
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y, spacing_x=spacing_x, spacing_y=spacing_y)
         expected_result = [
-            ((-3, -1), (-1, 1)),
-            ((1, 3), (-1, 1))
+            Interval2D.from_tuples((-3, -1), (-1, 1)),
+            Interval2D.from_tuples((1, 3), (-1, 1))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -928,8 +929,8 @@ class PatternDistributeStretchTest(PatternTestBase):
         spacing_y = 2
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y, spacing_x=spacing_x, spacing_y=spacing_y)
         expected_result = [
-            ((-3, 3), (-3, -1)),
-            ((-3, 3), (1, 3))
+            Interval2D.from_tuples((-3, 3), (-3, -1)),
+            Interval2D.from_tuples((-3, 3), (1, 3))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -942,10 +943,10 @@ class PatternDistributeStretchTest(PatternTestBase):
         spacing_y = 2
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y, spacing_x=spacing_x, spacing_y=spacing_y)
         expected_result = [
-            ((-3, -1), (-3, -1)),
-            ((1, 3), (-3, -1)),
-            ((-3, -1), (1, 3)),
-            ((1, 3), (1, 3))
+            Interval2D.from_tuples((-3, -1), (-3, -1)),
+            Interval2D.from_tuples((1, 3), (-3, -1)),
+            Interval2D.from_tuples((-3, -1), (1, 3)),
+            Interval2D.from_tuples((1, 3), (1, 3))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -959,21 +960,21 @@ class PatternDistributeStretchTest(PatternTestBase):
         result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y,
                                             spacing_x=spacing_x, spacing_y=spacing_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1)),
-            ((2, 3), (0, 1)),
-            ((4, 5), (0, 1)),
-            ((0, 1), (2, 3)),
-            ((2, 3), (2, 3)),
-            ((4, 5), (2, 3)),
-            ((0, 1), (4, 5)),
-            ((2, 3), (4, 5)),
-            ((4, 5), (4, 5)),
-            ((0, 1), (6, 7)),
-            ((2, 3), (6, 7)),
-            ((4, 5), (6, 7)),
-            ((0, 1), (8, 9)),
-            ((2, 3), (8, 9)),
-            ((4, 5), (8, 9))
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((2, 3), (0, 1)),
+            Interval2D.from_tuples((4, 5), (0, 1)),
+            Interval2D.from_tuples((0, 1), (2, 3)),
+            Interval2D.from_tuples((2, 3), (2, 3)),
+            Interval2D.from_tuples((4, 5), (2, 3)),
+            Interval2D.from_tuples((0, 1), (4, 5)),
+            Interval2D.from_tuples((2, 3), (4, 5)),
+            Interval2D.from_tuples((4, 5), (4, 5)),
+            Interval2D.from_tuples((0, 1), (6, 7)),
+            Interval2D.from_tuples((2, 3), (6, 7)),
+            Interval2D.from_tuples((4, 5), (6, 7)),
+            Interval2D.from_tuples((0, 1), (8, 9)),
+            Interval2D.from_tuples((2, 3), (8, 9)),
+            Interval2D.from_tuples((4, 5), (8, 9))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -984,9 +985,9 @@ class PatternDistributeStretchTest(PatternTestBase):
         min_tile_size_y = 1
         result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1)),
-            ((1, 2), (0, 1)),
-            ((2, 3), (0, 1))
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((1, 2), (0, 1)),
+            Interval2D.from_tuples((2, 3), (0, 1))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -997,7 +998,7 @@ class PatternDistributeStretchTest(PatternTestBase):
         min_tile_size_y = 1
         result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
         expected_result = [
-            ((0, 3), (0, 1))
+            Interval2D.from_tuples((0, 3), (0, 1))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1018,9 +1019,9 @@ class PatternDistributeStretchTest(PatternTestBase):
         min_tile_size_y = 1
         result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1)),
-            ((0, 1), (1, 2)),
-            ((0, 1), (2, 3))
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((0, 1), (1, 2)),
+            Interval2D.from_tuples((0, 1), (2, 3))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1031,7 +1032,7 @@ class PatternDistributeStretchTest(PatternTestBase):
         min_tile_size_y = 2
         result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
         expected_result = [
-            ((0, 1), (0, 3))
+            Interval2D.from_tuples((0, 1), (0, 3))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1052,9 +1053,9 @@ class PatternDistributeStretchTest(PatternTestBase):
         min_tile_size_y = 1
         result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1)), ((1, 2), (0, 1)), ((2, 3), (0, 1)),
-            ((0, 1), (1, 2)), ((1, 2), (1, 2)), ((2, 3), (1, 2)),
-            ((0, 1), (2, 3)), ((1, 2), (2, 3)), ((2, 3), (2, 3))
+            Interval2D.from_tuples((0, 1), (0, 1)), Interval2D.from_tuples((1, 2), (0, 1)), Interval2D.from_tuples((2, 3), (0, 1)),
+            Interval2D.from_tuples((0, 1), (1, 2)), Interval2D.from_tuples((1, 2), (1, 2)), Interval2D.from_tuples((2, 3), (1, 2)),
+            Interval2D.from_tuples((0, 1), (2, 3)), Interval2D.from_tuples((1, 2), (2, 3)), Interval2D.from_tuples((2, 3), (2, 3))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1067,9 +1068,9 @@ class PatternDistributeStretchTest(PatternTestBase):
         result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y,
                                             spacing_x=spacing_x, center=False)
         expected_result = [
-            ((0, 1), (0, 1)), ((2, 3), (0, 1)),
-            ((0, 1), (1, 2)), ((2, 3), (1, 2)),
-            ((0, 1), (2, 3)), ((2, 3), (2, 3))
+            Interval2D.from_tuples((0, 1), (0, 1)), Interval2D.from_tuples((2, 3), (0, 1)),
+            Interval2D.from_tuples((0, 1), (1, 2)), Interval2D.from_tuples((2, 3), (1, 2)),
+            Interval2D.from_tuples((0, 1), (2, 3)), Interval2D.from_tuples((2, 3), (2, 3))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1082,8 +1083,8 @@ class PatternDistributeStretchTest(PatternTestBase):
         result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y,
                                             spacing_y=spacing_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1)), ((1, 2), (0, 1)), ((2, 3), (0, 1)),
-            ((0, 1), (2, 3)), ((1, 2), (2, 3)), ((2, 3), (2, 3))
+            Interval2D.from_tuples((0, 1), (0, 1)), Interval2D.from_tuples((1, 2), (0, 1)), Interval2D.from_tuples((2, 3), (0, 1)),
+            Interval2D.from_tuples((0, 1), (2, 3)), Interval2D.from_tuples((1, 2), (2, 3)), Interval2D.from_tuples((2, 3), (2, 3))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1097,8 +1098,8 @@ class PatternDistributeStretchTest(PatternTestBase):
         result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y,
                                             spacing_x=spacing_x, spacing_y=spacing_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1)), ((2, 3), (0, 1)),
-            ((0, 1), (2, 3)), ((2, 3), (2, 3))
+            Interval2D.from_tuples((0, 1), (0, 1)), Interval2D.from_tuples((2, 3), (0, 1)),
+            Interval2D.from_tuples((0, 1), (2, 3)), Interval2D.from_tuples((2, 3), (2, 3))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1109,9 +1110,9 @@ class PatternDistributeStretchTest(PatternTestBase):
         max_tile_size_y = 1
         result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1)),
-            ((1, 2), (0, 1)),
-            ((2, 3), (0, 1))
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((1, 2), (0, 1)),
+            Interval2D.from_tuples((2, 3), (0, 1))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1122,8 +1123,8 @@ class PatternDistributeStretchTest(PatternTestBase):
         max_tile_size_y = 1
         result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y, center=False)
         expected_result = [
-            ((0, 1.5), (0, 1)),
-            ((1.5, 3), (0, 1))
+            Interval2D.from_tuples((0, 1.5), (0, 1)),
+            Interval2D.from_tuples((1.5, 3), (0, 1))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1134,9 +1135,9 @@ class PatternDistributeStretchTest(PatternTestBase):
         max_tile_size_y = 2
         result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1)),
-            ((1, 2), (0, 1)),
-            ((2, 3), (0, 1))
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((1, 2), (0, 1)),
+            Interval2D.from_tuples((2, 3), (0, 1))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1147,9 +1148,9 @@ class PatternDistributeStretchTest(PatternTestBase):
         max_tile_size_y = 1
         result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1)),
-            ((0, 1), (1, 2)),
-            ((0, 1), (2, 3))
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((0, 1), (1, 2)),
+            Interval2D.from_tuples((0, 1), (2, 3))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1160,8 +1161,8 @@ class PatternDistributeStretchTest(PatternTestBase):
         max_tile_size_y = 2
         result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1.5)),
-            ((0, 1), (1.5, 3))
+            Interval2D.from_tuples((0, 1), (0, 1.5)),
+            Interval2D.from_tuples((0, 1), (1.5, 3))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1175,8 +1176,8 @@ class PatternDistributeStretchTest(PatternTestBase):
         result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y,
                                             spacing_x=spacing_x, spacing_y=spacing_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1)),
-            ((0, 1), (2, 3))
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((0, 1), (2, 3))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1190,8 +1191,8 @@ class PatternDistributeStretchTest(PatternTestBase):
         result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y,
                                             spacing_x=spacing_x, spacing_y=spacing_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1)),
-            ((2, 3), (0, 1))
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((2, 3), (0, 1))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1205,7 +1206,7 @@ class PatternDistributeStretchTest(PatternTestBase):
         result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y,
                                             spacing_x=spacing_x, spacing_y=spacing_y, center=False)
         expected_result = [
-            ((0, 2), (0, 2))
+            Interval2D.from_tuples((0, 2), (0, 2))
         ]
         self.assertPattern2Equal(result, expected_result)
 
@@ -1219,7 +1220,7 @@ class PatternDistributeStretchTest(PatternTestBase):
         result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y,
                                             spacing_x=spacing_x, spacing_y=spacing_y, center=False)
         expected_result = [
-            ((0, 1), (0, 1))
+            Interval2D.from_tuples((0, 1), (0, 1))
         ]
         self.assertPattern2Equal(result, expected_result)
 
