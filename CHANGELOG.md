@@ -10,14 +10,15 @@
 - added add/cut/intersect_sketch()
 - added make_sphere() and make_cylinder()
 - added Body.cut_hole()
-- added Body.move_to_origin() Body.center() and Body.mirror()
-- added Sketch.move_to_origin() Sketch.center() and Sketch.mirror()
+- added Body.move_to_origin(), Body.center() and Body.mirror()
+- added Sketch.move_to_origin(), Sketch.center() and Sketch.mirror()
 - added pattern_distribute() and pattern_distribute_stretch()
 - breaking change: Sketch.add_polygon() has now parameter auto_close which is True by default
+- introduced Interval1D, Interval2D, Interval3D
 
 ## [0.4] - 2024-01-12
 
-- new method: Body.intersect
+- new method: Body.intersect()
 - renamed Body.fuse() to Body.add()
 - reordered params of cadscript.make_extrude, allowed passing of tuple for amount
 - removed method Sketch.finalize()
