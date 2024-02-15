@@ -4,6 +4,7 @@
 
 import unittest
 import cadscript
+from cadscript.interval import Interval3D
 
 
 class BodyPropertiesTest(unittest.TestCase):
@@ -14,7 +15,7 @@ class BodyPropertiesTest(unittest.TestCase):
 
     def test_box_extent(self):
         box = cadscript.make_box(1, 2, 3, center=True)
-        self.assertEqual(box.get_extent(), ((-0.5, 0.5), (-1, 1), (-1.5, 1.5)))
+        self.assertEqual(box.get_extent(), Interval3D.from_tuples((-0.5, 0.5), (-1, 1), (-1.5, 1.5)))
 
 
 if __name__ == '__main__':

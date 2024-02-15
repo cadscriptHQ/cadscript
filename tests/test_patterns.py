@@ -2,15 +2,73 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Tuple
 import unittest
-from cadscript.patterns import pattern_grid
-from cadscript.patterns import pattern_rect
+
+from cadscript.patterns import pattern_grid, pattern_rect, pattern_distribute, pattern_distribute_stretch
+from cadscript.interval import Interval2D
 
 
-class PatternRectTest(unittest.TestCase):
+class PatternTuple:
+    """
+    result and expected are lists of tuples floats, so we need to compare the sets of tuples
+    each tuple is compared with an epsilon
+    """
+    _epsilon = 1e-5
+
+    def __init__(self, data: Tuple[float, float]):
+        self.data = data
+
+    def __eq__(self, other):
+        return abs(self.data[0] - other.data[0]) < self._epsilon and abs(self.data[1] - other.data[1]) < self._epsilon
+
+
+class PatternSet:
+    def __init__(self, data: list[Tuple[float, float]]):
+        self.data = [PatternTuple(data) for data in data]
+
+    def __eq__(self, other):
+        if len(self.data) != len(other.data):
+            return False
+        if len(self.data) == 0 and len(other.data) == 0:
+            return True
+        for item in self.data:
+            for other_item in other.data:
+                if item == other_item:
+                    return True
+        return False
+
+
+class PatternSet2:
+    def __init__(self, data: list[Interval2D]):
+        self.data = [(PatternTuple(d.tuple_x), PatternTuple(d.tuple_y)) for d in data]
+
+    def __eq__(self, other):
+        if len(self.data) != len(other.data):
+            return False
+        if len(self.data) == 0 and len(other.data) == 0:
+            return True
+        for item in self.data:
+            for other_item in other.data:
+                if item[0] == other_item[0] and item[1] == other_item[1]:
+                    return True
+        return False
+
+
+class PatternTestBase(unittest.TestCase):
+
     def assertPatternEqual(self, result, expected):
-        self.assertEqual(result, expected)
+        result_set = PatternSet(result)
+        expected_set = PatternSet(expected)
+        self.assertEqual(result_set, expected_set, f"Expected {expected},\ngot {result}")
 
+    def assertPattern2Equal(self, result, expected):
+        result_set = PatternSet2(result)
+        expected_set = PatternSet2(expected)
+        self.assertEqual(result_set, expected_set, f"Expected {expected},\ngot {result}")
+
+
+class PatternRectTest(PatternTestBase):
     def test_2x1_uncentered(self):
         nx = 2
         ny = 1
@@ -48,10 +106,7 @@ class PatternRectTest(unittest.TestCase):
         self.assertPatternEqual(result, expected_result)
 
 
-class PatternGridTest(unittest.TestCase):
-    def assertPatternEqual(self, result, expected):
-        self.assertEqual(set(result), set(expected))
-
+class PatternGridTest(PatternTestBase):
     def test_3x3_size_centered(self):
         nx = 3
         ny = 3
@@ -374,6 +429,826 @@ class PatternGridTest(unittest.TestCase):
     def test_exception_count_y_less_than_one(self):
         with self.assertRaises(ValueError):
             pattern_grid(3, -1, size_x=1.0, size_y=1.0)
+
+
+class PatternDistributeTest(PatternTestBase):
+    def test_3x3_exact_fit(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False)
+        expected_result = [
+            (0.5, 0.5), (1.5, 0.5), (2.5, 0.5),
+            (0.5, 1.5), (1.5, 1.5), (2.5, 1.5),
+            (0.5, 2.5), (1.5, 2.5), (2.5, 2.5)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_exact_fit_origin(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, result_pos="origin")
+        expected_result = [
+            (0.0, 0.0), (1.0, 0.0), (2.0, 0.0),
+            (0.0, 1.0), (1.0, 1.0), (2.0, 1.0),
+            (0.0, 2.0), (1.0, 2.0), (2.0, 2.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_loose_fit_origin(self):
+        size_x = 3.2
+        size_y = 3.2
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, result_pos="origin")
+        expected_result = [
+            (0.0, 0.0), (1.1, 0.0), (2.2, 0.0),
+            (0.0, 1.1), (1.1, 1.1), (2.2, 1.1),
+            (0.0, 2.2), (1.1, 2.2), (2.2, 2.2)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_exact_fit_center(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True)
+        expected_result = [
+            (-1.0, -1.0), (0.0, -1.0), (1.0, -1.0),
+            (-1.0, 0.0), (0.0, 0.0), (1.0, 0.0),
+            (-1.0, 1.0), (0.0, 1.0), (1.0, 1.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_loose_fit_center(self):
+        size_x = 3.2
+        size_y = 3.2
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True)
+        expected_result = [
+            (-1.1, -1.1), (-0.0, -1.1), (1.1, -1.1),
+            (-1.1, 0.0), (-0.0, 0.0), (1.1, 0.0),
+            (-1.1, 1.1), (-0.0, 1.1), (1.1, 1.1)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x1_exact_fit(self):
+        size_x = 3
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False)
+        expected_result = [
+            (0.5, 0.5), (1.5, 0.5), (2.5, 0.5)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x1_exact_fit_origin(self):
+        size_x = 3
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, result_pos="origin")
+        expected_result = [
+            (0.0, 0.0), (1.0, 0.0), (2.0, 0.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x1_loose_fit_origin(self):
+        size_x = 3.2
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, result_pos="origin")
+        expected_result = [
+            (0.0, 0.0), (1.1, 0.0), (2.2, 0.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x1_exact_fit_center(self):
+        size_x = 3
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True)
+        expected_result = [
+            (-1.0, 0.0), (0.0, 0.0), (1.0, 0.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x1_loose_fit_center(self):
+        size_x = 3.2
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True)
+        expected_result = [
+            (-1.1, 0.0), (-0.0, 0.0), (1.1, 0.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x3_exact_fit(self):
+        size_x = 1
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False)
+        expected_result = [
+            (0.5, 0.5), (0.5, 1.5), (0.5, 2.5)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x3_exact_fit_origin(self):
+        size_x = 1
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, result_pos="origin")
+        expected_result = [
+            (0.0, 0.0), (0.0, 1.0), (0.0, 2.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x3_loose_fit_origin(self):
+        size_x = 1
+        size_y = 3.2
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, result_pos="origin")
+        expected_result = [
+            (0.0, 0.0), (0.0, 1.1), (0.0, 2.2)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x3_exact_fit_center(self):
+        size_x = 1
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True)
+        expected_result = [
+            (0.0, -1.0), (0.0, 0.0), (0.0, 1.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x3_loose_fit_center(self):
+        size_x = 1
+        size_y = 3.2
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True)
+        expected_result = [
+            (0.0, -1.1), (0.0, -0.0), (0.0, 1.1)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x1_exact_fit(self):
+        size_x = 1
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False)
+        expected_result = [
+            (0.5, 0.5)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x1_exact_fit_origin(self):
+        size_x = 1
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, result_pos="origin")
+        expected_result = [
+            (0.0, 0.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x1_loose_fit_x_origin(self):
+        size_x = 1.2
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, result_pos="origin")
+        expected_result = [
+            (0.1, 0.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x1_loose_fit_y_origin(self):
+        size_x = 1
+        size_y = 1.2
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, result_pos="origin")
+        expected_result = [
+            (0.0, 0.1)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x1_exact_fit_center(self):
+        size_x = 1
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True)
+        expected_result = [
+            (0.0, 0.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x1_too_small_x(self):
+        size_x = 0.5
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False)
+        expected_result = []
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x1_too_small_y(self):
+        size_x = 1
+        size_y = 0.5
+        tile_x = 1
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False)
+        expected_result = []
+        self.assertPatternEqual(result, expected_result)
+
+    def test_6x2_tile_3x1_origin(self):
+        size_x = 6
+        size_y = 2
+        tile_x = 3
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, result_pos="origin")
+        expected_result = [
+            (0.0, 0.0), (3.0, 0.0),
+            (0.0, 1.0), (3.0, 1.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_6x2_tile_3x1_center_origin(self):
+        size_x = 6
+        size_y = 2
+        tile_x = 3
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True, result_pos="origin")
+        expected_result = [
+            (-3.0, -1.0), (-3.0, 0.0),
+            (0.0, -1.0), (0.0, 0.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_6x2_tile_3x1_center(self):
+        size_x = 6
+        size_y = 2
+        tile_x = 3
+        tile_y = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True)
+        expected_result = [
+            (-1.5, -0.5), (1.5, -0.5),
+            (-1.5, 0.5), (1.5, 0.5)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_2x6_tile_1x3(self):
+        size_x = 2
+        size_y = 6
+        tile_x = 1
+        tile_y = 3
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, result_pos="origin")
+        expected_result = [
+            (0.0, 0.0), (0.0, 3.0),
+            (1.0, 0.0), (1.0, 3.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_min_spacing_x_1(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, min_spacing_x=min_spacing)
+        expected_result = [
+            (0.5, 0.5), (2.5, 0.5),
+            (0.5, 1.5), (2.5, 1.5),
+            (0.5, 2.5), (2.5, 2.5)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_min_spacing_y_1(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, min_spacing_y=min_spacing)
+        expected_result = [
+            (0.5, 0.5), (1.5, 0.5), (2.5, 0.5),
+            (0.5, 2.5), (1.5, 2.5), (2.5, 2.5)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_min_spacing_xy_1(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=False, min_spacing_x=min_spacing, min_spacing_y=min_spacing)
+        expected_result = [
+            (0.5, 0.5), (2.5, 0.5),
+            (0.5, 2.5), (2.5, 2.5)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_min_spacing_xy_1_center(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 1
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True, min_spacing_x=min_spacing, min_spacing_y=min_spacing)
+        expected_result = [
+            (-1.0, -1.0), (1.0, -1.0),
+            (-1.0, 1.0), (1.0, 1.0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_3x3_min_spacing_xy_2_center(self):
+        size_x = 3
+        size_y = 3
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 2
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True, min_spacing_x=min_spacing, min_spacing_y=min_spacing)
+        expected_result = [
+            (0, 0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+    def test_1x1_min_spacing_xy_2_center(self):
+        size_x = 1
+        size_y = 1
+        tile_x = 1
+        tile_y = 1
+        min_spacing = 2
+        result = pattern_distribute(size_x, size_y, tile_x, tile_y, center=True, min_spacing_x=min_spacing, min_spacing_y=min_spacing)
+        expected_result = [
+            (0, 0)
+        ]
+        self.assertPatternEqual(result, expected_result)
+
+
+class PatternDistributeStretchTest(PatternTestBase):
+
+    def test_1x1_into_2x2_centered(self):
+        count_x = 1
+        count_y = 1
+        size_x = 2
+        size_y = 2
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
+        expected_result = [
+            Interval2D.from_tuples((-1, 1), (-1, 1))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x1_into_6x4_centered(self):
+        count_x = 1
+        count_y = 1
+        size_x = 6
+        size_y = 4
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
+        expected_result = [
+            Interval2D.from_tuples((-3, 3), (-2, 2))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x1_into_1x10_uncentered(self):
+        count_x = 1
+        count_y = 1
+        size_x = 1
+        size_y = 10
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 10))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_2x1_into_2x2_centered(self):
+        count_x = 2
+        count_y = 1
+        size_x = 2
+        size_y = 2
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
+        expected_result = [
+            Interval2D.from_tuples((-1, 0), (-1, 1)),
+            Interval2D.from_tuples((0, 1), (-1, 1))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x1_into_6x4_centered(self):
+        count_x = 3
+        count_y = 1
+        size_x = 6
+        size_y = 4
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
+        expected_result = [
+            Interval2D.from_tuples((-3, -1), (-2, 2)),
+            Interval2D.from_tuples((-1, 1), (-2, 2)),
+            Interval2D.from_tuples((1, 3), (-2, 2))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x2_into_6x4_centered(self):
+        count_x = 1
+        count_y = 2
+        size_x = 6
+        size_y = 4
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
+        expected_result = [
+            Interval2D.from_tuples((-3, 3), (-2, 0)),
+            Interval2D.from_tuples((-3, 3), (0, 2))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x4_into_6x4_centered(self):
+        count_x = 1
+        count_y = 4
+        size_x = 6
+        size_y = 4
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
+        expected_result = [
+            Interval2D.from_tuples((-3, 3), (-2, -1)),
+            Interval2D.from_tuples((-3, 3), (-1, 0)),
+            Interval2D.from_tuples((-3, 3), (0, 1)),
+            Interval2D.from_tuples((-3, 3), (1, 2))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_2x2_into_6x4_centered(self):
+        count_x = 2
+        count_y = 2
+        size_x = 6
+        size_y = 4
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y)
+        expected_result = [
+            Interval2D.from_tuples((-3, 0), (-2, 0)),
+            Interval2D.from_tuples((0, 3), (-2, 0)),
+            Interval2D.from_tuples((-3, 0), (0, 2)),
+            Interval2D.from_tuples((0, 3), (0, 2))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_2x1_into_6x2_spacing_2(self):
+        count_x = 2
+        count_y = 1
+        size_x = 6
+        size_y = 2
+        spacing_x = 2
+        spacing_y = 2
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y, spacing_x=spacing_x, spacing_y=spacing_y)
+        expected_result = [
+            Interval2D.from_tuples((-3, -1), (-1, 1)),
+            Interval2D.from_tuples((1, 3), (-1, 1))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x2_into_6x6_spacing_2(self):
+        count_x = 1
+        count_y = 2
+        size_x = 6
+        size_y = 6
+        spacing_x = 2
+        spacing_y = 2
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y, spacing_x=spacing_x, spacing_y=spacing_y)
+        expected_result = [
+            Interval2D.from_tuples((-3, 3), (-3, -1)),
+            Interval2D.from_tuples((-3, 3), (1, 3))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_2x2_into_6x6_spacing_2(self):
+        count_x = 2
+        count_y = 2
+        size_x = 6
+        size_y = 6
+        spacing_x = 2
+        spacing_y = 2
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y, spacing_x=spacing_x, spacing_y=spacing_y)
+        expected_result = [
+            Interval2D.from_tuples((-3, -1), (-3, -1)),
+            Interval2D.from_tuples((1, 3), (-3, -1)),
+            Interval2D.from_tuples((-3, -1), (1, 3)),
+            Interval2D.from_tuples((1, 3), (1, 3))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x5_into_5x9_spacing_1_uncentered(self):
+        count_x = 3
+        count_y = 5
+        size_x = 5
+        size_y = 9
+        spacing_x = 1
+        spacing_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, count_x=count_x, count_y=count_y,
+                                            spacing_x=spacing_x, spacing_y=spacing_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((2, 3), (0, 1)),
+            Interval2D.from_tuples((4, 5), (0, 1)),
+            Interval2D.from_tuples((0, 1), (2, 3)),
+            Interval2D.from_tuples((2, 3), (2, 3)),
+            Interval2D.from_tuples((4, 5), (2, 3)),
+            Interval2D.from_tuples((0, 1), (4, 5)),
+            Interval2D.from_tuples((2, 3), (4, 5)),
+            Interval2D.from_tuples((4, 5), (4, 5)),
+            Interval2D.from_tuples((0, 1), (6, 7)),
+            Interval2D.from_tuples((2, 3), (6, 7)),
+            Interval2D.from_tuples((4, 5), (6, 7)),
+            Interval2D.from_tuples((0, 1), (8, 9)),
+            Interval2D.from_tuples((2, 3), (8, 9)),
+            Interval2D.from_tuples((4, 5), (8, 9))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x1_minx1_miny1(self):
+        size_x = 3
+        size_y = 1
+        min_tile_size_x = 1
+        min_tile_size_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((1, 2), (0, 1)),
+            Interval2D.from_tuples((2, 3), (0, 1))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x1_minx2_miny1(self):
+        size_x = 3
+        size_y = 1
+        min_tile_size_x = 2
+        min_tile_size_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 3), (0, 1))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x1_minx1_miny2(self):
+        size_x = 3
+        size_y = 1
+        min_tile_size_x = 1
+        min_tile_size_y = 2
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
+        expected_result = [
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x3_minx1_miny1(self):
+        size_x = 1
+        size_y = 3
+        min_tile_size_x = 1
+        min_tile_size_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((0, 1), (1, 2)),
+            Interval2D.from_tuples((0, 1), (2, 3))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x3_minx1_miny2(self):
+        size_x = 1
+        size_y = 3
+        min_tile_size_x = 1
+        min_tile_size_y = 2
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 3))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x3_minx2_miny1(self):
+        size_x = 1
+        size_y = 3
+        min_tile_size_x = 2
+        min_tile_size_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
+        expected_result = [
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x3_minx1_miny1(self):
+        size_x = 3
+        size_y = 3
+        min_tile_size_x = 1
+        min_tile_size_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)), Interval2D.from_tuples((1, 2), (0, 1)), Interval2D.from_tuples((2, 3), (0, 1)),
+            Interval2D.from_tuples((0, 1), (1, 2)), Interval2D.from_tuples((1, 2), (1, 2)), Interval2D.from_tuples((2, 3), (1, 2)),
+            Interval2D.from_tuples((0, 1), (2, 3)), Interval2D.from_tuples((1, 2), (2, 3)), Interval2D.from_tuples((2, 3), (2, 3))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x3_minx1_miny1_spacingx1(self):
+        size_x = 3
+        size_y = 3
+        min_tile_size_x = 1
+        min_tile_size_y = 1
+        spacing_x = 1
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y,
+                                            spacing_x=spacing_x, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)), Interval2D.from_tuples((2, 3), (0, 1)),
+            Interval2D.from_tuples((0, 1), (1, 2)), Interval2D.from_tuples((2, 3), (1, 2)),
+            Interval2D.from_tuples((0, 1), (2, 3)), Interval2D.from_tuples((2, 3), (2, 3))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x3_minx1_miny1_spacingy1(self):
+        size_x = 3
+        size_y = 3
+        min_tile_size_x = 1
+        min_tile_size_y = 1
+        spacing_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y,
+                                            spacing_y=spacing_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)), Interval2D.from_tuples((1, 2), (0, 1)), Interval2D.from_tuples((2, 3), (0, 1)),
+            Interval2D.from_tuples((0, 1), (2, 3)), Interval2D.from_tuples((1, 2), (2, 3)), Interval2D.from_tuples((2, 3), (2, 3))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x3_minx1_miny1_spacingx1_spacingy1(self):
+        size_x = 3
+        size_y = 3
+        min_tile_size_x = 1
+        min_tile_size_y = 1
+        spacing_x = 1
+        spacing_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y,
+                                            spacing_x=spacing_x, spacing_y=spacing_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)), Interval2D.from_tuples((2, 3), (0, 1)),
+            Interval2D.from_tuples((0, 1), (2, 3)), Interval2D.from_tuples((2, 3), (2, 3))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x1_maxx1_maxy1(self):
+        size_x = 3
+        size_y = 1
+        max_tile_size_x = 1
+        max_tile_size_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((1, 2), (0, 1)),
+            Interval2D.from_tuples((2, 3), (0, 1))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x1_maxx2_maxy1(self):
+        size_x = 3
+        size_y = 1
+        max_tile_size_x = 2
+        max_tile_size_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1.5), (0, 1)),
+            Interval2D.from_tuples((1.5, 3), (0, 1))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x1_maxx1_maxy2(self):
+        size_x = 3
+        size_y = 1
+        max_tile_size_x = 1
+        max_tile_size_y = 2
+        result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((1, 2), (0, 1)),
+            Interval2D.from_tuples((2, 3), (0, 1))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x3_maxx1_maxy1(self):
+        size_x = 1
+        size_y = 3
+        max_tile_size_x = 1
+        max_tile_size_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((0, 1), (1, 2)),
+            Interval2D.from_tuples((0, 1), (2, 3))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x3_maxx1_maxy2(self):
+        size_x = 1
+        size_y = 3
+        max_tile_size_x = 1
+        max_tile_size_y = 2
+        result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1.5)),
+            Interval2D.from_tuples((0, 1), (1.5, 3))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x3_maxx1_maxy1_spacing1(self):
+        size_x = 1
+        size_y = 3
+        max_tile_size_x = 1
+        max_tile_size_y = 1
+        spacing_x = 1
+        spacing_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y,
+                                            spacing_x=spacing_x, spacing_y=spacing_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((0, 1), (2, 3))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_3x1_maxx1_maxy1_spacing1(self):
+        size_x = 3
+        size_y = 1
+        max_tile_size_x = 1
+        max_tile_size_y = 1
+        spacing_x = 1
+        spacing_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y,
+                                            spacing_x=spacing_x, spacing_y=spacing_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1)),
+            Interval2D.from_tuples((2, 3), (0, 1))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_2x2_minx1_minx1_spacing1(self):
+        size_x = 2
+        size_y = 2
+        min_tile_size_x = 1
+        min_tile_size_y = 1
+        spacing_x = 1
+        spacing_y = 1
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y,
+                                            spacing_x=spacing_x, spacing_y=spacing_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 2), (0, 2))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_1x1_minx1_miny1_spacing10(self):
+        size_x = 1
+        size_y = 1
+        min_tile_size_x = 1
+        min_tile_size_y = 1
+        spacing_x = 10
+        spacing_y = 10
+        result = pattern_distribute_stretch(size_x, size_y, min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y,
+                                            spacing_x=spacing_x, spacing_y=spacing_y, center=False)
+        expected_result = [
+            Interval2D.from_tuples((0, 1), (0, 1))
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_2x2_maxx5_maxy5_minx3(self):
+        size_x = 2
+        size_y = 2
+        max_tile_size_x = 5
+        max_tile_size_y = 5
+        min_tile_size_x = 3
+        min_tile_size_y = 3
+        result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y,
+                                            min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
+        expected_result = [
+        ]
+        self.assertPattern2Equal(result, expected_result)
+
+    def test_2x2_maxx5_maxy5_miny3(self):
+        size_x = 2
+        size_y = 2
+        max_tile_size_x = 5
+        max_tile_size_y = 5
+        min_tile_size_x = 1
+        min_tile_size_y = 3
+        result = pattern_distribute_stretch(size_x, size_y, max_tile_size_x=max_tile_size_x, max_tile_size_y=max_tile_size_y,
+                                            min_tile_size_x=min_tile_size_x, min_tile_size_y=min_tile_size_y, center=False)
+        expected_result = [
+        ]
+        self.assertPattern2Equal(result, expected_result)
 
 
 if __name__ == '__main__':

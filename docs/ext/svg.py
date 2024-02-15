@@ -123,8 +123,7 @@ def get_svg(shape, opts=None):
 
     # Available options and their defaults
     options = {
-        "width": 800,
-        "height": 240,
+        "width": 600,
         "marginLeft": 20,
         "marginTop": 20,
         "projectionOrigin": (0, 0, 0),
@@ -143,12 +142,14 @@ def get_svg(shape, opts=None):
     uom = UNITS.MM
 
     # Handle the case where the height or width are None
-    width = options["width"]
-    if width is not None:
+    width = None
+    height = None
+    if "width" in options:
         width = float(options["width"])
-    height = options["height"]
-    if options["height"] is not None:
+    if "height" in options:
         height = float(options["height"])
+    if width is None and height is None:
+        raise ValueError("Either width or height must be specified")    
     marginLeft = float(options["marginLeft"])
     marginTop = float(options["marginTop"])
     projectionOrigin = tuple(options["projectionOrigin"])
@@ -258,21 +259,29 @@ def get_svg(shape, opts=None):
     bb = Compound.makeCompound([Shape(lines) for (lines, _) in lines_list]).BoundingBox()
 
     # Determine whether the user wants to fit the drawing to the bounding box
+    width_value = 0
+    height_value = 0
     if width is None or height is None:
         # Fit image to specified width (or height)
-        if width is None:
-            width = (height - (2.0 * marginTop)) * (
+        if width is None and height is not None:
+            height_value = height
+            width_value = (height_value - (2.0 * marginTop)) * (
                 bb.xlen / bb.ylen
             ) + 2.0 * marginLeft
+        elif width is not None and height is None:
+            width_value = width
+            height_value = (width_value - 2.0 * marginLeft) * (bb.ylen / bb.xlen) + 2.0 * marginTop
         else:
-            height = (width - 2.0 * marginLeft) * (bb.ylen / bb.xlen) + 2.0 * marginTop
+            raise ValueError("Either width or height must be specified")
 
         # width pixels for x, height pixels for y
-        unitScale = (width - 2.0 * marginLeft) / bb.xlen
+        unitScale = (width_value - 2.0 * marginLeft) / bb.xlen
     else:
+        width_value = width
+        height_value = height
         bb_scale = 0.75
         # width pixels for x, height pixels for y
-        unitScale = min(width / bb.xlen * bb_scale, height / bb.ylen * bb_scale)
+        unitScale = min(width_value / bb.xlen * bb_scale, height_value / bb.ylen * bb_scale)
 
     # compute amount to translate-- move the top left into view
     (xTranslate, yTranslate) = (
@@ -286,9 +295,9 @@ def get_svg(shape, opts=None):
             "content": content,
             "xTranslate": str(xTranslate),
             "yTranslate": str(yTranslate),
-            "width": str(width),
-            "height": str(height),
-            "textboxY": str(height - 30),
+            "width": str(width_value),
+            "height": str(height_value),
+            "textboxY": str(height_value - 30),
             "uom": str(uom),
         }
     )

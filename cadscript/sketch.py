@@ -3,12 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import cadquery as cq
+from math import pi
 
 from typing import Iterable, List, Optional, Union
 
-from .typedefs import DimensionDefinitionType, CenterDefinitionType, Vector2DType
+from .interval import Interval2D
+from .typedefs import Axis2DType, DimensionDefinitionType, CenterDefinition2DType, Vector2DType
 from .export import export_sketch_DXF
-from .helpers import get_dimensions
+from .helpers import get_center_flags, get_dimensions_2d, get_radius, get_positions
 from .cqselectors import NearestToPointListSelector
 
 
@@ -17,6 +19,11 @@ class Sketch:
     Represents a 2D sketch. Sketch instances are typically created using :func:`cadscript.make_sketch`.
     """
     __sketch: cq.Sketch
+
+    class CqMode:
+        Add: cq.sketch.Modes = "a"
+        Substract: cq.sketch.Modes = "s"
+        Intersect: cq.sketch.Modes = "i"
 
     def __init__(self, sketch: cq.Sketch) -> None:
         self.__sketch = sketch
@@ -33,38 +40,26 @@ class Sketch:
         return self
 
     def __rect_helper(self,
-                      sketch,
+                      sketch: cq.Sketch,
                       size_x: DimensionDefinitionType,
                       size_y: DimensionDefinitionType,
-                      center: CenterDefinitionType,
-                      mode="a"
+                      angle: float,
+                      center: CenterDefinition2DType,
+                      mode: cq.sketch.Modes = "a"
                       ):
-        dim1, dim2 = get_dimensions([size_x, size_y], center)
-        x1, x2 = dim1
-        y1, y2 = dim2
-        p0 = cq.Vector(x1, y1)
-        p1 = cq.Vector(x2, y1)
-        p2 = cq.Vector(x2, y2)
-        p3 = cq.Vector(x1, y2)
-        return sketch.polygon([p0, p1, p2, p3, p0], mode=mode)
-
-    def __get_positions(self,
-                        positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]],
-                        pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]]
-                        ) -> Optional[List[Vector2DType]]:
-        if positions is not None and pos is not None:
-            raise ValueError("only one of positions and pos can be specified")
-        if positions is None and pos is None:
-            return None
-        p = positions if positions is not None else pos
-        pos_list = [p] if isinstance(p, tuple) else p
-        return pos_list
+        dim = get_dimensions_2d([size_x, size_y], center)
+        p0 = cq.Vector(dim.x1, dim.y1)
+        p1 = cq.Vector(dim.x2, dim.y1)
+        p2 = cq.Vector(dim.x2, dim.y2)
+        p3 = cq.Vector(dim.x1, dim.y2)
+        return sketch.polygon([p0, p1, p2, p3, p0], angle=angle, mode=mode)
 
     def add_rect(self,
                  size_x: DimensionDefinitionType,
                  size_y: DimensionDefinitionType,
                  *,
-                 center: CenterDefinitionType = True,
+                 angle: float = 0,
+                 center: CenterDefinition2DType = True,
                  positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
                  pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                  ) -> 'Sketch':
@@ -74,7 +69,8 @@ class Sketch:
         Args:
             size_x (DimensionDefinitionType): The size of the rectangle along the x-axis.
             size_y (DimensionDefinitionType): The size of the rectangle along the y-axis.
-            center (CenterDefinitionType, optional): Determines whether the rectangle is centered.
+            angle (float, optional): The angle of rotation. Defaults to 0.
+            center (CenterDefinition2DType, optional): Determines whether the rectangle is centered.
                 If False, the rectangle will start from the origin.
                 Can also be "X" or "Y" to center in only one direction. Defaults to True.
             positions (Vector2DType | Iterable[Vector2DType], optional): If given, a rectangle is added for each of the entries,
@@ -85,14 +81,15 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        action = lambda x: self.__rect_helper(x, size_x, size_y, center)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        action = lambda x: self.__rect_helper(x, size_x, size_y, angle, center)
+        return self.__perform_action(action, get_positions(positions, pos))
 
     def cut_rect(self,
                  size_x: DimensionDefinitionType,
                  size_y: DimensionDefinitionType,
                  *,
-                 center: CenterDefinitionType = True,
+                 angle: float = 0,
+                 center: CenterDefinition2DType = True,
                  positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
                  pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                  ) -> 'Sketch':
@@ -102,7 +99,8 @@ class Sketch:
         Args:
             size_x (DimensionDefinitionType): The size of the rectangle along the x-axis.
             size_y (DimensionDefinitionType): The size of the rectangle along the y-axis.
-            center (CenterDefinitionType, optional): Determines whether the rectangle is centered.
+            angle (float, optional): The angle of rotation. Defaults to 0.
+            center (CenterDefinition2DType, optional): Determines whether the rectangle is centered.
                 If False, the rectangle will start from the origin.
                 Can also be "X" or "Y" to center in only one direction. Defaults to True.
             positions (Vector2DType | Iterable[Vector2DType], optional): If given, a rectangle is cut for each of the entries,
@@ -113,31 +111,9 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        action = lambda x: self.__rect_helper(x, size_x, size_y, center, mode="s")
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        action = lambda x: self.__rect_helper(x, size_x, size_y, angle, center, mode=Sketch.CqMode.Substract)
+        return self.__perform_action(action, get_positions(positions, pos))
 
-    def __get_radius(self,
-                     r: Optional[float] = None,
-                     radius: Optional[float] = None,
-                     d: Optional[float] = None,
-                     diameter: Optional[float] = None
-                     ) -> float:
-        '''
-        Helper function to get the radius from the given parameters.
-        '''
-        # check only one parameter is specified
-        if sum(x is not None for x in [r, radius, d, diameter]) > 1:
-            raise ValueError("only one of r, radius, d, diameter can be specified")
-        if r is not None:
-            return r
-        elif radius is not None:
-            return radius
-        elif d is not None:
-            return d / 2
-        elif diameter is not None:
-            return diameter / 2
-        else:
-            raise ValueError("no radius/diameter specified")
 
     def add_circle(self,
                    *,
@@ -163,9 +139,9 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        r = self.__get_radius(r, radius, d, diameter)
+        r = get_radius(r, radius, d, diameter)
         action = lambda x: x.circle(r)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
     def cut_circle(self,
                    *,
@@ -191,15 +167,90 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        r = self.__get_radius(r, radius, d, diameter)
+        r = get_radius(r, radius, d, diameter)
         action = lambda x: x.circle(r, mode="s")
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
+
+    def add_ellipse(self,
+                    size_x: DimensionDefinitionType,
+                    size_y: DimensionDefinitionType,
+                    *,
+                    angle: float = 0,
+                    center: CenterDefinition2DType = True,
+                    positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                    pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                    ) -> 'Sketch':
+        """
+        Adds an ellipse to the sketch object.
+
+        Args:
+            size_x (DimensionDefinitionType): The size of the ellipse along the x-axis.
+            size_y (DimensionDefinitionType): The size of the ellipse along the y-axis.
+            angle (float, optional): The angle of rotation. Defaults to 0.
+            center (CenterDefinition2DType, optional): Determines whether the ellipse is centered.
+                If False, the ellipse will start from the origin.
+                Can also be "X" or "Y" to center in only one direction. Defaults to True.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a ellipse is added for each of the entries,
+                specifying the offset as (x,y) tuple.
+                Defaults to None, which results in a single ellipse added with no offset.
+            pos: Shorthand for positions parameter, only use one of them.
+
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        return self.__ellipse(size_x, size_y, Sketch.CqMode.Add, angle, center, positions, pos)
+
+    def cut_ellipse(self,
+                    size_x: DimensionDefinitionType,
+                    size_y: DimensionDefinitionType,
+                    *,
+                    angle: float = 0,
+                    center: CenterDefinition2DType = True,
+                    positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                    pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                    ) -> 'Sketch':
+        """
+        Cuts an ellipse from the sketch object.
+
+        Args:
+            size_x (DimensionDefinitionType): The size of the ellipse along the x-axis.
+            size_y (DimensionDefinitionType): The size of the ellipse along the y-axis.
+            angle (float, optional): The angle of rotation. Defaults to 0.
+            center (CenterDefinition2DType, optional): Determines whether the ellipse is centered.
+                If False, the ellipse will start from the origin.
+                Can also be "X" or "Y" to center in only one direction. Defaults to True.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a ellipse is cuts for each of the entries,
+                specifying the offset as (x,y) tuple.
+                Defaults to None, which results in a single ellipse cut with no offset.
+            pos: Shorthand for positions parameter, only use one of them.
+
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        return self.__ellipse(size_x, size_y, Sketch.CqMode.Substract, angle, center, positions, pos)
+
+    def __ellipse(self,
+                  size_x: DimensionDefinitionType,
+                  size_y: DimensionDefinitionType,
+                  mode: str,
+                  angle: float = 0,
+                  center: CenterDefinition2DType = True,
+                  positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                  pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                  ) -> 'Sketch':
+        dim = get_dimensions_2d([size_x, size_y], center)
+        action = lambda x: x.ellipse(dim.size_x / 2.0, dim.size_y / 2.0, angle=angle, mode=mode)
+        pos_list = get_positions(positions, pos, [(0, 0)])
+        if not pos_list:
+            raise Exception("cadscript internal error: should not reach this point")
+        return self.__perform_action(action, [(x + dim.center_x, y + dim.center_y) for (x, y) in pos_list])
 
     def add_polygon(self,
                     point_list: Iterable[Vector2DType],
                     *,
                     positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
-                    pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                    pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                    auto_close: bool = True
                     ) -> 'Sketch':
         """
         Adds a polygon to the sketch.
@@ -211,13 +262,22 @@ class Sketch:
                 is added for each of the entries, specifying the offset as (x,y) tuple.
                 Defaults to None, which results in a single polygon added with no offset.
             pos: Shorthand for positions parameter, only use one of them.
+            auto_close (bool, optional): If True, the polygon will be automatically closed by
+                adding a line  from the last point to the first. If False, in the given point list,
+                the last point is expected to be the same as the first point.
+                Defaults to True.
 
         Returns:
             Sketch: The modified sketch object.
 
         """
+        point_list = list(point_list)
+        if len(point_list) < 3:
+            raise ValueError("A polygon must have at least 3 points")
+        if auto_close:
+            point_list.append(point_list[0])
         action = lambda x: x.polygon(point_list)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
     def cut_polygon(self,
                     point_list: Iterable[Vector2DType],
@@ -240,26 +300,46 @@ class Sketch:
             Sketch: The modified sketch object.
 
         """
-        action = lambda x: x.polygon(point_list, mode="s")
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        action = lambda x: x.polygon(point_list, mode=Sketch.CqMode.Substract)
+        return self.__perform_action(action, get_positions(positions, pos))
+
 
     def add_slot(self,
-                 w: float,
-                 h: float,
                  *,
+                 width: Optional[float] = None,
+                 height: Optional[float] = None,
                  angle: float = 0,
+                 start: Optional[Vector2DType] = None,
+                 end: Optional[Vector2DType] = None,
+                 r: Optional[float] = None,
+                 radius: Optional[float] = None,
+                 d: Optional[float] = None,
+                 diameter: Optional[float] = None,
                  positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
                  pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                  ) -> 'Sketch':
         """
-        Adds a slot to the sketch. The slot is defined by a width and height, and an angle of rotation. By default (rotation is 0),
-        the slot is parallel to the x-axis. The width is the non-rounded part along the x-axis and the height is
-        the extent along the y-axis. The part is centered at the origin unless the positions paramter is specified.
+        Adds a slot to the sketch. The slot is either defined by a width, height and an angle of rotation,
+        or by two points and a radius. One of the two methods must be used.
+
+        When using the width and height method, the slot is parallel to the x-axis.
+        The width is the non-rounded part along the x-axis and the height is
+        the extent along the y-axis. The part is centered at the origin unless the positions parameter is specified.
+        If the angle parameter is specified, the slot is rotated around its center by the given angle.
+
+        When using the two points method, the slot is defined by two points and a radius.
+        Use the start, end and one of the r, radius, d or diameter parameters to specify the slot.
 
         Args:
-            w (float): The width of the slot, the part without the rounded sides.
-            h (float): The height of the slot.
+            width (float, optional): The width of the slot, the part without the rounded sides.
+            heigth (float, optional): The height of the slot.
             angle (float, optional): The angle of rotation for the slot. Defaults to 0, which means the slot is parallel to the x-axis.
+            start (Vector2DType): The start point of the slot.
+            end (Vector2DType): The end point of the slot.
+            r (float, optional): The radius of the slot (alternative to 'radius', 'd' or 'diameter').
+            radius (float, optional): The radius of the slot (alternative to 'r', 'd' or 'diameter').
+            d (float, optional): The diameter of the slot (alternative to 'r', 'radius' or 'diameter').
+            diameter (float, optional): The diameter of the slot (alternative to 'r', 'radius' or 'd').
             positions (Vector2DType | Iterable[Vector2DType], optional): If given, a slot is added for each of the entries, specifying the
                 its respective center as (x,y) tuple. Defaults to None, which results in a single slot added at the origin.
             pos: Shorthand for positions parameter, only use one of them.
@@ -267,36 +347,190 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        action = lambda x: x.slot(w, h, angle=angle)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        if width is not None and height is not None:
+            return self.__slot_w_h(width, height, mode=Sketch.CqMode.Add, angle=angle,
+                                   positions=positions, pos=pos)
+        if start is not None and end is not None:
+            return self.__slot_start_end(start, end, mode=Sketch.CqMode.Add, r=r, radius=radius, d=d, diameter=diameter,
+                                         positions=positions, pos=pos)
+        raise ValueError("invalid parameters. Either width and height or start and end must be specified")
+
 
     def cut_slot(self,
-                 w: float,
-                 h: float,
                  *,
+                 width: Optional[float] = None,
+                 height: Optional[float] = None,
                  angle: float = 0,
+                 start: Optional[Vector2DType] = None,
+                 end: Optional[Vector2DType] = None,
+                 r: Optional[float] = None,
+                 radius: Optional[float] = None,
+                 d: Optional[float] = None,
+                 diameter: Optional[float] = None,
                  positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
                  pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
                  ) -> 'Sketch':
         """
-        Cuts a slot from sketch. The slot is defined by a width and height, and an angle of rotation. By default (rotation is 0),
-        the slot is parallel to the x-axis. The width is the non-rounded part along the x-axis and the height is the extent
-        along the y-axis.
-        The part is centered at the origin unless the positions paramter is specified.
+        Cuts a slot from the sketch. The slot is either defined by a width, height and an angle of rotation,
+        or by two points and a radius. One of the two methods must be used.
+
+        When using the width and height method, the slot is parallel to the x-axis.
+        The width is the non-rounded part along the x-axis and the height is
+        the extent along the y-axis. The part is centered at the origin unless the positions parameter is specified.
+        If the angle parameter is specified, the slot is rotated around its center by the given angle.
+
+        When using the two points method, the slot is defined by two points and a radius.
+        Use the start, end and one of the r, radius, d or diameter parameters to specify the slot.
 
         Args:
-            w (float): The width of the slot, the part without the rounded sides.
-            h (float): The height of the slot.
+            width (float, optional): The width of the slot, the part without the rounded sides.
+            heigth (float, optional): The height of the slot.
             angle (float, optional): The angle of rotation for the slot. Defaults to 0, which means the slot is parallel to the x-axis.
-            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a slot is added for each of the entries, specifying the
-                its respective center as (x,y) tuple. Defaults to None, which results in a single slot added at the origin.
+            start (Vector2DType): The start point of the slot.
+            end (Vector2DType): The end point of the slot.
+            r (float, optional): The radius of the slot (alternative to 'radius', 'd' or 'diameter').
+            radius (float, optional): The radius of the slot (alternative to 'r', 'd' or 'diameter').
+            d (float, optional): The diameter of the slot (alternative to 'r', 'radius' or 'diameter').
+            diameter (float, optional): The diameter of the slot (alternative to 'r', 'radius' or 'd').
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, a slot is cut for each of the entries, specifying the
+                its respective center as (x,y) tuple. Defaults to None, which results in a single slot cut at the origin.
             pos: Shorthand for positions parameter, only use one of them.
 
         Returns:
             Sketch: The updated sketch object.
         """
-        action = lambda x: x.slot(w, h, angle=angle, mode="s")
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        if width is not None and height is not None:
+            return self.__slot_w_h(width, height, mode=Sketch.CqMode.Substract, angle=angle,
+                                   positions=positions, pos=pos)
+        if start is not None and end is not None:
+            return self.__slot_start_end(start, end, mode=Sketch.CqMode.Substract, r=r, radius=radius, d=d, diameter=diameter,
+                                         positions=positions, pos=pos)
+        raise ValueError("invalid parameters. Either width and height or start and end must be specified")
+
+
+    def __slot_w_h(self,
+                   w: float,
+                   h: float,
+                   mode: str,
+                   *,
+                   angle: float = 0,
+                   positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                   pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                   ) -> 'Sketch':
+        slot = Sketch(cq.Sketch())
+        slot.add_rect(w, h, center=True)
+        slot.add_circle(diameter=h, pos=(-w / 2, 0))
+        slot.add_circle(diameter=h, pos=(+w / 2, 0))
+
+        self.__combine_sketch(slot, mode, positions=positions, angle=angle, pos=pos)
+        return self
+
+    def __slot_start_end(self,
+                         start: Vector2DType,
+                         end: Vector2DType,
+                         mode: str,
+                         *,
+                         r: Optional[float] = None,
+                         radius: Optional[float] = None,
+                         d: Optional[float] = None,
+                         diameter: Optional[float] = None,
+                         positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                         pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                         ) -> 'Sketch':
+        radius = get_radius(r, radius, d, diameter)
+        x1, y1 = start
+        x2, y2 = end
+        dx, dy = x2 - x1, y2 - y1
+
+        slot = Sketch(cq.Sketch())
+        angle = cq.Vector(dx, dy).getSignedAngle(cq.Vector(1, 0)) * 180 / pi
+        length = cq.Vector(dx, dy).Length
+        slot.add_rect(length, 2 * radius, center="Y", angle=angle, pos=start)
+        slot.add_circle(r=radius, pos=start)
+        slot.add_circle(r=radius, pos=end)
+
+        self.__combine_sketch(slot, mode, positions=positions, pos=pos)
+        return self
+
+    def add_sketch(self,
+                   sketch: 'Sketch',
+                   *,
+                   angle: float = 0,
+                   positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                   pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                   ) -> 'Sketch':
+        """
+        Adds another sketch to the sketch object.
+
+        Args:
+            sketch (Sketch): The sketch to add.
+            angle (float, optional): The angle of rotation. Defaults to 0.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, the sketch is added for each of the entries,
+                specifying the position as (x,y) tuple. Defaults to None, which results in the sketch added once at the origin.
+            pos: Shorthand for positions parameter, only use one of them.
+
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        return self.__combine_sketch(sketch, Sketch.CqMode.Add, angle=angle, positions=positions, pos=pos)
+
+    def cut_sketch(self,
+                   sketch: 'Sketch',
+                   *,
+                   angle: float = 0,
+                   positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                   pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                   ) -> 'Sketch':
+        """
+        Cuts another sketch away from the sketch object.
+
+        Args:
+            sketch (Sketch): The sketch to cut.
+            angle (float, optional): The angle of rotation. Defaults to 0.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, the sketch is cut for each of the entries,
+                specifying the position as (x,y) tuple. Defaults to None, which results in the sketch cut once at the origin.
+            pos: Shorthand for positions parameter, only use one of them.
+
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        return self.__combine_sketch(sketch, Sketch.CqMode.Substract, angle=angle, positions=positions, pos=pos)
+
+
+    def intersect_sketch(self,
+                         sketch: 'Sketch',
+                         *,
+                         angle: float = 0,
+                         positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                         pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                         ) -> 'Sketch':
+        """
+        Intersects another sketch away from the sketch object.
+
+        Args:
+            sketch (Sketch): The sketch to intersect with.
+            angle (float, optional): The angle of rotation. Defaults to 0.
+            positions (Vector2DType | Iterable[Vector2DType], optional): If given, the sketch is cut for each of the entries,
+                specifying the position as (x,y) tuple. Defaults to None, which results in the sketch intersected once at the origin.
+            pos: Shorthand for positions parameter, only use one of them.
+
+        Returns:
+            Sketch: The updated sketch object.
+        """
+        return self.__combine_sketch(sketch, Sketch.CqMode.Intersect, angle=angle, positions=positions, pos=pos)
+
+    def __combine_sketch(self,
+                         sketch: 'Sketch',
+                         mode: str,
+                         *,
+                         angle: float = 0,
+                         positions: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None,
+                         pos: Optional[Union[Vector2DType, Iterable[Vector2DType]]] = None
+                         ) -> 'Sketch':
+        res = cq.Compound.makeCompound([sketch.__sketch._faces])
+        action = lambda x: x.face(res, angle=angle, mode=mode)
+        return self.__perform_action(action, get_positions(positions, pos))
+
 
     def add_import_dxf(self,
                        dxf_filename: str,
@@ -320,7 +554,7 @@ class Sketch:
 
         """
         action = lambda x: x.importDXF(dxf_filename, tol=tolerance)
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        return self.__perform_action(action, get_positions(positions, pos))
 
     def cut_import_dxf(self,
                        dxf_filename: str,
@@ -342,8 +576,8 @@ class Sketch:
         Returns:
             Sketch: The updated sketch object.
         """
-        action = lambda x: x.importDXF(dxf_filename, tol=tolerance, mode="s")
-        return self.__perform_action(action, self.__get_positions(positions, pos))
+        action = lambda x: x.importDXF(dxf_filename, tol=tolerance, mode=Sketch.CqMode.Substract)
+        return self.__perform_action(action, get_positions(positions, pos))
 
     def _select_vertices(self,
                          query: Union[str, Vector2DType, Iterable[Vector2DType]]
@@ -435,6 +669,74 @@ class Sketch:
         self.__sketch = self.__sketch.moved(cq.Location(cq.Vector(translationVector)))
         return self
 
+
+    def move_to_origin(self, axis: CenterDefinition2DType = True) -> 'Sketch':
+        """
+        Moves the sketch to the origin, i.e. that the lower corner of the bounding box is at the origin.
+
+        Args:
+            axis (CenterDefinition2DType, optional):
+                Can be "X" or "Y" to move the object in only one direction or True which moves the sketch in both directions.
+                If False, the sketch will be not moved at all.
+                Defaults to True.
+        """
+        dim = self.get_extent()
+        axis_flags = get_center_flags(axis)
+
+        def get_translate_value(entry) -> float:
+            (dim_min, _), _axis = entry
+            return -dim_min if _axis else 0
+
+        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xy, axis_flags)))
+        if not isinstance(move_vector, tuple) or len(move_vector) != 2:
+            raise Exception("cadscript internal error: should not reach this point")
+        return self.move(move_vector)
+
+    def center(self, center: CenterDefinition2DType = True) -> 'Sketch':
+        """
+        Centers the sketch at the origin.
+
+        Args:
+            center (CenterDefinition2DType, optional):
+                Can be "X" or "Y" to move the object in only one direction or True which moves the sketch in both directions.
+                If False, the sketch will be not moved at all.
+                Defaults to True.
+
+        """
+        dim = self.get_extent()
+        center_flags = get_center_flags(center)
+
+        def get_translate_value(entry) -> float:
+            (dim_min, dim_max), centered = entry
+            return -(dim_min + dim_max) / 2 if centered else 0
+
+        move_vector = tuple(map(get_translate_value, zip(dim.tuple_xy, center_flags)))
+        if not isinstance(move_vector, tuple) or len(move_vector) != 2:
+            raise Exception("cadscript internal error: should not reach this point")
+        return self.move(move_vector)
+
+    def mirror(self, axis: Axis2DType, copy_and_merge: bool = True) -> 'Sketch':
+        """
+        Mirrors the sketch object.
+
+        Args:
+            axis (Axis2DType): The axis to mirror the sketch object along.
+            copy_and_merge (bool, optional): If True, the sketch is mirrored and merged with the original sketch.
+                If False, the original sketch is replaced by the mirrored sketch. Defaults to True.
+
+        Returns:
+            Sketch: The mirrored sketch object.
+        """
+        res = cq.Compound.makeCompound([self.__sketch._faces])
+        mirror_plane = "YZ" if axis == "X" else "XZ" if axis == "Y" else None
+        if mirror_plane is None:
+            raise ValueError("Invalid axis. Must be 'X' or 'Y'")
+        mirrored = cq.Sketch().face(cq.Compound.makeCompound(res.mirror(mirror_plane)))
+        if not copy_and_merge:
+            self.__sketch = mirrored
+            return self
+        return self.add_sketch(Sketch(mirrored))
+
     def rotate(self,
                degrees
                ) -> 'Sketch':
@@ -475,3 +777,16 @@ class Sketch:
         pos_list = [(v.X, v.Y) for v in self.__sketch._selection if isinstance(v, cq.Vertex)]
         self.__sketch.reset()  # delete selection again
         return pos_list
+
+    def get_extent(self) -> Interval2D:
+        """
+        Returns the extent of the bounding box of the sketch.
+        """
+        faces = [s for s in self.__sketch.faces() if isinstance(s, cq.Shape)]
+        if not faces:
+            return Interval2D(0, 0, 0, 0)
+
+        bb = faces[0].BoundingBox()
+        for s in faces[1:]:
+            bb.add(s.BoundingBox())
+        return Interval2D(bb.xmin, bb.xmax, bb.ymin, bb.ymax)
