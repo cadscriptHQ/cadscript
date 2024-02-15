@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5] - work in progress
+## [0.5] - 2024-02-15
 
 - make_box(): center param accessible as named param only
 - make_text(): added center param, center as default
