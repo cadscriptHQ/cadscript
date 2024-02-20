@@ -66,6 +66,9 @@ class Interval1D:
             raise ValueError("Interval is too small to shrink")
         return self.set(self.x1 + offset, self.x2 - offset)
 
+    def move(self, offset: float) -> 'Interval1D':
+        return self.set(self.x1 + offset, self.x2 + offset)
+
 
 class Interval2D:
     """
@@ -191,6 +194,10 @@ class Interval2D:
 
     def shrink(self, offset: float, raise_if_zero: bool = True) -> 'Interval2D':
         return self.shrink_x(offset, raise_if_zero).shrink_y(offset, raise_if_zero)
+
+    def move(self, offset: Vector2DType) -> 'Interval2D':
+        return self.set(self.x1 + offset[0], self.x2 + offset[0], 
+                        self.y1 + offset[1], self.y2 + offset[1])
 
 
 class Interval3D:
@@ -355,3 +362,8 @@ class Interval3D:
 
     def shrink(self, offset: float, raise_if_zero: bool = True) -> 'Interval3D':
         return self.shrink_x(offset, raise_if_zero).shrink_y(offset, raise_if_zero).shrink_z(offset, raise_if_zero)
+
+    def move(self, offset: Vector3DType) -> 'Interval3D':
+        return self.set(self.x1 + offset[0], self.x2 + offset[0],
+                        self.y1 + offset[1], self.y2 + offset[1],
+                        self.z1 + offset[2], self.z2 + offset[2])
