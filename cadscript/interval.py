@@ -44,7 +44,7 @@ class Interval1D:
 
     @property
     def max(self) -> float:
-        return self.x1
+        return self.x2
 
     @property
     def size(self) -> float:
