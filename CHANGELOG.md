@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.1] - 2024-02-20
+
+- fix in Interval1D.max
+- added move() methods in interval classes
+
 ## [0.5] - 2024-02-15
 
 - make_box(): center param accessible as named param only
