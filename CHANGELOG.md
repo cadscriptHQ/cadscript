@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.2] - 2024-02-22
+
+- new functions make_extrude_x(), make_extrude_y(), and make_extrude_z()
+- new param center for make_extrude(), bug fixes
+
 ## [0.5.1] - 2024-02-20
 
 - fix in Interval1D.max

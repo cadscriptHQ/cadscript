@@ -130,31 +130,143 @@ def make_cylinder(*,
 
 def make_extrude(plane: Union[ConstructionPlane, str],
                  sketch: Sketch,
-                 amount: DimensionDefinitionType
+                 amount: DimensionDefinitionType,
+                 center: bool = False
                  ) -> 'Body':
     """
     Create an extrusion from a sketch.
 
     Args:
         plane (Union[ConstructionPlane,str]): The plane to extrude on.
-            Can be one of the strings "XY", "YZ", "XZ", "front", "back", "top", "bottom", "left" or "right"
+            Can be one of the strings "XY", "YZ", "ZX", "XZ", "YX", "ZY".
+
         sketch (Sketch): The sketch to extrude.
         amount (float): The amount of extrusion. Can also be a tuple of two floats to extrude between two planes with the given offsets.
+        center (CenterDefinitionType, optional): Whether to center the extrusion at the plane. 
+            If False, the extrusion will start from the plane.
+            If True, the extrusion will be centered at the plane. 
+            If amount is a tuple, this parameter is ignored. 
+            Defaults to False.
+
+    Returns:
+        Body: The extruded body.
+
+    Remarks:
+        The places are defined as follows. Directions refer to
+        the global directions.
+        =========== ======= ======= ======
+        Plane       xDir    yDir    zDir
+        =========== ======= ======= ======
+        XY          +x      +y      +z
+        YZ          +y      +z      +x
+        ZX          +z      +x      +y
+        XZ          +x      +z      -y
+        YX          +y      +x      -z
+        ZY          +z      +y      -x
+        =========== ======= ======= ======
+    """
+    if isinstance(plane, ConstructionPlane):
+        wp = plane.cq()
+    elif isinstance(plane, str):
+        wp = cq.Workplane(plane)
+    elif isinstance(plane, cq.Workplane):
+        wp = plane
+    else:
+        raise ValueError("Invalid plane parameter type")
+
+    dim = get_dimension(amount, center)
+
+    if abs(dim.min) > 1e-6:
+        # introduce construction plane and extrude from there
+        wp = wp.workplane(offset=dim.min)
+
+    extr = wp.placeSketch(sketch.cq()).extrude(dim.size, False)
+    return Body(extr)
+
+
+def make_extrude_x(sketch: Sketch,
+                   amount: DimensionDefinitionType,
+                   center: bool = False
+                   ) -> 'Body':
+    """
+    Create an extrusion from a sketch at the origin in the x direction.
+    The x direction of the sketch will be aligned with the global y direction.
+    The y direction of the sketch will be aligned with the global z direction.
+
+    Args:
+        sketch (Sketch): The sketch to extrude.
+        amount (float): The amount of extrusion in positive x direction (global coordinates).
+                Can also be a tuple of two floats to extrude between two planes with the given offsets.
+        center (CenterDefinitionType, optional): Whether to center the extrusion at the orogin. 
+            If False, the extrusion will start from the origin.
+            If True, the extrusion will be centered at the origin. 
+            If amount is a tuple, this parameter is ignored. Defaults to False.
 
     Returns:
         Body: The extruded body.
     """
-    if isinstance(amount, (float, int)):
-        if isinstance(plane, str):
-            wp = cq.Workplane(plane)
-        else:
-            wp = plane.cq()
-        extr = wp.placeSketch(sketch.cq()).extrude(amount, False)
-        return Body(extr)
-    else:
-        dim = get_dimension(amount, False)
-        start_plane = make_construction_plane(plane, dim.min)
-        return make_extrude(start_plane, sketch, dim.size)
+    plane = ConstructionPlane(cq.Workplane("YZ"))
+    return make_extrude(plane, sketch, amount, center)
+
+
+def make_extrude_y(sketch: Sketch,
+                   amount: DimensionDefinitionType,
+                   center: bool = False
+                   ) -> 'Body':
+    """
+    Create an extrusion from a sketch at the origin in the y direction.
+    The x direction of the sketch will be aligned with the global x direction.
+    The y direction of the sketch will be aligned with the global z direction.
+
+    Args:
+        sketch (Sketch): The sketch to extrude.
+        amount (float): The amount of extrusion in positive y direction (global coordinates).
+                Can also be a tuple of two floats to extrude between two planes with the given offsets.
+        center (CenterDefinitionType, optional): Whether to center the extrusion at the orogin. 
+            If False, the extrusion will start from the origin.
+            If True, the extrusion will be centered at the origin. 
+            If amount is a tuple, this parameter is ignored. Defaults to False.
+
+    Returns:
+        Body: The extruded body.
+
+    Remarks:
+        Please note that this function does not do the same as using :meth:`make_extrude` 
+        with "XZ" as the plane parameter.
+        The "XZ" plane has its normal in negative y direction, while this function uses
+        global coordinates and extrudes in positive y direction therefore.
+    """
+    # special case for y extrusion:
+    # the plane "XZ" has its normal in negative y direction,
+    # but we want to extrude in positive y direction (global coordinates)
+    # so we use the "XZ" plane and mirror the result
+    plane = ConstructionPlane(cq.Workplane("XZ"))
+    return make_extrude(plane, sketch, amount, center).mirror("Y", copy_and_merge=False)
+
+
+def make_extrude_z(sketch: Sketch,
+                   amount: DimensionDefinitionType,
+                   center: bool = False
+                   ) -> 'Body':
+    """
+    Create an extrusion from a sketch at the origin in the z direction.
+    The x direction of the sketch will be aligned with the global x direction.
+    The y direction of the sketch will be aligned with the global y direction.
+
+    Args:
+        sketch (Sketch): The sketch to extrude.
+        amount (float): The amount of extrusion in positive z direction (global coordinates).
+                Can also be a tuple of two floats to extrude between two planes with the given offsets.
+        center (CenterDefinitionType, optional): Whether to center the extrusion at the orogin. 
+            If False, the extrusion will start from the origin.
+            If True, the extrusion will be centered at the origin. 
+            If amount is a tuple, this parameter is ignored. Defaults to False.
+
+    Returns:
+        Body: The extruded body.
+    """
+    plane = ConstructionPlane(cq.Workplane("XY"))
+    return make_extrude(plane, sketch, amount, center)
 
 
 def make_text(text: str,
