@@ -1,5 +1,11 @@
 # Changelog
 
+
+
+## [0.5.3] - 2024-07-10
+
+- FIX: dxf export results in error with newer cadquery versions #12
+
 ## [0.5.2] - 2024-02-22
 
 - new functions make_extrude_x(), make_extrude_y(), and make_extrude_z()
