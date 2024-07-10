@@ -5,6 +5,7 @@
 ## [0.5.3] - 2024-07-10
 
 - FIX: dxf export results in error with newer cadquery versions #12
+- FIX: introduced dependency to numpy<2, as current cadquery version (2.4, dev) is incompatible with new numpy 2.0 #13
 
 ## [0.5.2] - 2024-02-22
 
