@@ -1,1 +1,4 @@
-cadquery
+# current caadquery 2.4 has an issue with numpy 2.0
+# see https://github.com/CadQuery/cadquery/issues/1616
+numpy<2
+cadquery>=2.4
