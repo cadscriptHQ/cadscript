@@ -3,6 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python>=3.8,<=3.12
+  - numpy~=1.26
   - ipython
   - ocp=7.7.2
   - vtk=*=qt*
@@ -27,7 +28,7 @@ dependencies:
   - appdirs
   - pip
   - recommonmark
-  - cadquery
+  - cadquery>=2
   - pip:
     - sphinx-toolbox>=3.5.0
   

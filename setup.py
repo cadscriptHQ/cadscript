@@ -11,7 +11,8 @@ setup(
     author_email='mail@andreaskahler.com',
     packages=find_packages(),
     install_requires=[
-        'cadquery'
+        'numpy~=1.26',
+        'cadquery>=2'
     ],
     python_requires=">=3.8",
     classifiers=[
