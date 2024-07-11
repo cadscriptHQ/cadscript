@@ -166,21 +166,22 @@ class cadscript_directive(cq_directive_vtk):
             lines.extend(text)
             lines.append("")
 
+        lines.append(".. raw:: html")
+        lines.append("")
         if "side-by-side" in options:
-            lines.append(".. raw:: html")
-            lines.append("")
-            lines.append("    <div class=\"side-by-side\"><div class=\"leftside\">")
-            lines.append("")
+            lines.append("    <div class=\"cq-side-by-side\"><div class=\"leftside\">")
+        else:
+            lines.append("    <div class=\"cq-top-bottom\"><div class=\"cq-top\">")
+        lines.append("")
 
         lines.extend(["", "::", ""])
         lines.extend(["    %s" % row.rstrip() for row in script.split("\n")])
         lines.append("")
 
-        if "side-by-side" in options:
-            lines.append(".. raw:: html")
-            lines.append("")
-            lines.append("    </div>")
-            lines.append("")
+        lines.append(".. raw:: html")
+        lines.append("")
+        lines.append("    </div>")
+        lines.append("")
 
         try:
             result = cqgi.parse(plot_code).build()
@@ -214,11 +215,10 @@ class cadscript_directive(cq_directive_vtk):
             traceback.print_exc()
             assy = Assembly(Compound.makeText("CQGI error", 10, 5))
 
-        if "side-by-side" in options:
-            lines.append("")
-            lines.append(".. raw:: html")
-            lines.append("")
-            lines.append("    </div>")
+        lines.append("")
+        lines.append(".. raw:: html")
+        lines.append("")
+        lines.append("    </div>")
         lines.append("")
 
         return lines
