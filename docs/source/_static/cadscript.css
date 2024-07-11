@@ -12,8 +12,8 @@ div.rightside {
 }
 
 div.cq-side-by-side {  
-  padding: 1px;
-  border: 1px solid #ccc;
+  border-left: 4px solid #ccc;
+  margin-bottom: 10px;
 } 
 
 /* cq render after code */
