@@ -19,7 +19,7 @@ div.cq-side-by-side {
 /* cq render after code */
 
 
-div.cq-top > div.highlight-default { /* code block */
+div.cq-top > div.highlight { /* code block */
   margin-bottom: 0;
   border-left: 5px solid #ccc;
 }
@@ -36,4 +36,8 @@ table.docutils td p {
   text-wrap: wrap;
 }
 
-
+/* links in code */
+a.codelink, a.codelink:visited {
+  color: #0000FF;
+  text-decoration: underline #C0C0FF;
+}

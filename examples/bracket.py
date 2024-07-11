@@ -100,5 +100,4 @@ result = extr2.intersect(extr1)
 
 # STEP 14 dummy step to show whole script in documentation
 # The complete script looks like this:
-
 cadscript.show(result)
