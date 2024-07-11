@@ -1,4 +1,4 @@
-.. _examples:
+.. _examples_sketch:
 
 .. currentmodule:: cadscript
 
