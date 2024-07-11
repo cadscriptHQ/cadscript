@@ -16,11 +16,8 @@ Contents
 
    intro_getting_started
    intro_installation
-   doc_sketch_examples
-   ref_module_functions
-   ref_body
-   ref_sketch
-   doc_query_string
+   examples_
+   ref_
 
 .. sidebar-links::
    :github:
