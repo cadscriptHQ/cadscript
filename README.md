@@ -15,7 +15,7 @@ Cadscript is based on [CadQuery](https://github.com/CadQuery/cadquery/), a Pytho
 
 ## Status
 
-Cadscript is still in development. Version 1.0 will be the first release. Until then expect API changes to happen without prior annoucements. If you want to make sure your scripts don't break, use a specific version, e.g. 0.2.
+Cadscript is still in development. Version 1.0 will be the first release. Until then expect API changes to happen without prior annoucements. If you want to make sure your scripts don't break, use a specific version, e.g. 0.5.
 
 ## Why Cadscript?
 
@@ -23,7 +23,7 @@ Using Python, you have a simple, yet powerful scripting language. With Cadscript
 
 ### Why not CadQuery?
 
-CadQuery already is a Python module wrapping the Open Cascade kernel. It is a very feature-rich module, making most of the many Open Cascade functionalities available to the Python programmer. But in our feeling, it still is a bit to complex. If you are new to CadQuery it is bit hard to find your way around. We were looking for something simpler, a bit like [OpenSCAD](http://openscad.org/).
+CadQuery already is a Python module wrapping the Open Cascade kernel. It is a very feature-rich module, making most of the many Open Cascade functionalities available to the Python programmer. But in our feeling, it still is a bit too complex. If you are new to CadQuery it is bit hard to find your way around. We were looking for something simpler, a bit like [OpenSCAD](http://openscad.org/).
 
 ### Why not OpenSCAD?
 
@@ -59,7 +59,6 @@ For more details consult the [documentation](https://cadscript.readthedocs.io/).
 * Export: DFX, SVG (Sketches), SVG (3D rendering), STEP, STL
 * Compatibility with CadQuery
 * CQ-Editor integration
-* Jupyter integration (TODO, planned for version 1.0)
 * Construction planes (TODO, planned for version 1.0)
 * Revolve and loft operation (TODO, planned for version 1.0)
 * Assemblies (TODO, planned for version 1.0)
