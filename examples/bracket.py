@@ -69,7 +69,7 @@ sketch2.add_circle(d=26, pos=(0, 10))
 # We add a fillet now. We want only the point where the circle and the rectangle meet
 # at a sharp angle.
 # The search string ">>X" sorts all points (also called vertices) in positive X direction.
-# The "[1]" selects the second point in that list, which is the one we want.
+# The "[1]" selects the second point in that list (first in the list has index 0), which is the one we want.
 # ">>X[0]" would select the point where the circle and the rectangle meet at the bottom.
 # ">>X[2]" returns the corners of the rectangle at the right side. Here two points are selected,
 # because they both have the same X coordinate.

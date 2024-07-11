@@ -26,7 +26,7 @@ class Body:
         Fillets the specified edges of the body.
 
         Args:
-            edgesStr (str): The edges to fillet.
+            edgeQuery (str): The edges to fillet. The query syntax is documented at :ref:`query_edges`. 
             amount (float): The radius of the fillet.
 
         Returns:
@@ -41,7 +41,7 @@ class Body:
         Chamfers the specified edges of the body.
 
         Args:
-            edgesStr (str): The edges to chamfer.
+            edgeQuery (str): The edges to chamfer. The query syntax is documented at :ref:`query_edges`. 
             amount (float): The distance of the chamfer.
 
         Returns:

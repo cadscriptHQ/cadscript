@@ -20,6 +20,7 @@ Contents
    ref_module_functions
    ref_body
    ref_sketch
+   doc_query_string
 
 .. sidebar-links::
    :github:

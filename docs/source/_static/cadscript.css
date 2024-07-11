@@ -13,3 +13,7 @@ div.side-by-side {
   padding: 1px;
   border: 1px solid #ccc;
 } 
+
+table.docutils td p {
+  text-wrap: wrap;
+}
