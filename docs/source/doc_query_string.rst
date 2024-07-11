@@ -18,7 +18,7 @@ The following methods allow you to select points (aka vertices) in a sketch base
     * :py:meth:`Sketch.chamfer` 
     * :py:meth:`Sketch.fillet` 
 
-The following query strings are supported:
+The following query bits are supported:
 
 .. list-table:: 
    :header-rows: 1
@@ -42,11 +42,11 @@ The following query strings are supported:
      - >>X[1]
      - The search string ">>X" sorts all vertices in positive X direction.\ 
        The "[1]" selects the second vertex (or list of vertices with the\ 
-       same distance) in that list (first in the list has index 0).
+       same position) in that list (first in the list has index 0).
    * - <<[]
      - <<Y[2]
-     - The search string "<<Y" sorts all vertices in nagative Y direction.\ 
-       Returns the third vertex (or list of vertices with the same distance)\ 
+     - The search string "<<Y" sorts all vertices in negative Y direction.\ 
+       Returns the third vertex (or list of vertices with the same position)\ 
        in that list.
    * - or
      - >Y or <Y
@@ -56,9 +56,77 @@ The following query strings are supported:
      - Vertices farthest in the positive y dir and negative x dir
    * - not
      - not >Y
-     - Vertices not farthest in the positive y dir  
+     - All vertices but farthest in the positive y dir  
 
 
 
+.. _query_edges:
 
+Selecting Edges
+---------------
+
+
+The following methods allow you to select points (aka vertices) in a sketch based on a query string. 
+
+.. hlist::
+
+    * :py:meth:`Body.chamfer` 
+    * :py:meth:`Body.fillet` 
+
+The following query bits are supported:
+
+
+
+.. list-table:: 
+   :header-rows: 1
+
+   * - Query
+     - Example
+     - Selects
+   * - \* 
+     - \*
+     - Selects all edges
+   * - ALL
+     - ALL
+     - Selects all edges
+   * - \+
+     - \+Z
+     - Edges aligned in the Z direction
+   * - \|
+     - \|Z
+     - Edges parallel to z direction
+   * - #
+     - #Z
+     - Edges perpendicular to z direction
+   * - >
+     - >Y
+     - Edges farthest in positive y direction
+   * - <
+     - <Y
+     - Edges closest in positive y direction
+   * - >>[]
+     - >>Y[1]
+     - The search string ">>Y" sorts all edges in positive Y direction.\ 
+       The "[1]" selects the second edge (or list of edges with the\ 
+       same position) in that list (first in the list has index 0).
+   * - <<[]
+     - <<Y[0]
+     - The search string "<<Y" sorts all edges in negative Y direction.\ 
+       The "[0]" selects the first edge (or list of edges with the\ 
+       same position) in that list.
+   * - >[]
+     - >Y[1]
+     - Sorts all **parallel** edges in the positive y direction, gets the second one.
+   * - <[]
+     - <Y[2]
+     - Sorts all **parallel** edges in the negative y direction, gets the third one.
+   * - or
+     - >Y or <Y
+     - Edges farthest in the positive or negative y dir
+   * - and
+     - >Y and <X
+     - Edges farthest in the positive y dir and negative x dir
+   * - not
+     - not >Y
+     - All edges but the farthest in the positive y dir  
 

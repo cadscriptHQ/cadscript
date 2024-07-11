@@ -610,7 +610,7 @@ class Sketch:
 
         Args:
             query (str | Vector2DType | Iterable[Vector2DType]): The vertices to fillet.
-                The query string is documented at :ref:`query_vertices`. 
+                The query syntax is documented at :ref:`query_vertices`. 
                 You can also pass a point or a list of points to fillet the nearest vertices.
             radius (float): The fillet radius.
 
@@ -631,7 +631,7 @@ class Sketch:
 
         Args:
             query (str | Vector2DType | Iterable[Vector2DType]): The vertices to chamfer.
-                The query string is documented at :ref:`query_vertices`. 
+                The query syntax is documented at :ref:`query_vertices`. 
                 You can also pass a point or a list of points to chamfer the nearest vertices.
             amount (float): The chamfer amount.
 
