@@ -12,6 +12,7 @@ import cadquery
 from cadquery.occ_impl.assembly import toJSON
 from cadquery.occ_impl.jupyter_tools import DEFAULT_COLOR
 from docutils.parsers.rst import directives
+from sphinx.application import Sphinx
 
 from cadquery.cq_directive import cq_directive_vtk, template_vtk, rendering_code
 
@@ -44,6 +45,8 @@ template_img = """
     </div>
 
 """
+
+theapp = None
 
 
 class cadscript_directive(cq_directive_vtk):
@@ -90,7 +93,7 @@ class cadscript_directive(cq_directive_vtk):
                 pre_script, script, text = self.get_source_file(content, options.get("steps", None), "text_from_comment" in options)
         else:
             # else use inline code
-            script = "\n".join(script)        
+            script = "\n".join(script)
 
         # add the prefix and postfix
         plot_code = prefix + "\n" + pre_script + "\n" + script + "\n" + postfix.format(result_var=result_var)
@@ -166,21 +169,20 @@ class cadscript_directive(cq_directive_vtk):
             lines.extend(text)
             lines.append("")
 
+        lines.append(".. raw:: html")
+        lines.append("")
         if "side-by-side" in options:
-            lines.append(".. raw:: html")
-            lines.append("")
-            lines.append("    <div class=\"side-by-side\"><div class=\"leftside\">")
-            lines.append("")
-
-        lines.extend(["", "::", ""])
-        lines.extend(["    %s" % row.rstrip() for row in script.split("\n")])
+            lines.append("    <div class=\"cq-side-by-side\"><div class=\"leftside\">")
+        else:
+            lines.append("    <div class=\"cq-top-bottom\"><div class=\"cq-top\">")
         lines.append("")
 
-        if "side-by-side" in options:
-            lines.append(".. raw:: html")
-            lines.append("")
-            lines.append("    </div>")
-            lines.append("")
+        lines.extend(self.generate_code_block(script))
+
+        lines.append(".. raw:: html")
+        lines.append("")
+        lines.append("    </div>")
+        lines.append("")
 
         try:
             result = cqgi.parse(plot_code).build()
@@ -214,11 +216,10 @@ class cadscript_directive(cq_directive_vtk):
             traceback.print_exc()
             assy = Assembly(Compound.makeText("CQGI error", 10, 5))
 
-        if "side-by-side" in options:
-            lines.append("")
-            lines.append(".. raw:: html")
-            lines.append("")
-            lines.append("    </div>")
+        lines.append("")
+        lines.append(".. raw:: html")
+        lines.append("")
+        lines.append("    </div>")
         lines.append("")
 
         return lines
@@ -294,6 +295,74 @@ class cadscript_directive(cq_directive_vtk):
         ).splitlines()
 
 
+    def generate_code_block(self, code):
+        """
+        Generate a code block with links to the documentation for method calls.
+        """
+        highlighter = theapp.builder.highlighter
+
+        body_prefixes = ["body", "box", "result", "extr"]
+        sketch_prefixes = ["sketch", "s"]
+        cadscript_prefixes = ["cad", "cadscript"]
+
+        # Regular expression to find method calls like obj.method(
+        # in html the string looks like
+        # <span class="n">cadscript</span><span class="o">.</span><span class="n">make_box</span><span class="p">(
+
+        method_call_pattern = re.compile(
+            r'\<span\s+class\=\"n\"\>'  # <span class="n">
+            r'\s*(\w+)\s*'              # methodName
+            r'\<\/span\>\s*'            # </span>
+            r'\<span\s+class\=\"o\"\>'  # <span class="o">
+            r'\s*\.\s*'                 # .
+            r'\<\/span\>\s*'            # </span>
+            r'\<span\s+class\=\"n\"\>'  # <span class="n">
+            r'\s*(\w+)\s*'              # methodName
+            r'\<\/span\>\s*'            # </span>
+            r'\<span\s+class\=\"p\"\>'  # <span class="p">
+            r'\s*\('                    # (
+        )
+
+        # Function to replace method calls with links if they are documented
+        # class="n">(\w+)\.(\w+)\((.*?)\)')
+        def replace_method_call(match):
+            obj_name, method_name = match.groups()
+
+            # Determine which document to link based on the prefix
+            # todo: could be done by examining env.domaindata['py']['objects']
+            if any(obj_name.startswith(prefix) for prefix in body_prefixes):
+                link_target = f'ref_body.html#cadscript.Body.{method_name}'
+            elif any(obj_name.startswith(prefix) for prefix in sketch_prefixes):
+                link_target = f'ref_sketch.html#cadscript.Sketch.{method_name}'
+            elif any(obj_name.startswith(prefix) for prefix in cadscript_prefixes):
+                link_target = f'ref_module_functions.html#cadscript.{method_name}'
+            else:
+                return match.group(0)  # No replacement if prefix does not match
+
+            link = (
+                f'<span class="n">{obj_name}</span>'
+                f'<span class="o">.</span>'
+                f'<span class="n"><a class="codelink" href="{link_target}">{method_name}</a></span>'
+                f'<span class="p">('
+            )
+            return link
+
+
+        # Use Sphinx highlighter to generate HTML
+        highlighted_code = highlighter.highlight_block(code, 'python')
+
+        # Replace method calls with links
+        linked_code = method_call_pattern.sub(replace_method_call, highlighted_code)
+
+        lines = []
+        lines.append(".. raw:: html")
+        lines.append("")
+        lines.extend(["    %s" % line.rstrip() for line in linked_code.split("\n")])
+        lines.append("")
+
+        return lines
+
+
 
 class cadscript_auto_directive(cadscript_directive):
 
@@ -355,6 +424,12 @@ def setup(app):
     app.add_js_file("vtk.js")
     app.add_js_file(None, body=rendering_code)
 
+    app.connect("builder-inited", remember_app)
+
+
+def remember_app(app: Sphinx) -> None:
+    global theapp  # bad hack to remember the app object
+    theapp = app
 
 
 if __name__ == "__main__":

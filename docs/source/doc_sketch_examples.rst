@@ -41,15 +41,6 @@ Rectangles
 
 
 
-See also
-
-.. hlist::
-
-    * :py:meth:`cadscript.make_box` 
-    * :py:meth:`Sketch.add_rect` 
-
-
-
 Circles
 -------
 
@@ -74,10 +65,4 @@ Circles
     sketch.add_circle(d=40, pos=(20, 10))
 
 
-See also
-
-.. hlist::
-
-    * :py:meth:`cadscript.make_box` 
-    * :py:meth:`Sketch.add_circle` 
 
