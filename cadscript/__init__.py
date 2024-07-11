@@ -152,18 +152,29 @@ def make_extrude(plane: Union[ConstructionPlane, str],
         Body: The extruded body.
 
     Remarks:
-        The places are defined as follows. Directions refer to
+        The planes are defined as follows. Directions refer to
         the global directions.
-        =========== ======= ======= ======
-        Plane       xDir    yDir    zDir
-        =========== ======= ======= ======
-        XY          +x      +y      +z
-        YZ          +y      +z      +x
-        ZX          +z      +x      +y
-        XZ          +x      +z      -y
-        YX          +y      +x      -z
-        ZY          +z      +y      -x
-        =========== ======= ======= ======
+       
+        +-----------+-------+-------+-------+
+        | Plane     | xDir  | yDir  | zDir  |
+        +===========+=======+=======+=======+
+        | XY        | +x    | +y    | +z    |
+        +-----------+-------+-------+-------+
+        | YZ        | +y    | +z    | +x    |
+        +-----------+-------+-------+-------+
+        | ZX        | +z    | +x    | +y    |
+        +-----------+-------+-------+-------+
+        | XZ        | +x    | +z    | -y    |
+        +-----------+-------+-------+-------+
+        | YX        | +y    | +x    | -z    |
+        +-----------+-------+-------+-------+
+        | ZY        | +z    | +y    | -x    |
+        +-----------+-------+-------+-------+   
+
+        Please note that the "XZ" plane has its normal in negative y direction.
+
+        To avoid confusion, it is recommended to use the 
+        :meth:`make_extrude_x`, :meth:`make_extrude_y` or :meth:`make_extrude_z` functions     
     """
     if isinstance(plane, ConstructionPlane):
         wp = plane.cq()
