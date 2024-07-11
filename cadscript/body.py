@@ -21,7 +21,18 @@ class Body:
     def __init__(self, workplane: cq.Workplane):
         self.__wp = workplane
 
-    def fillet(self, edgesStr: str, amount: float) -> 'Body':
+    def _select_edges(self,
+                      query: str
+                      ) -> cq.Workplane:
+        '''
+        Selects edges in the body
+        '''
+        if query == "ALL" or query == "*":
+            return self.__wp.edges()
+        else:
+            return self.__wp.edges(query)
+
+    def fillet(self, edgeQuery: str, amount: float) -> 'Body':
         """
         Fillets the specified edges of the body.
 
@@ -32,11 +43,13 @@ class Body:
         Returns:
             Body: The modified body object.
         """
-        result = self.__wp.edges(edgesStr).fillet(amount)
-        self.__wp = result
+        selection = self._select_edges(edgeQuery)
+        if selection:
+            result = selection.fillet(amount)
+            self.__wp = result
         return self
 
-    def chamfer(self, edgesStr: str, amount: float) -> 'Body':
+    def chamfer(self, edgeQuery: str, amount: float) -> 'Body':
         """
         Chamfers the specified edges of the body.
 
@@ -47,8 +60,10 @@ class Body:
         Returns:
             Body: The modified body object.
         """
-        result = self.__wp.edges(edgesStr).chamfer(amount)
-        self.__wp = result
+        selection = self._select_edges(edgeQuery)
+        if selection:
+            result = selection.chamfer(amount)
+            self.__wp = result
         return self
 
     def move(self, translationVector: Vector3DType) -> 'Body':

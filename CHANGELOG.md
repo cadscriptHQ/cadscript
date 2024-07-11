@@ -1,6 +1,6 @@
 # Changelog
 
-
+- allow "ALL" and "*" for Body.chamfer() and Body.fillet()
 
 ## [0.5.3] - 2024-07-10
 
