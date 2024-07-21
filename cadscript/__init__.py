@@ -297,7 +297,7 @@ def make_revolve(axis: AxisType,
             Defaults to 360.
         start_axis (str, optional): The start axis of the revolution. Doesn't have an effect if angle is 360.
             Can be one of "X", "Y", "Z", "+X", "+Y", "+Z", "-X", "-Y", "-Z".
-            If not specified, the start axis will be "+Y" for the "X" axis, "+X" for the "Y" axis and "+X" for the "Z" axis.
+            If not specified, the start axis will be "+Y" for the "X" axis, "+Z" for the "Y" axis and "+X" for the "Z" axis.
             Revolution will be counter-clockwise around the axis (right-hand rule with axis in positive direction).
             
     Returns:
@@ -310,7 +310,7 @@ def make_revolve(axis: AxisType,
         start_axis_vec = __get_revolve_start_axis(start_axis, axis)
     elif axis == "Y":
         axis_vec = cq.Vector(0, 1, 0)
-        start_axis = start_axis or "+X"
+        start_axis = start_axis or "+Z"
         start_axis_vec = __get_revolve_start_axis(start_axis, axis)
     elif axis == "Z":
         axis_vec = cq.Vector(0, 0, 1)
