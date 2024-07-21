@@ -2,14 +2,17 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
+from math import cos, sin
+from operator import contains
 from pathlib import Path
 import tempfile
 import time
 import inspect
+from tracemalloc import start
 from typing import Literal, Optional, Union
 
 import cadquery as cq
-from .typedefs import DimensionDefinitionType, CenterDefinitionType
+from .typedefs import AxisType, DimensionDefinitionType, CenterDefinitionType
 
 from .body import Body
 from .sketch import Sketch
@@ -154,7 +157,7 @@ def make_extrude(plane: Union[ConstructionPlane, str],
     Remarks:
         The planes are defined as follows. Directions refer to
         the global directions.
-       
+
         +-----------+-------+-------+-------+
         | Plane     | xDir  | yDir  | zDir  |
         +===========+=======+=======+=======+
@@ -278,6 +281,80 @@ def make_extrude_z(sketch: Sketch,
     """
     plane = ConstructionPlane(cq.Workplane("XY"))
     return make_extrude(plane, sketch, amount, center)
+
+
+def make_revolve(axis: AxisType,
+                 sketch: Sketch,
+                 *,
+                 angle: DimensionDefinitionType = 360,
+                 start_axis: Optional[Literal["X", "Y", "Z", "+X", "+Y", "+Z", "-X", "-Y", "-Z"]] = None
+                 ) -> 'Body':
+    """
+    Create a revolved body from a sketch.
+
+    Args:
+        axis (AxisType): The axis of revolution. Can be one of "X", "Y" or "Z".
+        sketch (Sketch): The sketch to revolve.
+        angle (float, optional): The angle of revolution in degrees.
+            Can also be a tuple of two floats to revolve between two angles.
+            Defaults to 360.
+        start_axis (str, optional): The start axis of the revolution. Doesn't have an effect if angle is 360.
+            Can be one of "X", "Y", "Z", "+X", "+Y", "+Z", "-X", "-Y", "-Z".
+            If not specified, the start axis will be "+Y" for the "X" axis, "+X" for the "Y" axis and "+X" for the "Z" axis.
+            Revolution will be counter-clockwise around the axis (right-hand rule with axis in positive direction).
+            
+    Returns:
+        Body: The revolved body.
+    """
+
+    if axis == "X":
+        axis_vec = cq.Vector(1, 0, 0)
+        start_axis = start_axis or "+Y"
+        start_axis_vec = __get_revolve_start_axis(start_axis, axis)
+    elif axis == "Y":
+        axis_vec = cq.Vector(0, 1, 0)
+        start_axis = start_axis or "+X"
+        start_axis_vec = __get_revolve_start_axis(start_axis, axis)
+    elif axis == "Z":
+        axis_vec = cq.Vector(0, 0, 1)
+        start_axis = start_axis or "+X"
+        start_axis_vec = __get_revolve_start_axis(start_axis, axis)
+    else:
+        raise ValueError("Invalid axis parameter")
+
+    # we lay the sketch on a plane with rotation axis (axis_vec) up, and start axis to the right (start_axis_vec)
+    # Plane objects are defined by origin, xDir and normal, so we need to calculate the normal
+    normal = start_axis_vec.cross(axis_vec)
+    plane = cq.Plane(origin=cq.Vector(0, 0, 0), xDir=start_axis_vec, normal=normal)
+    if isinstance(angle, tuple):
+        # rotate the plane to the start angle
+        plane = plane.rotated(cq.Vector(0, angle[0], 0))
+        angle = angle[1] - angle[0]
+    wp = cq.Workplane(plane)
+    # revolve around the sketch y axis (up)
+    revolve = wp.placeSketch(sketch.cq()).revolve(axisStart=cq.Vector(0, 0, 0), axisEnd=cq.Vector(0, 1, 0), angleDegrees=angle)
+    return Body(revolve)
+
+
+def __get_revolve_start_axis(start_axis, axis):
+    vec = None
+    if start_axis == "X" or start_axis == "+X":
+        vec = cq.Vector(1, 0, 0)
+    elif start_axis == "-X":
+        vec = cq.Vector(-1, 0, 0)
+    elif start_axis == "Y" or start_axis == "+Y":
+        vec = cq.Vector(0, 1, 0)
+    elif start_axis == "-Y":
+        vec = cq.Vector(0, -1, 0)
+    elif start_axis == "Z" or start_axis == "+Z":
+        vec = cq.Vector(0, 0, 1)
+    elif start_axis == "-Z":
+        vec = cq.Vector(0, 0, -1)
+    if vec is None:
+        raise ValueError("Invalid start start_axis")
+    if str(axis) in str(start_axis):
+        raise ValueError("Start axis must be perpendicular to the revolution axis")
+    return vec
 
 
 def make_text(text: str,
