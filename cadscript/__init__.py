@@ -2,13 +2,10 @@
 # This file is part of Cadscript
 # SPDX-License-Identifier: Apache-2.0
 
-from math import cos, sin
-from operator import contains
 from pathlib import Path
 import tempfile
 import time
 import inspect
-from tracemalloc import start
 from typing import Literal, Optional, Union
 
 import cadquery as cq
