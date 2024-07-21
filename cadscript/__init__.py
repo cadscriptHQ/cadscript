@@ -303,8 +303,8 @@ def make_revolve(axis: AxisType,
             direction. The same applies to "Y" and "Z".
             If not specified, the start axis will be "+Y" for the "X" axis, "+Z" for the "Y" axis and 
             "+X" for the "Z" axis.
-            
-            
+
+
     Returns:
         Body: The revolved body.
     """
@@ -357,6 +357,73 @@ def __get_revolve_start_axis(start_axis, axis):
     if str(axis) in str(start_axis):
         raise ValueError("Start axis must be perpendicular to the revolution axis")
     return vec
+
+
+def make_loft(plane1: Union[ConstructionPlane, str],
+              sketch1: Sketch,
+              plane2: Union[ConstructionPlane, str],
+              sketch2: Sketch,
+              ) -> 'Body':
+    """
+    Create a loft between two sketches.
+
+    Args:
+        plane1 (Union[ConstructionPlane,str]): The plane of the first sketch.
+            Can be one of the strings "XY", "YZ", "ZX", "XZ", "YX", "ZY".
+        sketch1 (Sketch): The first sketch.
+        plane2 (Union[ConstructionPlane,str]): The plane of the second sketch.
+            Can be one of the strings "XY", "YZ", "ZX", "XZ", "YX", "ZY".
+        sketch2 (Sketch): The second sketch.
+
+    Returns:
+        Body: The lofted body.
+
+    Remarks:
+        The planes are defined as follows. Directions refer to
+        the global directions.
+
+        +-----------+-------+-------+-------+
+        | Plane     | xDir  | yDir  | zDir  |
+        +===========+=======+=======+=======+
+        | XY        | +x    | +y    | +z    |
+        +-----------+-------+-------+-------+
+        | YZ        | +y    | +z    | +x    |
+        +-----------+-------+-------+-------+
+        | ZX        | +z    | +x    | +y    |
+        +-----------+-------+-------+-------+
+        | XZ        | +x    | +z    | -y    |
+        +-----------+-------+-------+-------+
+        | YX        | +y    | +x    | -z    |
+        +-----------+-------+-------+-------+
+        | ZY        | +z    | +y    | -x    |
+        +-----------+-------+-------+-------+   
+
+        Please note that the "XZ" plane has its normal in negative y direction.
+    """
+    if isinstance(plane1, ConstructionPlane):
+        wp1 = plane1.cq()
+    elif isinstance(plane1, str):
+        wp1 = cq.Workplane(plane1)
+    elif isinstance(plane1, cq.Workplane):
+        wp1 = plane1
+    else:
+        raise ValueError("Invalid plane parameter type")
+
+    if isinstance(plane2, ConstructionPlane):
+        wp2 = plane2.cq()
+    elif isinstance(plane2, str):
+        wp2 = cq.Workplane(plane2)
+    elif isinstance(plane2, cq.Workplane):
+        wp2 = plane2
+    else:
+        raise ValueError("Invalid plane parameter type")
+
+    e1 = wp1.placeSketch(sketch1.cq())
+    e2 = wp2.placeSketch(sketch2.cq())
+
+    loft = cq.Workplane().add(e1).add(e2).toPending().loft(ruled=False)
+    return Body(loft)
+
 
 
 def make_text(text: str,
