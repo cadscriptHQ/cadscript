@@ -295,10 +295,15 @@ def make_revolve(axis: AxisType,
         angle (float, optional): The angle of revolution in degrees.
             Can also be a tuple of two floats to revolve between two angles.
             Defaults to 360.
+            Revolution will be counter-clockwise around the axis of revolution (right-hand rule with axis in 
+            positive direction),  starting from the start axis.
         start_axis (str, optional): The start axis of the revolution. Doesn't have an effect if angle is 360.
-            Can be one of "X", "Y", "Z", "+X", "+Y", "+Z", "-X", "-Y", "-Z".
-            If not specified, the start axis will be "+Y" for the "X" axis, "+Z" for the "Y" axis and "+X" for the "Z" axis.
-            Revolution will be counter-clockwise around the axis (right-hand rule with axis in positive direction).
+            Can be one of "X", "Y", "Z", "+X", "+Y", "+Z", "-X", "-Y", "-Z". "X" and "+X" are equivalent, 
+            describing the global x axis in positive direction. "-X" describes the global x axis in negative 
+            direction. The same applies to "Y" and "Z".
+            If not specified, the start axis will be "+Y" for the "X" axis, "+Z" for the "Y" axis and 
+            "+X" for the "Z" axis.
+            
             
     Returns:
         Body: The revolved body.
