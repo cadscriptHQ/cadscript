@@ -1,6 +1,13 @@
 # Changelog
 
+## dev
+
 - allow "ALL" and "*" for Body.chamfer() and Body.fillet()
+- added: cad.make_revolve()
+- added: cad.make_loft()
+- Body.make_extrude(), Body.add_extrude(), Body.cut_extrude(): sketch parameter is now optional
+- Body.make_extrude() now takes a DimensionDefinitionType for amount
+- cadscript.make_extrude*(): center param accessible as named param only
 
 ## [0.5.3] - 2024-07-10
 

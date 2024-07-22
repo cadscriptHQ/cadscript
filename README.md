@@ -59,8 +59,8 @@ For more details consult the [documentation](https://cadscript.readthedocs.io/).
 * Export: DFX, SVG (Sketches), SVG (3D rendering), STEP, STL
 * Compatibility with CadQuery
 * CQ-Editor integration
+* Revolve and loft operation 
 * Construction planes (TODO, planned for version 1.0)
-* Revolve and loft operation (TODO, planned for version 1.0)
 * Assemblies (TODO, planned for version 1.0)
 * OpenSCAD to Cadscript conversion utility (TODO, planned for version 1.5)
 
