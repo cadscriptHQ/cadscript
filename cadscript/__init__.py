@@ -131,6 +131,7 @@ def make_cylinder(*,
 def make_extrude(plane: Union[ConstructionPlane, str],
                  sketch: Sketch,
                  amount: DimensionDefinitionType,
+                 *,
                  center: bool = False
                  ) -> 'Body':
     """
@@ -197,6 +198,7 @@ def make_extrude(plane: Union[ConstructionPlane, str],
 
 def make_extrude_x(sketch: Sketch,
                    amount: DimensionDefinitionType,
+                   *,
                    center: bool = False
                    ) -> 'Body':
     """
@@ -217,11 +219,12 @@ def make_extrude_x(sketch: Sketch,
         Body: The extruded body.
     """
     plane = ConstructionPlane(cq.Workplane("YZ"))
-    return make_extrude(plane, sketch, amount, center)
+    return make_extrude(plane, sketch, amount, center=center)
 
 
 def make_extrude_y(sketch: Sketch,
                    amount: DimensionDefinitionType,
+                   *,
                    center: bool = False
                    ) -> 'Body':
     """
@@ -252,7 +255,7 @@ def make_extrude_y(sketch: Sketch,
     # but we want to extrude in positive y direction (global coordinates)
     # so we use the "XZ" plane and mirror the result
     plane = ConstructionPlane(cq.Workplane("XZ"))
-    return make_extrude(plane, sketch, amount, center).mirror("Y", copy_and_merge=False)
+    return make_extrude(plane, sketch, amount, center=center).mirror("Y", copy_and_merge=False)
 
 
 def make_extrude_z(sketch: Sketch,
@@ -277,7 +280,7 @@ def make_extrude_z(sketch: Sketch,
         Body: The extruded body.
     """
     plane = ConstructionPlane(cq.Workplane("XY"))
-    return make_extrude(plane, sketch, amount, center)
+    return make_extrude(plane, sketch, amount, center=center)
 
 
 def make_revolve(axis: AxisType,
