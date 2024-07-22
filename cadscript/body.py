@@ -197,7 +197,7 @@ class Body:
         self.__wp = plane.extrude(amount, "s")
         return self
 
-    def make_extrude(self, faceStr: str, sketch:  Optional['Sketch'], amount: DimensionDefinitionType) -> 'Body':
+    def make_extrude(self, faceStr: str, sketch: Optional['Sketch'], amount: DimensionDefinitionType) -> 'Body':
         """
         Creates a new body by extruding the specified face of the body using a sketch.
 
@@ -215,7 +215,7 @@ class Body:
         dim = get_dimension(amount, False)
         offset = dim.min if abs(dim.min) > 1e-6 else 0.0
 
-        face = self.__wp.faces(faceStr)                
+        face = self.__wp.faces(faceStr)
         plane = face.workplane(origin=(0, 0, 0))  # offset param does not work for some reason, move result instead
         if sketch:
             plane = plane.placeSketch(sketch.cq())
