@@ -155,19 +155,20 @@ class Body:
         self.__wp = wp
         return self
 
-    def add_extrude(self, faceStr: str, sketch: Optional['Sketch'], amount: float) -> 'Body':
+    def add_extrude(self, faceQuery: str, sketch: Optional['Sketch'], amount: float) -> 'Body':
         """
         Adds an extrusion to the specified face of the body using a sketch.
 
         Args:
-            faceStr (str): The face to extrude.
+            faceQuery (str): Query string that selects the face to extrude. Must evaluate to exactly one face.
+                The query syntax is documented at :ref:`query_faces`. 
             sketch (Sketch): The sketch to extrude. If None is given, the face itself is extruded.
             amount (float): The amount of extrusion.
 
         Returns:
             Body: The modified body object.
         """
-        face = self.__wp.faces(faceStr)
+        face = self.__wp.faces(faceQuery)
         plane = face.workplane(origin=(0, 0, 0))
         if sketch:
             plane = plane.placeSketch(sketch.cq())
@@ -176,19 +177,20 @@ class Body:
         self.__wp = plane.extrude(amount, "a")
         return self
 
-    def cut_extrude(self, faceStr: str, sketch: Optional['Sketch'], amount: float) -> 'Body':
+    def cut_extrude(self, faceQuery: str, sketch: Optional['Sketch'], amount: float) -> 'Body':
         """
         Adds a cut extrusion to the specified face of the body using a sketch.
 
         Args:
-            faceStr (str): The face to extrude.
+            faceQuery (str): Query string that selects the face to extrude. Must evaluate to exactly one face.
+                The query syntax is documented at :ref:`query_faces`. 
             sketch (Sketch): The sketch to extrude. If None is given, the face itself is extruded.
             amount (float): The amount of extrusion. For cutting you usually want to use a negative value to cut into the body.
 
         Returns:
             Body: The modified body object.
         """
-        face = self.__wp.faces(faceStr)
+        face = self.__wp.faces(faceQuery)
         plane = face.workplane(origin=(0, 0, 0))
         if sketch:
             plane = plane.placeSketch(sketch.cq())
@@ -197,12 +199,13 @@ class Body:
         self.__wp = plane.extrude(amount, "s")
         return self
 
-    def make_extrude(self, faceStr: str, sketch: Optional['Sketch'], amount: DimensionDefinitionType) -> 'Body':
+    def make_extrude(self, faceQuery: str, sketch: Optional['Sketch'], amount: DimensionDefinitionType) -> 'Body':
         """
         Creates a new body by extruding the specified face of the body using a sketch.
 
         Args:
-            faceStr (str): The face to extrude.
+            faceQuery (str): Query string that selects the face to extrude. Must evaluate to exactly one face.
+                The query syntax is documented at :ref:`query_faces`. 
             sketch (Sketch): The sketch to extrude. If None is given, the face itself is extruded.
             amount (float): The amount of extrusion. Can also be a tuple of two floats to extrude between two planes with the given offsets.
 
@@ -215,7 +218,7 @@ class Body:
         dim = get_dimension(amount, False)
         offset = dim.min if abs(dim.min) > 1e-6 else 0.0
 
-        face = self.__wp.faces(faceStr)
+        face = self.__wp.faces(faceQuery)
         plane = face.workplane(origin=(0, 0, 0))  # offset param does not work for some reason, move result instead
         if sketch:
             plane = plane.placeSketch(sketch.cq())
